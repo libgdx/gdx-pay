@@ -1,0 +1,135 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.13.+'
+    }
+}
+
+allprojects {
+
+    group = GROUPID
+    version = VERSION
+
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
+}
+
+project(":gdx-pay") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+}
+
+project(":gdx-pay-android") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    dependencies {
+        compile project(':gdx-pay')
+
+        compile 'com.badlogicgames.gdx:gdx-backend-android:1.3.2-SNAPSHOT'
+
+        compile fileTree(dir: 'lib', include: ['*.jar'])
+    }
+}
+
+project(":gdx-pay-android-openiab") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    dependencies {
+        compile project(':gdx-pay-android')
+
+        compile 'org.onepf:openiab:0.9.7.2'
+    }
+}
+
+project(":gdx-pay-android-ouya") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    dependencies {
+        compile project(':gdx-pay-android')
+
+        compile fileTree(dir: 'lib', include: ['*.jar'])
+    }
+
+    afterEvaluate { sourceSets.main.compileClasspath.files.each { println it } }
+}
+
+project(":gdx-pay-desktop-apple") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    dependencies {
+        compile project(':gdx-pay')
+    }
+}
+
+project(":gdx-pay-gwt-googlewallet") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    dependencies {
+        compile project(':gdx-pay')
+    }
+}
+
+project(":gdx-pay-iosrobovm-apple") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    dependencies {
+        compile project(':gdx-pay')
+    }
+}
+
+project(":gdx-pay-server") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    dependencies {
+        compile project(':gdx-pay')
+    }
+}
+
+project(":gdx-pay-tests") {
+    apply plugin : 'java'
+
+    dependencies {
+        compile project(':gdx-pay')
+        compile 'com.badlogicgames.gdx:gdx:1.3.2-SNAPSHOT'
+    }
+}
+
+project(":gdx-pay-tests-android") {
+
+    apply plugin: 'com.android.application'
+
+    configurations { natives }
+
+    dependencies {
+        compile project(':gdx-pay-tests')
+        compile project(':gdx-pay-android-openiab')
+        compile project(':gdx-pay-android-ouya')
+
+        compile "com.badlogicgames.gdx:gdx-backend-android:1.3.2-SNAPSHOT"
+        natives "com.badlogicgames.gdx:gdx-platform:1.3.2-SNAPSHOT:natives-armeabi"
+        natives "com.badlogicgames.gdx:gdx-platform:1.3.2-SNAPSHOT:natives-armeabi-v7a"
+        natives "com.badlogicgames.gdx:gdx-platform:1.3.2-SNAPSHOT:natives-x86"
+    }
+}
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+}
