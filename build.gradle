@@ -33,7 +33,7 @@ project(":gdx-pay-android") {
     dependencies {
         compile project(':gdx-pay')
 
-        compile 'com.badlogicgames.gdx:gdx-backend-android:1.3.2-SNAPSHOT'
+        compile 'com.badlogicgames.gdx:gdx-backend-android:1.4.1'
 
         compile fileTree(dir: 'lib', include: ['*.jar'])
     }
@@ -104,7 +104,7 @@ project(":gdx-pay-tests") {
 
     dependencies {
         compile project(':gdx-pay')
-        compile 'com.badlogicgames.gdx:gdx:1.3.2-SNAPSHOT'
+        compile 'com.badlogicgames.gdx:gdx:1.4.1'
     }
 }
 
@@ -119,10 +119,10 @@ project(":gdx-pay-tests-android") {
         compile project(':gdx-pay-android-openiab')
         compile project(':gdx-pay-android-ouya')
 
-        compile "com.badlogicgames.gdx:gdx-backend-android:1.3.2-SNAPSHOT"
-        natives "com.badlogicgames.gdx:gdx-platform:1.3.2-SNAPSHOT:natives-armeabi"
-        natives "com.badlogicgames.gdx:gdx-platform:1.3.2-SNAPSHOT:natives-armeabi-v7a"
-        natives "com.badlogicgames.gdx:gdx-platform:1.3.2-SNAPSHOT:natives-x86"
+        compile "com.badlogicgames.gdx:gdx-backend-android:1.4.1"
+        natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-armeabi"
+        natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-armeabi-v7a"
+        natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-x86"
     }
 }
 
