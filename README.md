@@ -5,6 +5,92 @@ The gdx-pay project is a libGDX extension.
 ### Getting Started
 
 
+## Client-Side Code
+
+In your **core project** you have:
+* gdx-pay.jar (required)
+
+In your **Android project** you use:
+* gdx-pay-android.jar (required)
+* gdx-pay-android-openiab.jar (optional: to support GooglePlay, Amazon etc.)
+* gdx-pay-android-ouya.jar (optional: to support OUYA)
+
+Also, for Android you will need to (a) update your AndroidManifest.xml and (b) proguard.cfg.
+
+In any case, if the correct jar files are place, all you need is to initialize the purchase system in your 
+core project as follows without bothering making any code changes to Android (and hopefully Desktop/iOS later as well). 
+
+
+```
+...
+if (PurchaseSystem.hasManager()) {
+    // purchase system is ready to start. Let's initialize our product list etc...
+    PurchaseManagerConfig config = new PurchaseManagerConfig();
+    config.addOffer(...)
+    config.addOffer(...)
+    ...
+    config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE, "<Google key>");
+    config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_AMAZON, "<Amazon key>");
+    ...
+    config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, new Object[] {
+      "<OUYA developerID String",
+      new byte[] { <OUYA applicationKey> }
+    });
+    ...
+
+    // let's start the purchase system...
+    PurchaseSystem.install(new PurchaseObserver() {         
+     ...
+    }
+  
+    // to restore existing purchases (results are reported to the observer)
+    PurchaseSystem.restore();
+    
+    // to make a purchase (results are reported to the observer)
+    PurchaseSystem.purchase("product_identifier");
+  
+    ...
+}
+...
+```
+
+## Server-Side Code (Optional)
+
+**gdx-pay-server** is optional and can be used for purchase **verification on a server**. It verifies if a 
+purchase is valid by e.g. doing a post-back validation on a server. 
+Place the following two jar-files onto your server (you won't need any other libGDX 
+libraries on your server, all dependencies to libGDX have been removed for easy integration): 
+
+* gdx-pay.jar 
+* gdx-pay-server.jar 
+
+How to integrate in your server: 
+```
+ // create a manager which returns "true" by default  
+ PurchaseVerifierManager verifier = new PurchaseVerifierManager(true);
+ 
+ // add the various purchase verifiers
+ verifier.addVerifier(new PurchaseVerifierAndroidGoogle(...));
+ verifier.addVerifier(new PurchaseVerifierAndroidAmazon(...));
+ verifier.addVerifier(new PurchaseVerifierAndroidOUYA(...));
+ verifier.addVerifier(new PurchaseVerifieriOSApple(...));
+ ...
+ 
+ // verify a purchase
+ if (verifier.isValid(transaction)) {
+   // transaction appears valid
+   ... add to BD etc. ...
+ }
+ else {
+   // transaction appears bogus
+   ... punish user ...
+ }
+ ```
+ 
+Please note that the server-side functionality hasn't been fully developed yet as of this writing. 
+**PurchaseVerifieriOSApple** is somewhat rudimentary implemented and will need some more work. There is a main(...) 
+method in that fail if you want to run/test it :)
+
 
 ### News & Community
 
