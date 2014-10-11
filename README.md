@@ -1,15 +1,15 @@
-This project aims to provide a common API for InApp purchasing across supported platforms.
+This project aims to provide a **cross-platform API for InApp purchasing**.
 The gdx-pay project is a libGDX extension.
 
 ### Getting Started
 
-The purchasing API comes in two part.
+The purchasing API comes in two parts.
 
 * **Client-Side API**: This is what is integrated into your game or application and will handle the
 purchase flow for the application.
 
 * **Server-Side API (optional)**: If you have a server running and would like to do a purchase verification
-on your server, you can use the API to verify purchases sent to your server. The server-side API is optional to use. 
+on your server, you can use the API to verify purchases sent to your server. 
 
 #### Client-Side API
 
@@ -23,48 +23,50 @@ In your **Android project** you use:
 * gdx-pay-android-ouya.jar (optional: to support OUYA)
 
 In your **iOS project** you use:
-* gdx-pay-iosrobovm-apple.jar (required): *needs implementation/volunteers wanted*!
+* gdx-pay-iosrobovm-apple.jar (required): *needs implementation/volunteers wanted!*
 
 In your **Desktop project** you use:
-* gdx-pay-desktop-apple.jar (optional: to support the Mac App Store): *needs implementation/volunteers wanted*!
+* gdx-pay-desktop-apple.jar (optional: to support the Mac App Store): *needs implementation/volunteers wanted!*
 
 In your **GWT project** you use:
-* gdx-pay-gwt-googlewallet.jar (optional: to support Google Wallet): *needs implementation/volunteers wanted*!
+* gdx-pay-gwt-googlewallet.jar (optional: to support Google Wallet): *needs implementation/volunteers wanted!*
 
 Also, for Android you will need to (a) update your AndroidManifest.xml and (b) proguard.cfg.
 
 In any case, if the correct jar files are place, all you need is to initialize the purchase system in your 
-core project as follows without bothering making any code changes to Android (and hopefully Desktop/iOS later as well). 
+core project as follows without bothering making any code changes. 
 
 
 ```
 ...
 if (PurchaseSystem.hasManager()) {
-    // purchase system is ready to start. Let's initialize our product list etc...
-    PurchaseManagerConfig config = new PurchaseManagerConfig();
-    config.addOffer(...)
-    config.addOffer(...)
-    ...
-    config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE, "<Google key>");
-    config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_AMAZON, "<Amazon key>");
-    ...
-    config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, new Object[] {
-      "<OUYA developerID String",
-      new byte[] { <OUYA applicationKey> }
-    });
-    ...
+  // purchase system is ready to start. Let's initialize our product list etc...
+  PurchaseManagerConfig config = new PurchaseManagerConfig();
+  config.addOffer(...)
+  config.addOffer(...)
+  ...
+  config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE, "<Google key>");
+  config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_AMAZON, "<Amazon key>");
+  ...
+  config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, new Object[] {
+    "<OUYA developerID String",
+    new byte[] { <OUYA applicationKey> }
+  });
+  ...
 
-    // let's start the purchase system...
-    PurchaseSystem.install(new PurchaseObserver() {         
-     ...
-    }
-    ...
-    // to restore existing purchases (results are reported to the observer)
-    PurchaseSystem.restore();
-    ...
-    // to make a purchase (results are reported to the observer)
-    PurchaseSystem.purchase("product_identifier"); 
-    ...
+  // let's start the purchase system...
+  PurchaseSystem.install(new PurchaseObserver() {         
+   ...
+  }
+  ...
+ 
+  // to restore existing purchases (results are reported to the observer)
+  PurchaseSystem.restore();
+  ...
+ 
+  // to make a purchase (results are reported to the observer)
+  PurchaseSystem.purchase("product_identifier"); 
+  ...
 }
 ...
 ```
