@@ -17,7 +17,7 @@ To setup the purchasing API, you will need to add the corresponding jar files to
 your **core project** you have:
 * gdx-pay.jar (required)
 
-In your **Android project** you use:
+In your **Android project** you use (also make sure to (a) update your AndroidManifest.xml and (b) proguard.cfg):
 * gdx-pay-android.jar (required)
 * gdx-pay-android-openiab.jar (optional: to support GooglePlay, Amazon etc.)
 * gdx-pay-android-ouya.jar (optional: to support OUYA)
@@ -30,8 +30,6 @@ In your **Desktop project** you use:
 
 In your **GWT project** you use:
 * gdx-pay-gwt-googlewallet.jar (optional: to support Google Wallet): *needs implementation/volunteers wanted!*
-
-Also, for Android you will need to (a) update your AndroidManifest.xml and (b) proguard.cfg.
 
 In any case, if the correct jar files are place, all you need is to initialize the purchase system in your 
 core project as follows without bothering making any code changes. 
