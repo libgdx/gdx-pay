@@ -1,11 +1,17 @@
-This project aims to provide a common api for in-app purchasing across supported platforms.
-
+This project aims to provide a common API for InApp purchasing across supported platforms.
 The gdx-pay project is a libGDX extension.
 
 ### Getting Started
 
+The purchasing API comes in two part.
 
-## Client-Side Code
+* **Client-Side** API: This is what is integrated into your game or application and will handle the
+purchase flow for the application.
+
+* **Server-Side** API (optional): If you have a server running and would like to do a purchase verification
+on your server, you can use the API to verify purchases done. The server-side API is optional to use. 
+
+#### Client-Side API
 
 In your **core project** you have:
 * gdx-pay.jar (required)
@@ -54,7 +60,7 @@ if (PurchaseSystem.hasManager()) {
 ...
 ```
 
-## Server-Side Code (Optional)
+#### Server-Side API (Optional)
 
 **gdx-pay-server** is optional and can be used for purchase **verification on a server**. It verifies if a 
 purchase is valid by e.g. doing a post-back validation on a server. 
