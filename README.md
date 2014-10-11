@@ -5,21 +5,31 @@ The gdx-pay project is a libGDX extension.
 
 The purchasing API comes in two part.
 
-* **Client-Side** API: This is what is integrated into your game or application and will handle the
+* **Client-Side API**: This is what is integrated into your game or application and will handle the
 purchase flow for the application.
 
-* **Server-Side** API (optional): If you have a server running and would like to do a purchase verification
-on your server, you can use the API to verify purchases done. The server-side API is optional to use. 
+* **Server-Side API (optional)**: If you have a server running and would like to do a purchase verification
+on your server, you can use the API to verify purchases sent to your server. The server-side API is optional to use. 
 
 #### Client-Side API
 
-In your **core project** you have:
+To setup the purchasing API, you will need to add the corresponding jar files to your project. In 
+your **core project** you have:
 * gdx-pay.jar (required)
 
 In your **Android project** you use:
 * gdx-pay-android.jar (required)
 * gdx-pay-android-openiab.jar (optional: to support GooglePlay, Amazon etc.)
 * gdx-pay-android-ouya.jar (optional: to support OUYA)
+
+In your **iOS project** you use:
+* gdx-pay-iosrobovm-apple.jar (required): *needs implementation/volunteers wanted*!
+
+In your **Desktop project** you use:
+* gdx-pay-desktop-apple.jar (optional: to support the Mac App Store): *needs implementation/volunteers wanted*!
+
+In your **GWT project** you use:
+* gdx-pay-gwt-googlewallet.jar (optional: to support Google Wallet): *needs implementation/volunteers wanted*!
 
 Also, for Android you will need to (a) update your AndroidManifest.xml and (b) proguard.cfg.
 
@@ -48,13 +58,12 @@ if (PurchaseSystem.hasManager()) {
     PurchaseSystem.install(new PurchaseObserver() {         
      ...
     }
-  
+    ...
     // to restore existing purchases (results are reported to the observer)
     PurchaseSystem.restore();
-    
+    ...
     // to make a purchase (results are reported to the observer)
-    PurchaseSystem.purchase("product_identifier");
-  
+    PurchaseSystem.purchase("product_identifier"); 
     ...
 }
 ...
