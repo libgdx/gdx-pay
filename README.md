@@ -46,9 +46,7 @@ if (PurchaseSystem.hasManager()) {
   config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE, "<Google key>");
   config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_AMAZON, "<Amazon key>");
   ...
-  config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, new Object[] {
-    "<OUYA developerID String",
-    new byte[] { <OUYA applicationKey> }
+  config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, new Object[] { OUYA_DEVELOPER_ID, KEYPATH });
   });
   ...
 
