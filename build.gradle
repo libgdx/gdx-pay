@@ -8,6 +8,7 @@ buildscript {
 }
 
 allprojects {
+	apply plugin: "eclipse"
 
     group = GROUPID
     version = VERSION
@@ -60,7 +61,6 @@ project(":gdx-pay-android-ouya") {
         compile fileTree(dir: 'lib', include: ['*.jar'])
     }
 
-    afterEvaluate { sourceSets.main.compileClasspath.files.each { println it } }
 }
 
 project(":gdx-pay-desktop-apple") {
