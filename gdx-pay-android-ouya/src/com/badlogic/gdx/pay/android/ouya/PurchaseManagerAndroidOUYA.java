@@ -53,6 +53,7 @@ import android.content.Intent;
 import android.net.ParseException;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Base64;
 import android.util.Log;
@@ -145,7 +146,6 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 		Object[] configuration = (Object[])config.getStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA);
 		String developerID = (String)configuration[0];
 		applicationKeyPath = (String)configuration[1]; // store our OUYA applicationKey-Path!
-		
 		ouyaFacade = OuyaFacade.getInstance();
 		ouyaFacade.init((Context)activity, developerID);
 
@@ -182,7 +182,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 
 	// ----- Handler --------------------
 
-	Handler handler = new HandlerExtension();
+	Handler handler = new HandlerExtension(Looper.getMainLooper());
 
 	final static int showToast = 0;
 	final static int requestOUYAproducts = 1;
@@ -190,6 +190,10 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 	final static int requestPurchaseRestore = 3;
 
 	final class HandlerExtension extends Handler {
+
+		public HandlerExtension(Looper mainLooper) {
+			super(mainLooper);
+		}
 
 		@Override
 		public void handleMessage (Message msg) {
