@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.badlogic.gdx.pay.PayTest;
+import com.badlogic.gdx.pay.tests.PayTest;
 
 public class MainActivity extends AndroidApplication {
 
