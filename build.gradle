@@ -1,3 +1,9 @@
+
+ext {
+    GROUPID = 'com.badlogicgames.gdxpay'
+    VERSION = '1.4.1-SNAPSHOT'
+}
+
 buildscript {
     repositories {
         mavenCentral()
@@ -8,11 +14,8 @@ buildscript {
 }
 
 allprojects {
-	apply plugin: "eclipse"
-
-    group = GROUPID
-    version = VERSION
-
+	  apply plugin: "eclipse"
+    
     repositories {
         mavenCentral()
         maven {
