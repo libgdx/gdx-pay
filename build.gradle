@@ -115,10 +115,17 @@ project(":gdx-pay-tests-android") {
     configurations { natives }
 
     dependencies {
-        compile project(':gdx-pay-tests')
+        compile project(':gdx-pay')
+        compile project(':gdx-pay-tests')   
+           
+        compile project(':gdx-pay-android')
+        
         compile project(':gdx-pay-android-openiab')
-        compile project(':gdx-pay-android-ouya')
-
+        compile 'org.onepf:openiab:0.9.7.2'      
+        
+        compile project(':gdx-pay-android-ouya')  
+        compile fileTree(dir: '../gdx-pay-android-ouya/lib', include: ['*.jar'])
+ 
         compile "com.badlogicgames.gdx:gdx-backend-android:1.4.1"
         natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-armeabi"
         natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-armeabi-v7a"
