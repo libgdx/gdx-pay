@@ -28,12 +28,21 @@ project(":gdx-pay") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }   
 }
 
 project(":gdx-pay-android") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
-
+    
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+    
     dependencies {
         compile project(':gdx-pay')
 
@@ -47,10 +56,15 @@ project(":gdx-pay-android-openiab") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+    
     dependencies {
         compile project(':gdx-pay-android')
 
-        compile 'org.onepf:openiab:0.9.7.2'
+        custom 'org.onepf:openiab:0.9.7.2'
     }
 }
 
@@ -58,10 +72,15 @@ project(":gdx-pay-android-ouya") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+    
     dependencies {
         compile project(':gdx-pay-android')
 
-        compile fileTree(dir: 'lib', include: ['*.jar'])
+        custom fileTree(dir: 'lib', include: ['*.jar'])
     }
 
 }
@@ -70,6 +89,11 @@ project(":gdx-pay-desktop-apple") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+    
     dependencies {
         compile project(':gdx-pay')
     }
@@ -79,6 +103,11 @@ project(":gdx-pay-gwt-googlewallet") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+    
     dependencies {
         compile project(':gdx-pay')
     }
@@ -88,6 +117,11 @@ project(":gdx-pay-iosrobovm-apple") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+    
     dependencies {
         compile project(':gdx-pay')
     }
@@ -97,6 +131,11 @@ project(":gdx-pay-server") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+    
     dependencies {
         compile project(':gdx-pay')
     }
@@ -105,6 +144,11 @@ project(":gdx-pay-server") {
 project(":gdx-pay-tests") {
     apply plugin : 'java'
 
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+    
     dependencies {
         compile project(':gdx-pay')
         compile 'com.badlogicgames.gdx:gdx:1.4.1'
@@ -115,7 +159,11 @@ project(":gdx-pay-tests-android") {
 
     apply plugin: 'com.android.application'
 
-    configurations { natives }
+    configurations { 
+        custom
+        compile.extendsFrom custom
+        natives 
+    }
 
     dependencies {
         compile project(':gdx-pay')

@@ -99,7 +99,13 @@ afterEvaluate { project ->
         required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
         sign configurations.archives
     }
-
+    
+    task libraryJar(type: Jar, dependsOn:classes) {
+        from sourceSets.main.allSource
+        from configurations.custom.collect { it.isDirectory() ? it : zipTree(it) }
+        classifier = 'library'
+    }
+     
     task sourcesJar(type: Jar, dependsOn:classes) {
         from sourceSets.main.allSource
         classifier = 'sources'
@@ -111,6 +117,7 @@ afterEvaluate { project ->
     }
 
     artifacts {
+        archives libraryJar
         archives sourcesJar
         archives javadocJar
     }
