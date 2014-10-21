@@ -1,7 +1,7 @@
 
 ext {
     GROUPID = 'com.badlogicgames.gdxpay'
-    VERSION = '0.1.0-SNAPSHOT'
+    VERSION = '0.2.0-SNAPSHOT'
 }
 
 buildscript {

@@ -90,6 +90,13 @@ afterEvaluate { project ->
                             distribution 'repo'
                         }
                     }
+                    
+                    developers {
+                        developer {
+                            id 'noblemaster'
+                            name 'Christoph Aschwanden'
+                        }
+                    }                
                 }
             }
         }
