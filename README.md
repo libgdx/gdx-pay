@@ -1,5 +1,6 @@
 This project aims to provide a **cross-platform API for InApp purchasing**.
-The gdx-pay project is a libGDX extension.
+The gdx-pay project is a libGDX extension. Current release version is 0.1.0 (snapshots available
+via sonatype).
 
 ### Getting Started
 
@@ -29,15 +30,57 @@ In your **Android project** you use (also make sure to (a) update your AndroidMa
 * direct: [gdx-pay-android.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android/0.1.0/gdx-pay-android-0.1.0-library.jar) (required)
 * direct: [gdx-pay-android-openiab.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-openiab/0.1.0/gdx-pay-android-openiab-0.1.0-library.jar) (optional: to support GooglePlay, Amazon etc.)
 * direct: [gdx-pay-android-ouya.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-ouya/0.1.0/gdx-pay-android-ouya-0.1.0-library.jar) (optional: to support OUYA)
+* via Maven (you will need to add the ouya-sdk.jar manually, also reference the OpenIAB dependency):
+```xml
+<dependency>
+  <groupId>com.badlogicgames.gdxpay</groupId>
+  <artifactId>gdx-pay-android</artifactId>
+  <version>0.1.0</version>
+</dependency>
+<dependency>
+  <groupId>com.badlogicgames.gdxpay</groupId>
+  <artifactId>gdx-pay-android-openiab</artifactId>
+  <version>0.1.0</version>
+</dependency>
+<dependency>
+  <groupId>com.badlogicgames.gdxpay</groupId>
+  <artifactId>gdx-pay-android-ouya</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
 
 In your **iOS project** you use:
 * direct: [gdx-pay-iosrobovm-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-iosrobovm-apple/0.1.0/gdx-pay-iosrobovm-apple-0.1.0-library.jar) (required): *needs implementation/volunteers wanted!*
+* via Maven:
+```xml
+<dependency>
+  <groupId>com.badlogicgames.gdxpay</groupId>
+  <artifactId>gdx-pay-iosrobovm-apple</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
 
 In your **Desktop project** you use:
 * direct: [gdx-pay-desktop-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-desktop-apple/0.1.0/gdx-pay-desktop-apple-0.1.0-library.jar) (optional: to support the Mac App Store): *needs implementation/volunteers wanted!*
+* via Maven:
+```xml
+<dependency>
+  <groupId>com.badlogicgames.gdxpay</groupId>
+  <artifactId>gdx-pay-desktop-apple</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
 
 In your **GWT project** you use:
 * direct: [gdx-pay-gwt-googlewallet.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-gwt-googlewallet/0.1.0/gdx-pay-gwt-googlewallet-0.1.0-library.jar) (optional: to support Google Wallet): *needs implementation/volunteers wanted!*
+* via Maven:
+```xml
+<dependency>
+  <groupId>com.badlogicgames.gdxpay</groupId>
+  <artifactId>gdx-pay-gwt-googlewallet</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
 
 In any case, if the correct jar files are place, all you need is to initialize the purchase system in your 
 core project as follows without bothering making any code changes. 
@@ -84,6 +127,19 @@ libraries on your server, all dependencies to libGDX have been removed for easy 
 
 * direct: [gdx-pay.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay/0.1.0/gdx-pay-0.1.0-library.jar) 
 * direct: [gdx-pay-server.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-server/0.1.0/gdx-pay-server-0.1.0-library.jar) 
+* via Maven:
+```xml
+<dependency>
+  <groupId>com.badlogicgames.gdxpay</groupId>
+  <artifactId>gdx-pay</artifactId>
+  <version>0.1.0</version>
+</dependency>
+<dependency>
+  <groupId>com.badlogicgames.gdxpay</groupId>
+  <artifactId>gdx-pay-server</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
 
 How to integrate in your server: 
 ```
