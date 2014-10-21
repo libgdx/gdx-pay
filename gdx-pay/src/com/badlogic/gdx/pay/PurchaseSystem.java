@@ -84,6 +84,10 @@ public final class PurchaseSystem {
             "IAP: Error creating IAP for Android (are the gdx-pay**.jar files installed?).", e);
         }
       }
+      else {
+        // notify not "reflection"
+        gdxAppLogMethod.invoke(gdxAppObject, TAG, "IAP: gdx-pay not instantiated via reflection.");
+      }
     } catch (Exception e) {
       // we appear not to be on libGDX!
     }
