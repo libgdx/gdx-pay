@@ -30,7 +30,7 @@ In your **Android project** you use (also make sure to (a) update your AndroidMa
 * via direct: [gdx-pay-android.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android/0.1.0/gdx-pay-android-0.1.0-library.jar)
 * via direct: [gdx-pay-android-openiab.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-openiab/0.1.0/gdx-pay-android-openiab-0.1.0-library.jar) (to support GooglePlay, Amazon etc.)
 * via direct: [gdx-pay-android-ouya.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-ouya/0.1.0/gdx-pay-android-ouya-0.1.0-library.jar) (to support OUYA)
-* via Maven (you will need to add the ouya-sdk.jar manually, also reference the OpenIAB dependency):
+* via Maven (you will need to add the ouya-sdk.jar manually, also reference the OpenIAB dependency; if you don't want to add them manually, use `<classifier>library</classifier>`):
 ```xml
 <dependency>
   <groupId>com.badlogicgames.gdxpay</groupId>
