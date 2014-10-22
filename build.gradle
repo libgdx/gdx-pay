@@ -22,6 +22,9 @@ allprojects {
             url "https://oss.sonatype.org/content/repositories/snapshots/"
         }
     }
+    
+    group = GROUPID
+    version = VERSION
 }
 
 project(":gdx-pay") {
