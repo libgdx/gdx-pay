@@ -297,7 +297,8 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 								@Override
 								public void onConsumeFinished (Purchase purchase, IabResult result) {
 									if (!result.isSuccess()) {
-										// NOTE: we should only rarely have an exception due to e.g. network outages etc.
+						        // FIXME: if consume fails, the purchase manager should take note and 
+									  //        try to consume again at a later point in time...
 										Log.e(TAG, "Error while consuming: " + result);
 									}
 								}
