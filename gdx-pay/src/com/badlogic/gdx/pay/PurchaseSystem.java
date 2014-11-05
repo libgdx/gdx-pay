@@ -23,142 +23,171 @@ import java.lang.reflect.Method;
  * @author noblemaster */
 public final class PurchaseSystem {
 
-	private static final String TAG = "IAP";
+    private static final String TAG = "IAP";
 
-	/** The actual purchase manager or null if none was available. */
-	private static PurchaseManager manager = null;
+    /** The actual purchase manager or null if none was available. */
+    private static PurchaseManager manager = null;
 
+    private PurchaseSystem () {
+        // private to prevent instantiation
+    }
 
-	private PurchaseSystem () {
-		// private to prevent instantiation
-	}
+    /** Registers a new purchase manager. */
+    public static void setManager (PurchaseManager manager) {
+        PurchaseSystem.manager = manager;
+    }
 
-	/** Registers a new purchase manager. */
-	public static void setManager (PurchaseManager manager) {
-		PurchaseSystem.manager = manager;
-	}
-	
-  /** We try to locate a suitable store via Java reflection. */
-  private static void resolve() {
-    // obtain the Gdx class
-    try {
-      Class<?> gdxClazz = Class.forName("com.badlogic.gdx.Gdx");
-      Class<?> gdxLifecycleListenerClazz = Class.forName("com.badlogic.gdx.LifecycleListener");
-      Class<?> gdxAndroidEventListenerClazz = Class.forName("com.badlogic.gdx.backends.android.AndroidEventListener");
-      Object gdxAppObject = gdxClazz.getField("app").get(null);
-      Method gdxAppLogMethod = gdxAppObject.getClass().getMethod("log", String.class, String.class);
-      Method gdxAppLogMethodT = gdxAppObject.getClass().getMethod("log", String.class, String.class, Throwable.class);
-      Method gdxAppAddLifecycleListenerMethod = gdxAppObject.getClass().getMethod("addLifecycleListener", gdxLifecycleListenerClazz);
-      Method gdxAppAddAndroidEventListenerMethod = gdxAppObject.getClass().getMethod("addAndroidEventListener", gdxAndroidEventListenerClazz);
-      
-      // check if we are on Android
-      boolean android;
-      try {
-        // this will crash if we are not on android!
-        Class<?> androidAppClazz = Class.forName("com.badlogic.gdx.backends.android.AndroidApplication");
-        android = true;
-      } catch (Exception e) {
-        // we appear not to be on Android
-        android = false;
-      }
-      if (android) {
+    /** We try to locate a suitable store via Java reflection. */
+    private static void resolve () {
+        // obtain the Gdx class
         try {
-          // look for gdx-pay-android and if it exists, instantiate it (gdx-pay jars need to be in place)
-          Class<?> iapClazz = Class.forName("com.badlogic.gdx.pay.android.IAP");
-          Class<?> activityClazz = Class.forName("android.app.Activity");
-          Class<?> intentClazz = Class.forName("android.content.Intent");
-          int requestCode = 1032; // requestCode for onActivityResult for purchases (could go into PurchaseManagerConfig)
-          Object iap = iapClazz.getConstructor(activityClazz, int.class).newInstance(gdxAppObject, requestCode);
+            Class<?> gdxClazz = Class.forName("com.badlogic.gdx.Gdx");
+            Class<?> gdxLifecycleListenerClazz = Class.forName("com.badlogic.gdx.LifecycleListener");
+            Object gdxAppObject = gdxClazz.getField("app").get(null);
+            Method gdxAppLogMethod = gdxAppObject.getClass().getMethod("log", String.class, String.class);
+            Method gdxAppLogMethodT = gdxAppObject.getClass().getMethod("log", String.class, String.class, Throwable.class);
+            Method gdxAppAddLifecycleListenerMethod = gdxAppObject.getClass().getMethod("addLifecycleListener",
+                gdxLifecycleListenerClazz);
 
-          // add a listener for Lifecycle events
-          gdxAppAddLifecycleListenerMethod.invoke(gdxAppObject, iap);
-          
-          // add a listener for Android Events events
-          gdxAppAddAndroidEventListenerMethod.invoke(gdxAppObject, iap);
+            // check if we are on iOS
+            boolean ios;
+            try {
+                // this will crash if we are not on iOS!
+                Class<?> iosAppClazz = Class.forName("com.badlogic.gdx.backends.iosrobovm.IOSApplication");
+                ios = true;
+            } catch (Exception e) {
+                // we appear not to be on iOS
+                ios = false;
+            }
+            if (ios) {
+                try {
+                    // look for gdx-pay-iosrobovm and if it exists, instantiate it (gdx-pay jars need to be in place)
+                    Class<?> iapClazz = Class.forName("com.badlogic.gdx.pay.ios.apple.PurchaseManageriOSApple");
+                    PurchaseSystem.setManager((PurchaseManager)iapClazz.newInstance());
 
-          // notify of success
-          gdxAppLogMethod.invoke(gdxAppObject, TAG, "IAP: gdx-pay successfully instantiated.");
+                    // notify of success
+                    gdxAppLogMethod.invoke(gdxAppObject, TAG, "IAP: gdx-pay successfully instantiated.");
+                } catch (Exception e) {
+                    // some jar files appear to be missing
+                    gdxAppLogMethodT.invoke(gdxAppObject, TAG,
+                        "IAP: Error creating IAP for iOS (are the gdx-pay**.jar files installed?).", e);
+                }
+                return;
+            }
+
+            // check if we are on Android
+            boolean android;
+            try {
+                // this will crash if we are not on android!
+                Class<?> androidAppClazz = Class.forName("com.badlogic.gdx.backends.android.AndroidApplication");
+                android = true;
+            } catch (Exception e) {
+                // we appear not to be on Android
+                android = false;
+            }
+            if (android) {
+                try {
+                    // look for gdx-pay-android and if it exists, instantiate it (gdx-pay jars need to be in place)
+                    Class<?> iapClazz = Class.forName("com.badlogic.gdx.pay.android.IAP");
+                    Class<?> activityClazz = Class.forName("android.app.Activity");
+                    Class<?> intentClazz = Class.forName("android.content.Intent");
+                    Class<?> gdxAndroidEventListenerClazz = Class
+                        .forName("com.badlogic.gdx.backends.android.AndroidEventListener");
+                    int requestCode = 1032; // requestCode for onActivityResult for purchases (could go into
+// PurchaseManagerConfig)
+                    Object iap = iapClazz.getConstructor(activityClazz, int.class).newInstance(gdxAppObject, requestCode);
+
+                    // add a listener for Lifecycle events
+                    gdxAppAddLifecycleListenerMethod.invoke(gdxAppObject, iap);
+
+                    // add a listener for Android Events events
+                    Method gdxAppAddAndroidEventListenerMethod = gdxAppObject.getClass().getMethod("addAndroidEventListener",
+                        gdxAndroidEventListenerClazz);
+                    gdxAppAddAndroidEventListenerMethod.invoke(gdxAppObject, iap);
+
+                    // notify of success
+                    gdxAppLogMethod.invoke(gdxAppObject, TAG, "IAP: gdx-pay successfully instantiated.");
+                } catch (Exception e) {
+                    // some jar files appear to be missing
+                    gdxAppLogMethodT.invoke(gdxAppObject, TAG,
+                        "IAP: Error creating IAP for Android (are the gdx-pay**.jar files installed?).", e);
+                }
+                return;
+            }
+
+            // notify not "reflection"
+            gdxAppLogMethod.invoke(gdxAppObject, TAG, "IAP: gdx-pay not instantiated via reflection.");
         } catch (Exception e) {
-          // some jar files appear to be missing
-          gdxAppLogMethodT.invoke(gdxAppObject, TAG,
-            "IAP: Error creating IAP for Android (are the gdx-pay**.jar files installed?).", e);
+            // we appear not to be on libGDX!
         }
-      }
-      else {
-        // notify not "reflection"
-        gdxAppLogMethod.invoke(gdxAppObject, TAG, "IAP: gdx-pay not instantiated via reflection.");
-      }
-    } catch (Exception e) {
-      // we appear not to be on libGDX!
     }
-  }
 
-  /** Returns the registered manager or null for none. */
-  public static PurchaseManager getManager () {
-    // resolve our manager via reflection if we do not have one
-    if (manager == null) {
-      resolve();
+    /** Returns the registered manager or null for none. */
+    public static PurchaseManager getManager () {
+        // resolve our manager via reflection if we do not have one
+        if (manager == null) {
+            resolve();
+        }
+
+        // return the manager or null if none was found
+        return manager;
     }
-    
-    // return the manager or null if none was found
-    return manager;
-  }
 
-	/** Returns true if there is a purchase manager available. */
-	public static boolean hasManager () {
-		return getManager() != null;
-	}
+    /** Returns true if there is a purchase manager available. */
+    public static boolean hasManager () {
+        return getManager() != null;
+    }
 
-	/** Returns the store name or null for none. */
-	public static String storeName () {
-		if (hasManager()) {
-			return manager.storeName();
-		} else {
-			return null;
-		}
-	}
+    /** Returns the store name or null for none. */
+    public static String storeName () {
+        if (hasManager()) {
+            return manager.storeName();
+        } else {
+            return null;
+        }
+    }
 
-	/** Installs a purchase observer. */
-	public static void install (PurchaseObserver observer, PurchaseManagerConfig config) {
-		if (hasManager()) {
-			manager.install(observer, config);
-		} else {
-			observer.handleInstallError(new RuntimeException("No purchase manager was available."));
-		}
-	}
+    /** Installs a purchase observer. */
+    public static void install (PurchaseObserver observer, PurchaseManagerConfig config) {
+        if (hasManager()) {
+            manager.install(observer, config);
+        } else {
+            observer.handleInstallError(new RuntimeException("No purchase manager was available."));
+        }
+    }
 
-	/** Returns true if the purchase system is installed and ready to go. */
-	public static boolean installed () {
-		if (hasManager()) {
-			return manager.installed();
-		} else {
-			return false;
-		}
-	}
+    /** Returns true if the purchase system is installed and ready to go. */
+    public static boolean installed () {
+        if (hasManager()) {
+            return manager.installed();
+        } else {
+            return false;
+        }
+    }
 
-	/** Disposes the purchase manager if there was one. */
-	public static void dispose () {
-		if (hasManager()) {
-			manager.dispose();
-			manager = null;
-		}
-	}
+    /** Disposes the purchase manager if there was one. */
+    public static void dispose () {
+        if (hasManager()) {
+            manager.dispose();
+            manager = null;
+        }
+    }
 
-	/** Executes a purchase. */
-	public static void purchase (String identifier) {
-		if (hasManager()) {
-			manager.purchase(identifier);
-		} else {
-			throw new RuntimeException("No purchase manager was found.");
-		}
-	}
+    /** Executes a purchase. */
+    public static void purchase (String identifier) {
+        if (hasManager()) {
+            manager.purchase(identifier);
+        } else {
+            throw new RuntimeException("No purchase manager was found.");
+        }
+    }
 
-	/** Asks to restore previous purchases. Results are returned to the observer. */
-	public static void purchaseRestore () {
-		if (hasManager()) {
-			manager.purchaseRestore();
-		} else {
-			throw new RuntimeException("No purchase manager was found.");
-		}
-	}
+    /** Asks to restore previous purchases. Results are returned to the observer. */
+    public static void purchaseRestore () {
+        if (hasManager()) {
+            manager.purchaseRestore();
+        } else {
+            throw new RuntimeException("No purchase manager was found.");
+        }
+    }
 }
