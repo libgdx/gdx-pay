@@ -60,9 +60,11 @@ public class PayTest extends ApplicationAdapter {
         if (PurchaseSystem.hasManager()) {
             // build our purchase configuration: all your products and types need to be listed here
             final String IAP_TEST_CONSUMEABLE = "com.badlogic.gdx.tests.pay.consumeable";
+            final String IAP_TEST_NONCONSUMEABLE = "com.badlogic.gdx.tests.pay.nonconsumeable";
             PurchaseManagerConfig config = new PurchaseManagerConfig();
             config.addOffer(new Offer().setType(OfferType.CONSUMABLE).setIdentifier(IAP_TEST_CONSUMEABLE)
                 .putIdentifierForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE, "android.test.purchased"));
+            config.addOffer(new Offer().setType(OfferType.ENTITLEMENT).setIdentifier(IAP_TEST_NONCONSUMEABLE));
 
             // install the observer
             PurchaseSystem.install(new PurchaseObserver() {
@@ -74,7 +76,7 @@ public class PayTest extends ApplicationAdapter {
                         message("   . " + transactions[i].getIdentifier() + "\n");
                     }
 
-                    // restore purchases!
+                    // make a purchase
                     message(" - purchasing: " + IAP_TEST_CONSUMEABLE + ".\n");
                     PurchaseSystem.purchase(IAP_TEST_CONSUMEABLE);
                 }
@@ -128,8 +130,17 @@ public class PayTest extends ApplicationAdapter {
 
                 @Override
                 public void handlePurchaseCanceled () {
-                    // TODO Auto-generated method stub
+                    message(" - purchase cancelled.\n");
 
+                    // dispose the purchase system
+                    Gdx.app.postRunnable(new Runnable() {
+                        @Override
+                        public void run () {
+                            message(" - disposing the purchase manager.\n");
+                            PurchaseSystem.dispose();
+                            message("Testing InApp System: COMPLETED\n");
+                        }
+                    });
                 }
             }, config);
 
