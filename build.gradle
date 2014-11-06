@@ -10,6 +10,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:0.13.+'
+        classpath 'org.robovm:robovm-gradle-plugin:1.0.0-alpha-04'
     }
 }
 
@@ -118,6 +119,7 @@ project(":gdx-pay-gwt-googlewallet") {
 
 project(":gdx-pay-iosrobovm-apple") {
     apply plugin : 'java'
+    apply plugin : 'robovm'
     apply from : '../publish.gradle'
 
     configurations {
@@ -127,6 +129,8 @@ project(":gdx-pay-iosrobovm-apple") {
     
     dependencies {
         compile project(':gdx-pay')
+        compile 'org.robovm:robovm-rt:1.0.0-SNAPSHOT'
+        compile 'org.robovm:robovm-cocoatouch:1.0.0-SNAPSHOT'
     }
 }
 
@@ -184,6 +188,29 @@ project(":gdx-pay-tests-android") {
         natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-armeabi"
         natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-armeabi-v7a"
         natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-x86"
+    }
+}
+
+project(":gdx-pay-tests-iosrobovm") {
+	apply plugin: 'java'
+    apply plugin: 'robovm'
+
+    configurations { 
+        custom
+        compile.extendsFrom custom
+        natives 
+    }
+
+    dependencies {
+        compile project(':gdx-pay')
+        compile project(':gdx-pay-tests')   
+           
+        compile project(':gdx-pay-iosrobovm-apple')
+
+        compile "org.robovm:robovm-rt:1.0.0-SNAPSHOT"
+        compile "org.robovm:robovm-cocoatouch:1.0.0-SNAPSHOT"
+        compile "com.badlogicgames.gdx:gdx-backend-robovm:1.4.1"
+        natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-ios"
     }
 }
 
