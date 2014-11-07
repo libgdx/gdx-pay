@@ -27,18 +27,18 @@ In your **Android project** you use. Please note if you use the jars, all depend
 * [gdx-pay-android-ouya.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-ouya/0.1.0/gdx-pay-android-ouya-0.1.0-library.jar) (to support OUYA)
 * AndroidManifest.xml: 
 ```
-    <!--all-->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <!--Google Play-->
-    <uses-permission android:name="com.android.vending.BILLING"/>
-    <!--Open Store-->
-    <uses-permission android:name="org.onepf.openiab.permission.BILLING"/>
-    <!--Samsung Apps-->
-    <uses-permission android:name="com.sec.android.iap.permission.BILLING"/>
-    <!--Nokia-->
-    <uses-permission android:name="com.nokia.payment.BILLING"/>
-    <!--SlideME-->
-    <uses-permission android:name="com.slideme.sam.manager.inapp.permission.BILLING"/>
+<!--all-->
+<uses-permission android:name="android.permission.INTERNET"/>
+<!--Google Play-->
+<uses-permission android:name="com.android.vending.BILLING"/>
+<!--Open Store-->
+<uses-permission android:name="org.onepf.openiab.permission.BILLING"/>
+<!--Samsung Apps-->
+<uses-permission android:name="com.sec.android.iap.permission.BILLING"/>
+<!--Nokia-->
+<uses-permission android:name="com.nokia.payment.BILLING"/>
+<!--SlideME-->
+<uses-permission android:name="com.slideme.sam.manager.inapp.permission.BILLING"/>
 ```
 * proguard.cfg:
 ```
