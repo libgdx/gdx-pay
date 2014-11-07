@@ -101,7 +101,7 @@ if (PurchaseSystem.hasManager()) {
 ...
 ```
 
-(*) IMPORTANT: `PurchaseSystem.restore()` should *not be called directly* by your application. Restoring purchases shall only be 
+`(*)` IMPORTANT: `PurchaseSystem.restore()` should *not be called directly* by your application. Restoring purchases shall only be 
 called when a user explicitly requests it. In your application add a [Restore Purchases] button which in turn will call this method.
 This is a requirement by Apple iOS. If you don't provide a button for purchase restores your application will be rejected! You have
 been warned :)
