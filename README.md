@@ -21,10 +21,32 @@ To setup the purchasing API, you will need to add the corresponding jar files to
 your **core project** you have:
 * [gdx-pay.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay/0.1.0/gdx-pay-0.1.0-library.jar)
 
-In your **Android project** you use (also make sure to (a) update your AndroidManifest.xml and (b) proguard.cfg). Please note if you use the jars, all dependencies such as the ouya-sdk.jar are already wired in:
+In your **Android project** you use. Please note if you use the jars, all dependencies such as the ouya-sdk.jar are already wired in:
 * [gdx-pay-android.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android/0.1.0/gdx-pay-android-0.1.0-library.jar)
 * [gdx-pay-android-openiab.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-openiab/0.1.0/gdx-pay-android-openiab-0.1.0-library.jar) (to support GooglePlay, Amazon etc.)
 * [gdx-pay-android-ouya.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-ouya/0.1.0/gdx-pay-android-ouya-0.1.0-library.jar) (to support OUYA)
+* AndroidManifest.xml: 
+```
+    <!--all-->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!--Google Play-->
+    <uses-permission android:name="com.android.vending.BILLING"/>
+    <!--Open Store-->
+    <uses-permission android:name="org.onepf.openiab.permission.BILLING"/>
+    <!--Samsung Apps-->
+    <uses-permission android:name="com.sec.android.iap.permission.BILLING"/>
+    <!--Nokia-->
+    <uses-permission android:name="com.nokia.payment.BILLING"/>
+    <!--SlideME-->
+    <uses-permission android:name="com.slideme.sam.manager.inapp.permission.BILLING"/>
+```
+* proguard.cfg:
+```
+-keep class com.android.vending.billing.**
+-keep class com.amazon.** {*;}
+-keep class com.sec.android.iap.**
+-keep class com.nokia.payment.iap.aidl.**
+```
 
 In your **iOS project** you use:
 * [gdx-pay-iosrobovm-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-iosrobovm-apple/0.1.0/gdx-pay-iosrobovm-apple-0.1.0-library.jar)
