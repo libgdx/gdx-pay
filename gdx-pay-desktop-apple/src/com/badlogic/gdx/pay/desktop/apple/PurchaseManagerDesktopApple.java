@@ -16,6 +16,7 @@
 
 package com.badlogic.gdx.pay.desktop.apple;
 
+import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
@@ -59,4 +60,10 @@ public class PurchaseManagerDesktopApple implements PurchaseManager {
 		// TODO Auto-generated method stub
 
 	}
+
+    @Override
+    public Information getInformation(String identifier) {
+        // not implemented yet for this purchase manager
+        return Information.UNAVAILABLE;
+    }
 }

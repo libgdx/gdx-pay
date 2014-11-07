@@ -74,6 +74,9 @@ public interface PurchaseManager {
 	/** Restores existing purchases. */
 	public void purchaseRestore ();
 
+    /** Returns information about a product provided by the purchase manager. Returns 'null' if the product is not available. */
+	public Information getInformation(String identifier);
+	
 	@Override
 	public String toString ();
 }

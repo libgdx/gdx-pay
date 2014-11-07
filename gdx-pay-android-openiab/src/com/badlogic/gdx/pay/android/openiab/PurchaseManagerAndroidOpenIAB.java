@@ -34,6 +34,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
 
+import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.OfferType;
 import com.badlogic.gdx.pay.PurchaseManager;
@@ -352,7 +353,13 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 		});
 	}
 
-	/** Converts a purchase to our transaction object. */
+	@Override
+    public Information getInformation(String identifier) {
+	    // not implemented yet for this purchase manager
+        return Information.UNAVAILABLE;
+    }
+
+    /** Converts a purchase to our transaction object. */
 	Transaction transaction (Purchase purchase) {
 		// obtain the SKU details (could be null!)
 		SkuDetails skuDetails = inventory.getSkuDetails(purchase.getSku());

@@ -190,4 +190,13 @@ public final class PurchaseSystem {
             throw new RuntimeException("No purchase manager was found.");
         }
     }
+    
+    /** Returns information about a product provided by the purchase manager. Returns 'null' if the product is not available. */
+    public static Information getInformation(String identifier) {
+        if (hasManager()) {
+            return manager.getInformation(identifier);
+        } else {
+            throw new RuntimeException("No purchase manager was found.");
+        }
+    }
 }

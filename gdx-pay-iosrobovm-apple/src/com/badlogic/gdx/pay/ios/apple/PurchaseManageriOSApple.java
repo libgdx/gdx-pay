@@ -42,6 +42,7 @@ import org.robovm.apple.storekit.SKReceiptRefreshRequest;
 import org.robovm.apple.storekit.SKRequest;
 import org.robovm.apple.storekit.SKRequestDelegateAdapter;
 
+import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
@@ -372,6 +373,13 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         }
     }
 
+
+    @Override
+    public Information getInformation(String identifier) {
+        // not implemented yet for this purchase manager
+        return Information.UNAVAILABLE;
+    }
+    
     @Override
     public String toString () {
         return "AppleIOS";

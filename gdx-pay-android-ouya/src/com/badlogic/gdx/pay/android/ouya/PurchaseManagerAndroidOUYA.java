@@ -61,6 +61,7 @@ import android.widget.Toast;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
@@ -656,4 +657,10 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 			showMessage(LOGTYPELOG, "disposed all the OUYA IAP stuff.");
 		}
 	}
+
+    @Override
+    public Information getInformation(String identifier) {
+        // not implemented yet for this purchase manager
+        return Information.UNAVAILABLE;
+    }
 }
