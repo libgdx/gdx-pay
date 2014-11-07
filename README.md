@@ -27,7 +27,8 @@ In your **Android project** you use (also make sure to (a) update your AndroidMa
 * [gdx-pay-android-ouya.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-ouya/0.1.0/gdx-pay-android-ouya-0.1.0-library.jar) (to support OUYA)
 
 In your **iOS project** you use:
-* [gdx-pay-iosrobovm-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-iosrobovm-apple/0.1.0/gdx-pay-iosrobovm-apple-0.1.0-library.jar): *needs implementation/volunteers wanted!*
+* [gdx-pay-iosrobovm-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-iosrobovm-apple/0.1.0/gdx-pay-iosrobovm-apple-0.1.0-library.jar)
+* robovm.xml: add `<pattern>com.badlogic.gdx.pay.ios.apple.PurchaseManageriOSApple</pattern>` inside <forceLinkClasses>.
 
 In your **Desktop project** you use:
 * [gdx-pay-desktop-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-desktop-apple/0.1.0/gdx-pay-desktop-apple-0.1.0-library.jar) (to support the Mac App Store): *needs implementation/volunteers wanted!*
