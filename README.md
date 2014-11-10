@@ -71,12 +71,10 @@ if (PurchaseSystem.hasManager()) {
   config.addOffer(...)
   ...
   config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE, "<Google key>");
-  config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_AMAZON, "<Amazon key>");
   ...
   config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, new Object[] { 
-      OUYA_DEVELOPER_ID, 
-      KEYPATH 
-    });
+    OUYA_DEVELOPER_ID, 
+    KEYPATH 
   });
   ...
 
@@ -105,6 +103,9 @@ if (PurchaseSystem.hasManager()) {
 called when a user explicitly requests it. In your application add a [Restore Purchases] button which in turn will call this method.
 This is a requirement by Apple iOS. If you don't provide a button for purchase restores your application will be rejected! You have
 been warned :)
+
+For keys you have to pass in have a look at [OpenIAB's Sample Configuration](https://github.com/onepf/OpenIAB/blob/dev/samples/trivialdrive/src/main/java/org/onepf/sample/trivialdrive/InAppConfig.java).
+Please note you will not need to pass in any keys for Amazon as it doesn't require them.
 
 
 #### Server-Side API (Optional)
