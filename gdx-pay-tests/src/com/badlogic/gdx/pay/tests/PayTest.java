@@ -136,7 +136,7 @@ public class PayTest extends ApplicationAdapter {
                     Gdx.app.postRunnable(new Runnable() {
                         @Override
                         public void run () {
-                            message(" - disposing the purchase manager.\n");
+                            message(" - user canceled! - disposing the purchase manager.\n");
                             PurchaseSystem.dispose();
                             message("Testing InApp System: COMPLETED\n");
                         }
