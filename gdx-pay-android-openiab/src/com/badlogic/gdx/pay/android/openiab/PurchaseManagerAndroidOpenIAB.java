@@ -280,7 +280,13 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 				public void onIabPurchaseFinished (IabResult result, Purchase purchase) {
 					if (result.isFailure()) {
 						// the purchase has failed
-						observer.handlePurchaseError(new RuntimeException(result.toString()));
+						
+						if (result.getResponse() == IabHelper.IABHELPER_USER_CANCELLED) {
+							observer.handlePurchaseCanceled();
+						}
+						else {
+							observer.handlePurchaseError(new RuntimeException(result.toString()));
+						}
 					} else {
 						// parse transaction data
 						Transaction transaction = transaction(purchase);
