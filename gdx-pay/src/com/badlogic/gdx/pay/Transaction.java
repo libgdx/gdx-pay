@@ -29,8 +29,10 @@ public final class Transaction {
 	/** The store name. */
 	private String storeName;
 	/** A unique order ID. */
-	private String orderId;
-
+	private String orderId;		// unique identifier of a purchase.
+	private String requestId = null;	// Represents the unique id of any in-app purchasing request.
+	private String userId = null;		// Represents the unique user id of any in-app purchase
+	
 	/** The original purchase time in milliseconds since the epoch (Jan 1, 1970). */
 	private Date purchaseTime;
 	/** The title/info for the purchase (or null for unknown). E.g. "Purchased: 100 Coins". */
@@ -80,6 +82,25 @@ public final class Transaction {
 		this.orderId = orderId;
 	}
 
+	/** The original request identifier which is unique for each request (doesn't change). It represents an unique ID for the
+	 * request on the corresponding store. */
+	public String getRequestId () {
+		return requestId;
+	}
+
+	public void setRequestId (String requestId) {
+		this.requestId = requestId;
+	}
+
+	/** The user identifier which is unique for each request / purchase (doesn't change). */
+	public String getUserId () {
+		return userId;
+	}
+
+	public void setUserId (String userId) {
+		this.userId = userId;
+	}
+	
 	/** Returns true if the order is considered valid, i.e. in purchased state (non-refunded/cancelled). */
 	public boolean isPurchased () {
 		return reversalTime == null;
