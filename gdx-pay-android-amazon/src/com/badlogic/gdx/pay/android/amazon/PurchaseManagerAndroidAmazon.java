@@ -166,7 +166,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	    	switch (receipt.getProductType()) {
 	                
 	        case CONSUMABLE:
-	            // check consumable sample for how to handle consumable purchases
+	            // TODO: check consumable sample for how to handle consumable purchases
 	            break;
 	            
 	        case ENTITLED:
@@ -175,7 +175,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	            break;
 	            
 	        case SUBSCRIPTION:
-	            // check subscription sample for how to handle consumable purchases
+	            // TODO: check subscription sample for how to handle consumable purchases
 	            break;
 	        }
 
@@ -221,9 +221,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 	@Override
 	public void dispose () {
-		
-		if (PurchaseSystem.hasManager()) PurchaseSystem.dispose();
-		
+
 		if (observer != null) {			
 			// remove observer and config as well
 			observer = null;
