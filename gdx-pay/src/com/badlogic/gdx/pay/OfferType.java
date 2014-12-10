@@ -23,5 +23,7 @@ public enum OfferType {
 	/** A consumable can be purchased multiple times and diminishes once used (e.g. virtual money, coins). */
 	CONSUMABLE,
 	/** An entitlement can only be purchased once (e.g. one time upgrade). Basically a non-consumable. */
-	ENTITLEMENT;
+	ENTITLEMENT,
+	/** Subscriptions are entitlements that are bound by a period of time, but renew automatically at the end of the time period. */
+	SUBSCRIPTION;
 }
