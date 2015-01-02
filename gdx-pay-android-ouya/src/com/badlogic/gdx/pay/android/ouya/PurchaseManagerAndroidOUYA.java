@@ -78,7 +78,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 	/** Debug tag for logging. */
 	private static final String TAG = "GdxPay/OUYA";
 	private static final boolean LOGDEBUG = true;
-	private static final boolean SHOWTOASTS = true;
+	private static final boolean SHOWTOASTS = false;
 	private static final int LOGTYPELOG = 0;
 	private static final int LOGTYPEERROR = 1;
 
