@@ -359,6 +359,9 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 				}
 			});
 		}
+		else {
+			Log.e(TAG, "ERROR: purchaseRestore(): openIAB helper == null");
+		}
 	}
 
 	@Override
