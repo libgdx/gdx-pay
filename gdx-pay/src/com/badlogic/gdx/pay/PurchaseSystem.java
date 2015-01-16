@@ -50,15 +50,7 @@ public final class PurchaseSystem {
                 gdxLifecycleListenerClazz);
 
             // check if we are on iOS
-            boolean ios;
-            try {
-                // this will crash if we are not on iOS!
-                Class<?> iosAppClazz = Class.forName("com.badlogic.gdx.backends.iosrobovm.IOSApplication");
-                ios = true;
-            } catch (Exception e) {
-                // we appear not to be on iOS
-                ios = false;
-            }
+            boolean ios = findClass("com.badlogic.gdx.backends.iosrobovm.IOSApplication") != null;
             if (ios) {
                 try {
                     // look for gdx-pay-iosrobovm and if it exists, instantiate it (gdx-pay jars need to be in place)
@@ -76,15 +68,7 @@ public final class PurchaseSystem {
             }
 
             // check if we are on Android
-            boolean android;
-            try {
-                // this will crash if we are not on android!
-                Class<?> androidAppClazz = Class.forName("com.badlogic.gdx.backends.android.AndroidApplication");
-                android = true;
-            } catch (Exception e) {
-                // we appear not to be on Android
-                android = false;
-            }
+            boolean android = findClass("com.badlogic.gdx.backends.android.AndroidApplication") != null;
             if (android) {
                 try {
                     // look for gdx-pay-android and if it exists, instantiate it (gdx-pay jars need to be in place)
@@ -95,7 +79,29 @@ public final class PurchaseSystem {
                         .forName("com.badlogic.gdx.backends.android.AndroidEventListener");
                     int requestCode = 1032; // requestCode for onActivityResult for purchases (could go into
 // PurchaseManagerConfig)
-                    Object iap = iapClazz.getConstructor(activityClazz, int.class).newInstance(gdxAppObject, requestCode);
+                    Object activity = null;
+                    if (activityClazz.isAssignableFrom(gdxAppObject.getClass())) {
+                        activity = gdxAppObject;
+                    } else {
+                        Class<?> supportFragmentClass = findClass("android.support.v4.app.Fragment");
+                        if (supportFragmentClass != null
+                            && supportFragmentClass.isAssignableFrom(gdxAppObject.getClass())) {
+                            activity = supportFragmentClass.getMethod("getActivity").invoke(gdxAppObject);
+                        } else {
+                            Class<?> fragmentClass = findClass("android.app.Fragment");
+                            if (fragmentClass != null && fragmentClass.isAssignableFrom(gdxAppObject.getClass())) {
+                                activity = fragmentClass.getMethod("getActivity").invoke(gdxAppObject);
+                            }
+                        }
+                    }
+
+                    if (activity == null) {
+                        throw new RuntimeException("Can't find your gdx activity to instantiate Android IAP. "
+                            + "Looks like you have implemented AndroidApplication without using "
+                            + "Activity or Fragment classes or Activity is not available at the moment");
+                    }
+
+                    Object iap = iapClazz.getConstructor(activityClazz, int.class).newInstance(activity, requestCode);
 
                     // add a listener for Lifecycle events
                     gdxAppAddLifecycleListenerMethod.invoke(gdxAppObject, iap);
@@ -119,6 +125,15 @@ public final class PurchaseSystem {
             gdxAppLogMethod.invoke(gdxAppObject, TAG, "IAP: gdx-pay not instantiated via reflection.");
         } catch (Exception e) {
             // we appear not to be on libGDX!
+        }
+    }
+
+    /** @return null if class is not available in runtime */
+    private static Class<?> findClass(String name) {
+        try {
+            return Class.forName(name);
+        } catch (Exception e) {
+            return null;
         }
     }
 
