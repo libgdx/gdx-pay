@@ -107,6 +107,9 @@ been warned :)
 For keys you have to pass in have a look at [OpenIAB's Sample Configuration](https://github.com/onepf/OpenIAB/blob/dev/samples/trivialdrive/src/main/java/org/onepf/sample/trivialdrive/InAppConfig.java).
 Please note you will not need to pass in any keys for Amazon as it doesn't require them.
 
+Here is a user-guide in the wiki on how to implement gdx-pay in your libgdx project with using platform resolvers: 
+ [Integration-example-with-resolvers](https://github.com/libgdx/gdx-pay/wiki/Integration-example-with-resolvers)
+
 
 #### Server-Side API (Optional)
 
