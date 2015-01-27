@@ -148,6 +148,12 @@ Please note that the server-side functionality hasn't been fully developed yet a
 **PurchaseVerifieriOSApple** is somewhat rudimentary implemented and will need some more work. There is a main(...) 
 method in that fail if you want to run/test it :)
 
+### Release History
+
+Release history for major milestones (available via Maven):
+* Version 0.3.0: Minor Updates and Bugfixes (2015-01-27)
+* Version 0.2.0: iOS Added
+* Version 0.1.0: Initial Release
 
 ### News & Community
 
