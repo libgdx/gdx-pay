@@ -79,13 +79,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		this.activity = activity;
 	}
 
-//	/** Used by IAP.java to determine if we are running on OUYA hardware :). */
-//	public static final boolean isRunningOnOUYAHardware () {
-//		// let's determine if we are on fire tv - hardware by this hack...
-//		String name = android.os.Build.MODEL.toLowerCase();
-//		return (name.contains("ouya") || name.contains("mojo") || name.contains("m.o.j.o"));
-//	}
-
 	@Override
 	public String storeName () {
 		return PurchaseManagerConfig.STORE_NAME_ANDROID_AMAZON;
@@ -94,7 +87,9 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	@Override
 	public void install (final PurchaseObserver observer, PurchaseManagerConfig config) {
 		this.observer = observer;
-		this.config = config;
+		this.config = config;  // FIXME: IMPORTANT: identifier is not correctly mapped! --> we need to use config to map to Amazon store!
+		                       //                       --> have a look at PurchaseManageriOSApple to see how mapping works!
+		                       //                       --> use: config.getOffer(...).getIdentifierForStore() ... config.getOfferForStore(...) ... etc.!
 		
 		PurchasingService.registerListener(activity.getApplicationContext(), this);
 		
@@ -136,7 +131,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	
 	
 	@Override
-	public void purchase(String identifier) {
+	public void purchase(String identifier) {  
 
 		String requestId = PurchasingService.purchase(identifier).toString();		
 	}

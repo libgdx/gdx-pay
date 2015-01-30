@@ -402,8 +402,9 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 		transaction.setOrderId(purchase.getOrderId());
 
 		transaction.setPurchaseTime(new Date(purchase.getPurchaseTime()));
-		transaction.setPurchaseText(skuDetails != null ? "Purchased: " + skuDetails.getTitle() : "Purchased");
-		transaction.setPurchaseCost(-1); // TODO: GdxPay: impl. parsing of COST + CURRENCY via skuDetails.getPrice()!
+		transaction.setPurchaseText((skuDetails != null ? "Purchased " + skuDetails.getTitle() + " for " + skuDetails.getPrice() + ": " + skuDetails.getDescription()
+		                                                : "Purchased"));
+		transaction.setPurchaseCost(-1);   // -1 for Unknow: FIXME: need parser for cost (amount and currency code!)
 		transaction.setPurchaseCostCurrency(null);
 
 		if (purchase.getPurchaseState() != 0) {

@@ -106,7 +106,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             Set<String> productIdentifiers = new HashSet<String>();
             int size = config.getOfferCount();
             for (int i = 0; i < size; i++) {
-                productIdentifiers.add(config.getOffer(i).getIdentifier());
+                productIdentifiers.add(config.getOffer(i).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE));
             }
 
             // Request configured offers/products.
@@ -148,7 +148,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
 
         // Find the SKProduct for this identifier.
-        SKProduct product = getProductById(identifier);
+        SKProduct product = getProductById(config.getOffer(identifier).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE));
         if (product == null) {
             // Product with this identifier not found.
             log(LOGTYPEERROR, "Error purchasing product " + identifier + " : Identifier unknown!");
@@ -184,21 +184,32 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     /** Converts a purchase to our transaction object. */
     Transaction transaction (SKPaymentTransaction t) {
         SKPayment payment = t.getPayment();
-
         SKProduct product = getProductById(payment.getProductIdentifier());
+        
         // Build the transaction from the payment transaction object.
-        final Transaction transaction = new Transaction();
-        transaction.setIdentifier(product.getProductIdentifier());
+        Transaction transaction = new Transaction();
+        transaction.setIdentifier(config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE, payment.getProductIdentifier()).getIdentifier());
+        
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
         transaction.setOrderId(t.getTransactionIdentifier());
+        
         transaction.setPurchaseTime(t.getTransactionDate().toDate());
         transaction.setPurchaseText("Purchased: " + product.getLocalizedTitle());
-        transaction.setPurchaseCost((int)(product.getPrice().doubleValue() * 100));
+        transaction.setPurchaseCost((int)Math.round(product.getPrice().doubleValue() * 100)); 
         transaction.setPurchaseCostCurrency(product.getPriceLocale().getCurrencyCode());
+        
+        transaction.setReversalTime(null);  // no refunds for iOS!
+        transaction.setReversalText(null);
+        
         if (payment.getRequestData() != null) {
             transaction.setTransactionData(payment.getRequestData().toBase64EncodedString(NSDataBase64EncodingOptions.None));
         }
+        else {
+            transaction.setTransactionData(null);
+        }
+        transaction.setTransactionDataSignature(null);
 
+        // return the transaction
         return transaction;
     }
 

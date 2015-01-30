@@ -153,7 +153,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 		// --- copy all available products to the list of purchasables
 		productIDList = new ArrayList<Purchasable>(config.getOfferCount());
 		for (int i = 0; i < config.getOfferCount(); i++) {
-			productIDList.add(new Purchasable(config.getOffer(i).getIdentifier()));
+			productIDList.add(new Purchasable(config.getOffer(i).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA)));
 		}
 
 		// Create a PublicKey object from the key data downloaded from the developer portal.
@@ -237,7 +237,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 	public void purchase (String identifier) {
 		// String payload = null;
 
-		OUYApurchaseProduct = getProduct(identifier);
+		OUYApurchaseProduct = getProduct(config.getOffer(identifier).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA));
 
 		if (OUYApurchaseProduct != null) {
 			try {
@@ -502,7 +502,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 			if (storedProduct != null) {
 				// convert product to transaction
 				Transaction trans = convertPurchasedProductToTransaction(storedProduct);
-
+				
 				// inform the listener
 				observer.handlePurchase(trans);
 			} else {
@@ -544,32 +544,23 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 
 	/** Converts a product to our transaction object. */
 	Transaction convertPurchasedProductToTransaction (Product product) {
-
 		// build the transaction from the purchase object
 		Transaction transaction = new Transaction();
-		transaction.setIdentifier(product.getIdentifier());
+		transaction.setIdentifier(config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, product.getIdentifier()).getIdentifier());
+		
 		transaction.setStoreName(storeName());
-		// transaction.setOrderId(receipt.getOrderId());
-		transaction.setPurchaseTime(new Date());
-		// transaction.setPurchaseText(skuDetails != null ? "Purchased: " + skuDetails.getTitle() : "Purchased");
-		// GeneratedDate - when the receipt was created
-		// Gamer - the gamer that purchased the product
-		// UUID - the identifier of the gamer that purchased the product
-		// transaction.setPurchaseCost(-1); // TODO: GdxPay: impl. parsing of COST + CURRENCY via skuDetails.getPrice()!
-		// transaction.setPurchaseCostCurrency(null);
+		// transaction.setOrderId(receipt.getOrderId());   // FIXME: we need the order ID!
+		
+		transaction.setPurchaseTime(new Date());   // FIXME: we need the purchase date (from receipt!)
+	    transaction.setPurchaseText("Purchased for " + product.getFormattedPrice() + ".");
+	    transaction.setPurchaseCost(product.getPriceInCents()); 
+	    transaction.setPurchaseCostCurrency(product.getCurrencyCode());
 
-		// if (purchase.getPurchaseState() != 0) {
-		// order has been refunded or cancelled
-		// transaction.setReversalTime(new Date());
-		// transaction.setReversalText(purchase.getPurchaseState() == 1 ? "Cancelled" : "Refunded");
-		// } else {
-		// still valid!
-		// transaction.setReversalTime(null);
-		// transaction.setReversalText(null);
-		// }
+        transaction.setReversalTime(null);
+        transaction.setReversalText(null);
 
-		// transaction.setTransactionData(purchase.getOriginalJson());
-		// transaction.setTransactionDataSignature(purchase.getSignature());
+        transaction.setTransactionData(null);
+        transaction.setTransactionDataSignature(null);
 
 		showMessage(LOGTYPELOG, "converted purchased product to transaction.");
 		return transaction;
@@ -577,32 +568,23 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 
 	/** Converts a purchase to our transaction object. */
 	Transaction convertToTransaction (Receipt receipt) {
-
 		// build the transaction from the purchase object
 		Transaction transaction = new Transaction();
-		transaction.setIdentifier(receipt.getIdentifier());
+		transaction.setIdentifier(config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, receipt.getIdentifier()).getIdentifier());
+		
 		transaction.setStoreName(storeName());
-		// transaction.setOrderId(receipt.getOrderId());
+		// transaction.setOrderId(receipt.getOrderId());  // FIXME: we need the order ID!
+		
 		transaction.setPurchaseTime(receipt.getPurchaseDate());
-		// transaction.setPurchaseText(skuDetails != null ? "Purchased: " + skuDetails.getTitle() : "Purchased");
-		// GeneratedDate - when the receipt was created
-		// Gamer - the gamer that purchased the product
-		// UUID - the identifier of the gamer that purchased the product
-		// transaction.setPurchaseCost(-1); // TODO: GdxPay: impl. parsing of COST + CURRENCY via skuDetails.getPrice()!
-		// transaction.setPurchaseCostCurrency(null);
+		transaction.setPurchaseText("Purchased by \"" + receipt.getGamer() + "\" for " + receipt.getFormattedPrice() + ".");
+		transaction.setPurchaseCost(receipt.getPriceInCents()); 
+		transaction.setPurchaseCostCurrency(receipt.getCurrency());
 
-		// if (purchase.getPurchaseState() != 0) {
-		// order has been refunded or cancelled
-		// transaction.setReversalTime(new Date());
-		// transaction.setReversalText(purchase.getPurchaseState() == 1 ? "Cancelled" : "Refunded");
-		// } else {
-		// still valid!
-		// transaction.setReversalTime(null);
-		// transaction.setReversalText(null);
-		// }
+		transaction.setReversalTime(null);
+		transaction.setReversalText(null);
 
-		// transaction.setTransactionData(purchase.getOriginalJson());
-		// transaction.setTransactionDataSignature(purchase.getSignature());
+		transaction.setTransactionData(null);
+		transaction.setTransactionDataSignature(null);
 
 		showMessage(LOGTYPELOG, "converted receipt to transaction.");
 		return transaction;

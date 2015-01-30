@@ -54,10 +54,6 @@ public class Offer {
 		return this;
 	}
 
-	public synchronized Set<Map.Entry<String, String>> getIdentifierForStores () {
-		return identifierForStores.entrySet();
-	}
-
 	public synchronized String getIdentifierForStore (String storeName) {
 		String identifier = identifierForStores.get(storeName);
 		if (identifier != null) {
@@ -67,6 +63,10 @@ public class Offer {
 			return this.identifier;
 		}
 	}
+
+    public synchronized Set<Map.Entry<String, String>> getIdentifierForStores () {
+        return identifierForStores.entrySet();
+    }
 
 	public synchronized Offer putIdentifierForStore (String storeName, String identifierForStore) {
 		identifierForStores.put(storeName, identifierForStore);

@@ -70,6 +70,18 @@ public class PurchaseManagerConfig {
 		return null;
 	}
 
+	public synchronized Offer getOfferForStore (String storeName, String identifierForStore) {
+        // search matching offer and return it
+        for (int i = 0; i < offers.size(); i++) {
+            if (offers.get(i).getIdentifierForStore(storeName).equals(identifierForStore)) {
+                return offers.get(i);
+            }
+        }
+	    
+	    // no matching offer found
+	    return null;
+	}
+	
 	public synchronized Offer getOffer (int index) {
 		return offers.get(index);
 	}
