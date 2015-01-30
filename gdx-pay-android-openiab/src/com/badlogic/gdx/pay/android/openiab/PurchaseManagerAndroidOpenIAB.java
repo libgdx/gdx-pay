@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.onepf.oms.OpenIabHelper;
 import org.onepf.oms.SkuManager;
@@ -152,20 +153,16 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 			}
 		}
 	}
-
-	@Override
-	public void install (final PurchaseObserver observer, PurchaseManagerConfig config) {
-		this.observer = observer;
-		this.config = config;
-
-		// map the identifiers/SKUs
-		for (int i = 0; i < config.getOfferCount(); i++) {
+	
+	private void refreshSKUs() {
+  		// refresh the identifiers/SKUs: ensures we have the correct mapping in case PurchaseManagerConfig was updated
+  		for (int i = 0; i < config.getOfferCount(); i++) {
 			Offer offer = config.getOffer(i);
-
+  
 			// map store-specific identifiers with our default identifier!
 			String identifier = offer.getIdentifier();
-			Map<String, String> identifierForStores = offer.getIdentifierForStores();
-			for (Map.Entry<String, String> entry : identifierForStores.entrySet()) {
+			Set<Map.Entry<String, String>> identifierForStores = offer.getIdentifierForStores();
+			for (Map.Entry<String, String> entry : identifierForStores) {
 				String storeNameOpenIAB = storeNameToOpenIAB(entry.getKey());
 				String identifierForStore = entry.getValue();
 				if (!(SkuManager.getInstance().getStoreSku(storeNameOpenIAB, identifier).equals(identifierForStore))) {
@@ -173,6 +170,12 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void install (final PurchaseObserver observer, PurchaseManagerConfig config) {
+		this.observer = observer;
+		this.config = config;
 
 		// build the OpenIAB options. Pass in the storeKeys as follows:
 		// -------------------------------------------------------------------------
@@ -217,6 +220,9 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 		builder.setVerifyMode(OpenIabHelper.Options.VERIFY_SKIP);
 		builder.addStoreKeys(storeKeys);
 
+		// refresh the SKUs list
+		refreshSKUs();
+		
 		// start OpenIAB
 		helper = new OpenIabHelper(activity, builder.build());
 		helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
@@ -271,7 +277,10 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 
 	@Override
 	public void purchase (final String identifier) {
-		
+        // refresh the SKUs list
+        refreshSKUs();
+      
+		// purchase if we have a helper
 		if (helper != null) {
 			String payload = null;
 	
@@ -306,8 +315,8 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 									@Override
 									public void onConsumeFinished (Purchase purchase, IabResult result) {
 										if (!result.isSuccess()) {
-							        // FIXME: if consume fails, the purchase manager should take note and 
-										  //        try to consume again at a later point in time...
+							                // FIXME: if consume fails, the purchase manager should take note and 
+										    //        try to consume again at a later point in time...
 											Log.e(TAG, "Error while consuming: " + result);
 										}
 									}
@@ -324,6 +333,10 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 
 	@Override
 	public void purchaseRestore () {
+        // refresh the SKUs list
+        refreshSKUs();
+    
+        // restore if we have a helper
 		if (helper != null) {
 			// ask for purchase restore
 			boolean querySkuDetails = true; // --> that way we get prices and title/description as well!

@@ -18,6 +18,7 @@ package com.badlogic.gdx.pay;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /** A product offer that can be purchased. */
 public class Offer {
@@ -31,33 +32,33 @@ public class Offer {
 	/** Store specific identifiers. For simplicity it's probably best to not set one but use the default identifier instead. */
 	private Map<String, String> identifierForStores = new HashMap<String, String>(16);
 
-	public OfferType getType () {
+	public synchronized OfferType getType () {
 		return type;
 	}
 
-	public Offer setType (OfferType type) {
+	public synchronized Offer setType (OfferType type) {
 		this.type = type;
 
 		// and return this for chaining
 		return this;
 	}
 
-	public String getIdentifier () {
+	public synchronized String getIdentifier () {
 		return identifier;
 	}
 
-	public Offer setIdentifier (String identifier) {
+	public synchronized Offer setIdentifier (String identifier) {
 		this.identifier = identifier;
 
 		// and return this for chaining
 		return this;
 	}
 
-	public Map<String, String> getIdentifierForStores () {
-		return identifierForStores;
+	public synchronized Set<Map.Entry<String, String>> getIdentifierForStores () {
+		return identifierForStores.entrySet();
 	}
 
-	public String getIdentifierForStore (String storeName) {
+	public synchronized String getIdentifierForStore (String storeName) {
 		String identifier = identifierForStores.get(storeName);
 		if (identifier != null) {
 			return identifier;
@@ -67,7 +68,7 @@ public class Offer {
 		}
 	}
 
-	public Offer putIdentifierForStore (String storeName, String identifierForStore) {
+	public synchronized Offer putIdentifierForStore (String storeName, String identifierForStore) {
 		identifierForStores.put(storeName, identifierForStore);
 
 		// and return this for chaining

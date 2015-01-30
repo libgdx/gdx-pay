@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 /** This configuration is set in your "core"-project and will be passed on to the active InApp store automatically.
+ * The configuration for offers can be updated on the fly, e.g. by downloading the lastest offers from your server
+ * if you have one setup.
  * @author noblemaster */
 public class PurchaseManagerConfig {
 
@@ -37,6 +39,8 @@ public class PurchaseManagerConfig {
 	public static final String STORE_NAME_ANDROID_OUYA = "OUYA";
 	public static final String STORE_NAME_IOS_APPLE = "AppleiOS";
 	public static final String STORE_NAME_DESKTOP_APPLE = "AppleMac";
+	public static final String STORE_NAME_DESKTOP_STEAM = "Steam";
+	public static final String STORE_NAME_DESKTOP_WINDOWS = "Windows";
 	public static final String STORE_NAME_GWT_GOOGLEWALLET = "GwtGoogleWallet";
 
 	/** Our list of purchaseable products. */
@@ -50,11 +54,11 @@ public class PurchaseManagerConfig {
 		storeParams = new HashMap<String, Object>(16);
 	}
 
-	public void addOffer (Offer offer) {
+	public synchronized void addOffer (Offer offer) {
 		offers.add(offer);
 	}
 
-	public Offer getOffer (String identifier) {
+	public synchronized Offer getOffer (String identifier) {
 		// search matching offer and return it
 		for (int i = 0; i < offers.size(); i++) {
 			if (offers.get(i).getIdentifier().equals(identifier)) {
@@ -66,11 +70,11 @@ public class PurchaseManagerConfig {
 		return null;
 	}
 
-	public Offer getOffer (int index) {
+	public synchronized Offer getOffer (int index) {
 		return offers.get(index);
 	}
 
-	public int getOfferCount () {
+	public synchronized int getOfferCount () {
 		return offers.size();
 	}
 
@@ -79,7 +83,7 @@ public class PurchaseManagerConfig {
 	 * @param storeName The name of the store.
 	 * @param param The store parameters to use. This could be a string or byte-array etc. depending on what that store needs to
 	 *           initialize. */
-	public void addStoreParam (String storeName, Object param) {
+	public synchronized void addStoreParam (String storeName, Object param) {
 		storeParams.put(storeName, param);
 	}
 
@@ -88,7 +92,7 @@ public class PurchaseManagerConfig {
 	 * @param storeName The name of the store.
 	 * @return The store parameters or null if there where none. This could be a string or byte-array etc. depending on what that
 	 *         store needs to initialize. */
-	public Object getStoreParam (String storeName) {
+	public synchronized Object getStoreParam (String storeName) {
 		return storeParams.get(storeName);
 	}
 }

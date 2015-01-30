@@ -56,7 +56,9 @@ public interface PurchaseManager {
 	 * all purchases have been handled and served to the customer.
 	 * 
 	 * @param observer The observer which is called whenever purchases have to be handled by the application as well as when the
-	 *           store has been installed. */
+	 *           store has been installed. 
+	 * @param config  The configuration. Please note offers inside the configuration can be updated on the fly (e.g. by 
+	 *         downloading the latest offer list from your server if you have one setup). */
 	public void install (PurchaseObserver observer, PurchaseManagerConfig config);
 
 	/** Returns true if the purchase manager is installed (non-disposed) and ready to go. */
