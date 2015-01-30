@@ -103,8 +103,8 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         // Check if the device is configured for purchases.
         if (SKPaymentQueue.canMakePayments()) {
             // Create string set from offer identifiers.
-            Set<String> productIdentifiers = new HashSet<String>();
             int size = config.getOfferCount();
+            Set<String> productIdentifiers = new HashSet<String>(size);
             for (int i = 0; i < size; i++) {
                 productIdentifiers.add(config.getOffer(i).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE));
             }
@@ -145,20 +145,24 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
     @Override
     public void purchase (String identifier) {
-        log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
-
         // Find the SKProduct for this identifier.
-        SKProduct product = getProductById(config.getOffer(identifier).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE));
+        String identifierForStore = config.getOffer(identifier).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
+        SKProduct product = getProductByStoreIdentifier(identifierForStore);
         if (product == null) {
-            // Product with this identifier not found.
-            log(LOGTYPEERROR, "Error purchasing product " + identifier + " : Identifier unknown!");
-            observer
-                .handlePurchaseError(new RuntimeException("Error purchasing product " + identifier + " : Identifier unknown!"));
+            // Product with this identifier not found: load product info first and try to purchase again
+            log(LOGTYPELOG, "Requesting product info for " + identifierForStore);
+            Set<String> identifierForStoreSet = new HashSet<String>(1);
+            identifierForStoreSet.add(identifierForStore);
+            productsRequest = new SKProductsRequest(identifierForStoreSet);
+            productsRequest.setDelegate(new AppleProductsDelegatePurchase());
+            productsRequest.start();
         }
-        // Create a SKPayment from the product.
-        SKPayment payment = SKPayment.createFromProduct(product);
-        // Start purchase flow.
-        SKPaymentQueue.getDefaultQueue().addPayment(payment);
+        else {
+            // Create a SKPayment from the product and start purchase flow
+            log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
+            SKPayment payment = SKPayment.createFromProduct(product);
+            SKPaymentQueue.getDefaultQueue().addPayment(payment);
+        }
     }
 
     @Override
@@ -171,10 +175,10 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         SKPaymentQueue.getDefaultQueue().restoreCompletedTransactions();
     }
 
-    SKProduct getProductById (String identifier) {
+    SKProduct getProductByStoreIdentifier (String identifierForStore) {
         if (products == null) return null;
         for (SKProduct product : products) {
-            if (product.getProductIdentifier().equals(identifier)) {
+            if (product.getProductIdentifier().equals(identifierForStore)) {
                 return product;
             }
         }
@@ -184,7 +188,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     /** Converts a purchase to our transaction object. */
     Transaction transaction (SKPaymentTransaction t) {
         SKPayment payment = t.getPayment();
-        SKProduct product = getProductById(payment.getProductIdentifier());
+        SKProduct product = getProductByStoreIdentifier(payment.getProductIdentifier());
         
         // Build the transaction from the payment transaction object.
         Transaction transaction = new Transaction();
@@ -212,20 +216,48 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         // return the transaction
         return transaction;
     }
+    
+    private class AppleProductsDelegatePurchase extends SKProductsRequestDelegateAdapter {
+      @Override
+      public void didReceiveResponse (SKProductsRequest request, SKProductsResponse response) {
+          // Received the registered products from AppStore.
+          products = response.getProducts();
+          if (products.size() == 1) {        
+            // Create a SKPayment from the product and start purchase flow
+            SKProduct product = products.get(0);
+            log(LOGTYPELOG, "Product info received/purchasing product " + product.getProductIdentifier() + " ...");
+            SKPayment payment = SKPayment.createFromProduct(product);
+            SKPaymentQueue.getDefaultQueue().addPayment(payment);
+          }
+          else {
+            // wrong product count returned
+            String errorMessage = "Error purchasing product (wrong product info count returned: " + products.size() + ")!";
+            log(LOGTYPEERROR, errorMessage);
+            observer.handlePurchaseError(new RuntimeException(errorMessage));
+          }
+      }
+
+      @Override
+      public void didFail (SKRequest request, NSError error) {
+          String errorMessage = "Error requesting product info to later purchase: " + (error != null ? error.toString() : "unknown");
+          log(LOGTYPEERROR, errorMessage);
+          observer.handlePurchaseError(new RuntimeException(errorMessage));
+      }
+  }
 
     private class AppleProductsDelegate extends SKProductsRequestDelegateAdapter {
         @Override
         public void didReceiveResponse (SKProductsRequest request, SKProductsResponse response) {
             // Received the registered products from AppStore.
             products = response.getProducts();
+            log(LOGTYPELOG, "Products successfully received!");
 
             // Create and register our apple transaction observer.
             appleObserver = new AppleTransactionObserver();
             SKPaymentQueue.getDefaultQueue().addTransactionObserver(appleObserver);
-
-            log(LOGTYPELOG, "Products successfully received!");
             log(LOGTYPELOG, "Purchase observer successfully installed!");
 
+            // notify of success...
             observer.handleInstall();
         }
 

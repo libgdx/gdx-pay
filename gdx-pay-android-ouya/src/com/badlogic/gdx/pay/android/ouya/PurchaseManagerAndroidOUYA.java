@@ -237,7 +237,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 	public void purchase (String identifier) {
 		// String payload = null;
 
-		OUYApurchaseProduct = getProduct(config.getOffer(identifier).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA));
+		OUYApurchaseProduct = getProductByStoreIdentifier(config.getOffer(identifier).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA));
 
 		if (OUYApurchaseProduct != null) {
 			try {
@@ -372,10 +372,10 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 	// ---------------------------
 
 	/** search for a specific product by identifier */
-	public Product getProduct (String identifier) {
+	public Product getProductByStoreIdentifier (String identifierForStore) {
 		Product returnProduct = null;
 		for (int i = 0; i < productList.size(); i++) {
-			if (productList.get(i).getIdentifier().equals(identifier)) {
+			if (productList.get(i).getIdentifier().equals(identifierForStore)) {
 				returnProduct = productList.get(i);
 				break;
 			}
