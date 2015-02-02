@@ -17,6 +17,7 @@
 package com.badlogic.gdx.pay.android.amazon;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +40,6 @@ import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.PurchaseSystem;
 import com.badlogic.gdx.pay.Transaction;
 
 /** The purchase manager implementation for OUYA.
@@ -66,6 +66,9 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	/** The configuration. */
 	PurchaseManagerConfig config;
 	
+	/** The productList */
+	Set<String> productIdentifiers;
+	
 	// ------- for Toasts (debugging) -----
 	String toastText;
 	int duration;
@@ -87,9 +90,14 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	@Override
 	public void install (final PurchaseObserver observer, PurchaseManagerConfig config) {
 		this.observer = observer;
-		this.config = config;  // FIXME: IMPORTANT: identifier is not correctly mapped! --> we need to use config to map to Amazon store!
-		                       //                       --> have a look at PurchaseManageriOSApple to see how mapping works!
-		                       //                       --> use: config.getOffer(...).getIdentifierForStore() ... config.getOfferForStore(...) ... etc.!
+		this.config = config;
+		
+		// --- copy all available products to the list of productIdentifiers
+		int offerSize = config.getOfferCount();
+		productIdentifiers = new HashSet<String>(offerSize);
+		for (int z = 0; z < config.getOfferCount(); z++) {
+			productIdentifiers.add(config.getOffer(z).getIdentifierForStore(storeName()));
+		}
 		
 		PurchasingService.registerListener(activity.getApplicationContext(), this);
 		
@@ -128,23 +136,18 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		}
 	}
 
-	
-	
 	@Override
 	public void purchase(String identifier) {  
-
-		String requestId = PurchasingService.purchase(identifier).toString();		
+		String identifierForStore = config.getOffer(identifier).getIdentifierForStore(storeName());
+		String requestId = PurchasingService.purchase(identifierForStore).toString();		
 	}
 
 	@Override
 	public void purchaseRestore() {
-		
 		PurchasingService.getPurchaseUpdates(true);		// true: always gets ALL purchased items (complete history)
 	}
 	
-	
 //=====================================================================================
-
 
 	    /**
 	     * Method to handle receipts
@@ -173,22 +176,13 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	            // TODO: check subscription sample for how to handle consumable purchases
 	            break;
 	        }
-
 	    }
-
-
-	
 //====================================================================================
 
 //	public void onActivityResult (int requestCode, int resultCode, Intent data) {
 //		// forwards activities to OpenIAB for processing
 //		// this is only relevant for android
 //	}
-
-	@Override
-	public String toString () {
-		return "Amazon IAP 2.01";
-	}
 
 	void showMessage (final int type, final String message) {
 		if (LOGDEBUG) {
@@ -210,8 +204,8 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 	@Override
 	public boolean installed () {
-		if (PurchaseSystem.hasManager()) return true;
-		return false;
+//		if (PurchaseSystem.hasManager()) return true;	// this leads to unwanted binding via reflection !!
+		return observer != null;
 	}
 
 	@Override
@@ -454,5 +448,9 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		showMessage(LOGTYPELOG, "converted purchased product " + i + " to transaction.");
 		return transaction;
 	}
- 
+	
+	@Override
+	public String toString () {
+		return storeName();
+	}
 }

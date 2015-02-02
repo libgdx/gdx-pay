@@ -144,7 +144,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 		//			new Object[] { OUYA_DEVELOPERID_STRING, applicationKeyPathSTRING });
 		// -------------------------------------------------------------------------
 
-		Object[] configuration = (Object[])config.getStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA);
+		Object[] configuration = (Object[])config.getStoreParam(storeName());
 		String developerID = (String)configuration[0];
 		applicationKeyPath = (String)configuration[1]; // store our OUYA applicationKey-Path!
 		ouyaFacade = OuyaFacade.getInstance();
@@ -153,7 +153,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 		// --- copy all available products to the list of purchasables
 		productIDList = new ArrayList<Purchasable>(config.getOfferCount());
 		for (int i = 0; i < config.getOfferCount(); i++) {
-			productIDList.add(new Purchasable(config.getOffer(i).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA)));
+			productIDList.add(new Purchasable(config.getOffer(i).getIdentifierForStore(storeName())));
 		}
 
 		// Create a PublicKey object from the key data downloaded from the developer portal.
@@ -237,7 +237,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 	public void purchase (String identifier) {
 		// String payload = null;
 
-		OUYApurchaseProduct = getProductByStoreIdentifier(config.getOffer(identifier).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA));
+		OUYApurchaseProduct = getProductByStoreIdentifier(config.getOffer(identifier).getIdentifierForStore(storeName()));
 
 		if (OUYApurchaseProduct != null) {
 			try {
@@ -306,7 +306,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 			List<Transaction> transactions = new ArrayList<Transaction>(mReceiptList.size());
 
 			for (int i = 0; i < mReceiptList.size(); i++) {
-				transactions.add(convertToTransaction(mReceiptList.get(i)));
+				transactions.add(convertToTransaction(mReceiptList.get(i)));		// TODO: how can i get the uniqueID out of the JSON response!?
 			}
 			// send inventory to observer
 			observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
@@ -350,25 +350,20 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 			showMessage(LOGTYPEERROR, "receiptlistener: onFailure!");
 		}
 	}
-
 	// ----------------------------
 
 	OuyaResponseListener<ArrayList<Product>> productListListener = new CancelIgnoringOuyaResponseListener<ArrayList<Product>>() {
-
 		@Override
 		public void onSuccess (ArrayList<Product> products) {
 			productList = products;
 			showMessage(LOGTYPELOG, "successfully loaded productlist. " + productList.size() + " products found");
-
 		}
-
 		@Override
 		public void onFailure (int errorCode, String errorMessage, Bundle errorBundle) {
 			productList = null;
 			showMessage(LOGTYPEERROR, "failed to load productlist!");
 		}
 	};
-
 	// ---------------------------
 
 	/** search for a specific product by identifier */
@@ -382,7 +377,6 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 		}
 		return returnProduct;
 	}
-
 	// ------------------------------------------------
 
 	public void requestPurchase (final Product product) throws GeneralSecurityException, UnsupportedEncodingException,
@@ -424,7 +418,6 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 			ouyaOutstandingPurchaseRequests.put(uniqueId, product);
 		}
 	}
-
 	// -----------------------------------------------------------
 
 	/** The callback for when the user attempts to purchase something. We're not worried about the user cancelling the purchase so
@@ -449,13 +442,15 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 		public void onSuccess (String result) {
 			Product product = null;
 			Product storedProduct = null;
-			String id;
+			String id = "";
 			try {
 				OuyaEncryptionHelper helper = new OuyaEncryptionHelper();
-
 				JSONObject response = new JSONObject(result);
+				
 				if (response.has("key") && response.has("iv")) {
-					id = helper.decryptPurchaseResponse(response, ouyaPublicKey);
+					id = helper.decryptPurchaseResponse(response, ouyaPublicKey);	// this seems to be the unique purchase ID // TODO: check what is the result here
+//					String uniquePurchaseRequestID = "";
+//					uniquePurchaseRequestID = response.getString("uuid");			// TODO: check what is the result here.... encrypted?
 					synchronized (ouyaOutstandingPurchaseRequests) {
 						storedProduct = ouyaOutstandingPurchaseRequests.remove(id);
 						// showMessage("PurchaseListener: looks good ....");
@@ -501,7 +496,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 
 			if (storedProduct != null) {
 				// convert product to transaction
-				Transaction trans = convertPurchasedProductToTransaction(storedProduct);
+				Transaction trans = convertPurchasedProductToTransaction(storedProduct, id);
 				
 				// inform the listener
 				observer.handlePurchase(trans);
@@ -532,35 +527,31 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 			showMessage(LOGTYPELOG, "PurchaseListener: onCancel ...");
 		}
 	}
-
 	// ---------------------------------------------
 
 	@Override
 	public void purchaseRestore () {
 		handler.sendEmptyMessage(requestPurchaseRestore);
 	}
-
 	// --------------------------------------------
 
 	/** Converts a product to our transaction object. */
-	Transaction convertPurchasedProductToTransaction (Product product) {
+	Transaction convertPurchasedProductToTransaction (Product product, String uniquePurchaseRequestID) {
 		// build the transaction from the purchase object
 		Transaction transaction = new Transaction();
-		transaction.setIdentifier(config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, product.getIdentifier()).getIdentifier());
-		
+		transaction.setIdentifier(config.getOfferForStore(storeName(), product.getIdentifier()).getIdentifier());
 		transaction.setStoreName(storeName());
-		// transaction.setOrderId(receipt.getOrderId());   // FIXME: we need the order ID!
+		transaction.setOrderId(uniquePurchaseRequestID);   //---- should work ---- TODO: Testing -------------------------
 		
-		transaction.setPurchaseTime(new Date());   // FIXME: we need the purchase date (from receipt!)
-	    transaction.setPurchaseText("Purchased for " + product.getFormattedPrice() + ".");
-	    transaction.setPurchaseCost(product.getPriceInCents()); 
-	    transaction.setPurchaseCostCurrency(product.getCurrencyCode());
+		transaction.setPurchaseTime(new Date());   // FIXME: we need the purchase date (from receipt!) ..... maybe this is correct.... this is the "receipt" for the purchased product
+	   transaction.setPurchaseText("Purchased for " + product.getFormattedPrice() + ".");
+	   transaction.setPurchaseCost((int)(product.getLocalPrice() * 100));	//--------------- TODO: not sure if this works in every case! 
+	   transaction.setPurchaseCostCurrency(product.getCurrencyCode());
 
-        transaction.setReversalTime(null);
-        transaction.setReversalText(null);
-
-        transaction.setTransactionData(null);
-        transaction.setTransactionDataSignature(null);
+      transaction.setReversalTime(null);
+      transaction.setReversalText(null);
+      transaction.setTransactionData(null);
+      transaction.setTransactionDataSignature(null);
 
 		showMessage(LOGTYPELOG, "converted purchased product to transaction.");
 		return transaction;
@@ -570,19 +561,16 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 	Transaction convertToTransaction (Receipt receipt) {
 		// build the transaction from the purchase object
 		Transaction transaction = new Transaction();
-		transaction.setIdentifier(config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, receipt.getIdentifier()).getIdentifier());
-		
+		transaction.setIdentifier(config.getOfferForStore(storeName(), receipt.getIdentifier()).getIdentifier());
 		transaction.setStoreName(storeName());
-		// transaction.setOrderId(receipt.getOrderId());  // FIXME: we need the order ID!
 		
+		transaction.setOrderId("not available");		//----- TODO: how can i get the uniqueID out of the JSON response!?
 		transaction.setPurchaseTime(receipt.getPurchaseDate());
 		transaction.setPurchaseText("Purchased by \"" + receipt.getGamer() + "\" for " + receipt.getFormattedPrice() + ".");
-		transaction.setPurchaseCost(receipt.getPriceInCents()); 
+		transaction.setPurchaseCost((int)(receipt.getLocalPrice() * 100));	//--------------- TODO: not sure if this works in every case! 
 		transaction.setPurchaseCostCurrency(receipt.getCurrency());
-
 		transaction.setReversalTime(null);
 		transaction.setReversalText(null);
-
 		transaction.setTransactionData(null);
 		transaction.setTransactionDataSignature(null);
 
@@ -597,7 +585,7 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 
 	@Override
 	public String toString () {
-		return "OUYA";
+		return storeName();
 	}
 
 	void showMessage (final int type, final String message) {

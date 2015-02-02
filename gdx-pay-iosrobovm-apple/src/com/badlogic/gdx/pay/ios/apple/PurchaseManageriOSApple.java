@@ -425,6 +425,6 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     
     @Override
     public String toString () {
-        return "AppleIOS";
+        return "AppleIOS";				// FIXME: shouldnt this be PurchaseManagerConfig.STORE_NAME_IOS_APPLE or storeName() ??!!
     }
 }
