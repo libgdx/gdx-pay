@@ -218,6 +218,7 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 		}
 		OpenIabHelper.Options.Builder builder = new OpenIabHelper.Options.Builder();
 		builder.setVerifyMode(OpenIabHelper.Options.VERIFY_SKIP);
+		builder.setStoreSearchStrategy(OpenIabHelper.Options.SEARCH_STRATEGY_INSTALLER_THEN_BEST_FIT);
 		builder.addStoreKeys(storeKeys);
 
 		// refresh the SKUs list
