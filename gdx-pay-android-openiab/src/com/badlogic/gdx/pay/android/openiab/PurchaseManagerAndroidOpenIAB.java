@@ -216,7 +216,7 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 			storeKeys.put(storeNameToOpenIAB(PurchaseManagerConfig.STORE_NAME_ANDROID_YANDEX),
 				(String)config.getStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_YANDEX));
 		}
-		OpenIabHelper.Options.Builder builder = new OpenIabHelper.Options.Builder();
+		final OpenIabHelper.Options.Builder builder = new OpenIabHelper.Options.Builder();
 		builder.setVerifyMode(OpenIabHelper.Options.VERIFY_SKIP);
 		builder.setStoreSearchStrategy(OpenIabHelper.Options.SEARCH_STRATEGY_INSTALLER_THEN_BEST_FIT);
 		builder.addStoreKeys(storeKeys);
@@ -224,37 +224,42 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 		// refresh the SKUs list
 		refreshSKUs();
 		
-		// start OpenIAB
-		helper = new OpenIabHelper(activity, builder.build());
-		helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
-			public void onIabSetupFinished (IabResult result) {
-				if (!result.isSuccess()) {
-					// error setting up the
-					helper = null;
-					inventory = null;
+		// start OpenIAB (needs to be run on UI-thread for some reason!?)
+		activity.runOnUiThread(new Runnable() {       
+          @Override
+          public void run() {
+            helper = new OpenIabHelper(activity, builder.build());
+            helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
+                public void onIabSetupFinished (IabResult result) {
+                    if (!result.isSuccess()) {
+                        // error setting up the
+                        helper = null;
+                        inventory = null;
 
-					// remove observer and config as well
-					PurchaseManagerAndroidOpenIAB.this.observer = null;
-					PurchaseManagerAndroidOpenIAB.this.config = null;
+                        // remove observer and config as well
+                        PurchaseManagerAndroidOpenIAB.this.observer = null;
+                        PurchaseManagerAndroidOpenIAB.this.config = null;
 
-					// notify about the problem
-					observer.handleInstallError(new RuntimeException("Problem setting up in-app billing: " + result));
-				} else {
-					// do a restore first to get the inventory
-					boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
-					helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
-						@Override
-						public void onQueryInventoryFinished (IabResult result, Inventory inventory) {
-							// store the inventory so we can lookup prices later!
-							PurchaseManagerAndroidOpenIAB.this.inventory = inventory;
+                        // notify about the problem
+                        observer.handleInstallError(new RuntimeException("Problem setting up in-app billing: " + result));
+                    } else {
+                        // do a restore first to get the inventory
+                        boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
+                        helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
+                            @Override
+                            public void onQueryInventoryFinished (IabResult result, Inventory inventory) {
+                                // store the inventory so we can lookup prices later!
+                                PurchaseManagerAndroidOpenIAB.this.inventory = inventory;
 
-							// notify of successful initialization
-							observer.handleInstall();
-						}
-					});
-				}
-			}
-		});
+                                // notify of successful initialization
+                                observer.handleInstall();
+                            }
+                        });
+                    }
+                }
+            });
+          }
+        });
 	}
 
 	@Override
