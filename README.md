@@ -46,6 +46,7 @@ In your **Android project** you use. Please note if you use the jars, all depend
 -keep class com.amazon.** {*;}
 -keep class com.sec.android.iap.**
 -keep class com.nokia.payment.iap.aidl.**
+-dontwarn org.onepf.oms.appstore.FortumoBillingService
 ```
 
 In your **iOS project** you use:
