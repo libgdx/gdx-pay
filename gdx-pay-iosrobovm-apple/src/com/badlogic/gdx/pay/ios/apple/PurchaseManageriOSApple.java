@@ -27,6 +27,9 @@ import org.robovm.apple.foundation.NSBundle;
 import org.robovm.apple.foundation.NSData;
 import org.robovm.apple.foundation.NSDataBase64EncodingOptions;
 import org.robovm.apple.foundation.NSError;
+import org.robovm.apple.foundation.NSNumberFormatter;
+import org.robovm.apple.foundation.NSNumberFormatterBehavior;
+import org.robovm.apple.foundation.NSNumberFormatterStyle;
 import org.robovm.apple.foundation.NSURL;
 import org.robovm.apple.storekit.SKErrorCode;
 import org.robovm.apple.storekit.SKPayment;
@@ -78,6 +81,8 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     private static final boolean LOGDEBUG = true;
     private static final int LOGTYPELOG = 0;
     private static final int LOGTYPEERROR = 1;
+
+    private static NSNumberFormatter numberFormatter;
 
     private PurchaseObserver observer;
     private PurchaseManagerConfig config;
@@ -416,10 +421,20 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         }
     }
 
-
     @Override
     public Information getInformation(String identifier) {
-        // not implemented yet for this purchase manager
+        for(SKProduct p : products) {
+            if(p.getProductIdentifier().equals(identifier)) {
+                if(numberFormatter == null) {
+                    numberFormatter = new NSNumberFormatter();
+                    numberFormatter.setFormatterBehavior(NSNumberFormatterBehavior._10_4);
+                    numberFormatter.setNumberStyle(NSNumberFormatterStyle.Currency);
+                }
+                numberFormatter.setLocale(p.getPriceLocale());
+                Information i = new Information(p.getLocalizedTitle(), p.getLocalizedDescription(), numberFormatter.format(p.getPrice()));
+                return i;
+            }
+        }
         return Information.UNAVAILABLE;
     }
     
