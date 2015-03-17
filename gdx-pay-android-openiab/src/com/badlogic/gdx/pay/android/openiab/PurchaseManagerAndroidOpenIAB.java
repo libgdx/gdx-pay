@@ -391,7 +391,11 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 
 	@Override
     public Information getInformation(String identifier) {
-	    // not implemented yet for this purchase manager
+        SkuDetails details = inventory.getSkuDetails(identifier);
+        if(details != null) {
+            Information i = new Information(details.getTitle(), details.getDescription(), details.getPrice());
+            return i;
+        }
         return Information.UNAVAILABLE;
     }
 
