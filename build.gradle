@@ -10,7 +10,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.0.0'
-        classpath 'org.robovm:robovm-gradle-plugin:1.0.0-alpha-04'
+        classpath 'org.robovm:robovm-gradle-plugin:1.0.0'
     }
 }
 
@@ -144,8 +144,8 @@ project(":gdx-pay-iosrobovm-apple") {
     
     dependencies {
         compile project(':gdx-pay')
-        compile 'org.robovm:robovm-rt:1.0.0-SNAPSHOT'
-        compile 'org.robovm:robovm-cocoatouch:1.0.0-SNAPSHOT'
+        compile 'org.robovm:robovm-rt:1.0.0'
+        compile 'org.robovm:robovm-cocoatouch:1.0.0'
     }
 }
 
@@ -222,10 +222,10 @@ project(":gdx-pay-tests-iosrobovm") {
            
         compile project(':gdx-pay-iosrobovm-apple')
 
-        compile "org.robovm:robovm-rt:1.0.0-SNAPSHOT"
-        compile "org.robovm:robovm-cocoatouch:1.0.0-SNAPSHOT"
-        compile "com.badlogicgames.gdx:gdx-backend-robovm:1.4.1"
-        natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-ios"
+        compile "org.robovm:robovm-rt:1.0.0"
+        compile "org.robovm:robovm-cocoatouch:1.0.0"
+        compile "com.badlogicgames.gdx:gdx-backend-robovm:1.5.5"
+        natives "com.badlogicgames.gdx:gdx-platform:1.5.5:natives-ios"
     }
 }
 

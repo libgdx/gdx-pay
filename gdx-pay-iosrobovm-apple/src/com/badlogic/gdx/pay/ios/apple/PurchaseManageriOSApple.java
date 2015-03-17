@@ -160,7 +160,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         else {
             // Create a SKPayment from the product and start purchase flow
             log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
-            SKPayment payment = SKPayment.createFromProduct(product);
+            SKPayment payment = SKPayment.create(product);
             SKPaymentQueue.getDefaultQueue().addPayment(payment);
         }
     }
@@ -226,7 +226,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             // Create a SKPayment from the product and start purchase flow
             SKProduct product = products.get(0);
             log(LOGTYPELOG, "Product info received/purchasing product " + product.getProductIdentifier() + " ...");
-            SKPayment payment = SKPayment.createFromProduct(product);
+            SKPayment payment = SKPayment.create(product);
             SKPaymentQueue.getDefaultQueue().addPayment(payment);
           }
           else {
