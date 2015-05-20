@@ -362,7 +362,11 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
                     // Decide if user cancelled or transaction failed.
                     NSError error = transaction.getError();
-                    if (error.getCode() == SKErrorCode.PaymentCancelled.value()) {
+                    if (error == null) {
+                        log(LOGTYPEERROR, "Transaction failed but error-object is null: " + transaction);
+                        observer.handlePurchaseError(new RuntimeException("Transaction failed: " + transaction));
+                    }
+                    else if (error.getCode() == SKErrorCode.PaymentCancelled.value()) {
                         log(LOGTYPEERROR, "Transaction was cancelled by user!");
                         observer.handlePurchaseCanceled();
                     } else {

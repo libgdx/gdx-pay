@@ -68,7 +68,7 @@ project(":gdx-pay-android-openiab") {
     dependencies {
         compile project(':gdx-pay-android')
 
-        custom 'org.onepf:openiab:0.9.8.3'
+        custom 'org.onepf:openiab:0.9.8.7'
     }
 }
 
