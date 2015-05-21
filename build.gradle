@@ -69,6 +69,8 @@ project(":gdx-pay-android-openiab") {
         compile project(':gdx-pay-android')
 
         custom 'org.onepf:openiab:0.9.8.7'
+        
+        custom fileTree(dir: 'lib', include: ['*.jar'])
     }
 }
 
