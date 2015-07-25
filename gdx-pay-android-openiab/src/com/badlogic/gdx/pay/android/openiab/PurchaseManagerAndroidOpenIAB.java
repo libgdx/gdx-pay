@@ -156,9 +156,10 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 	
 	private void refreshSKUs() {
   		// refresh the identifiers/SKUs: ensures we have the correct mapping in case PurchaseManagerConfig was updated
+		if (config == null) return;
   		for (int i = 0; i < config.getOfferCount(); i++) {
 			Offer offer = config.getOffer(i);
-  
+
 			// map store-specific identifiers with our default identifier!
 			String identifier = offer.getIdentifier();
 			Set<Map.Entry<String, String>> identifierForStores = offer.getIdentifierForStores();
@@ -244,17 +245,22 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
                         observer.handleInstallError(new RuntimeException("Problem setting up in-app billing: " + result));
                     } else {
                         // do a restore first to get the inventory
-                        boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
-                        helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
-                            @Override
-                            public void onQueryInventoryFinished (IabResult result, Inventory inventory) {
-                                // store the inventory so we can lookup prices later!
-                                PurchaseManagerAndroidOpenIAB.this.inventory = inventory;
+						if (helper != null) {
+							boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
+							helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
+								@Override
+								public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
+									// store the inventory so we can lookup prices later!
+									PurchaseManagerAndroidOpenIAB.this.inventory = inventory;
 
-                                // notify of successful initialization
-                                observer.handleInstall();
-                            }
-                        });
+									// notify of successful initialization
+									observer.handleInstall();
+								}
+							});
+						} else {
+							// can happen because of some race conditions seems
+							Log.e(TAG, "Setup is finished but helper is null");
+						}
                     }
                 }
             });
@@ -349,37 +355,41 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 			helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
 				@Override
 				public void onQueryInventoryFinished (IabResult result, Inventory inventory) {
-					// store the inventory so we can lookup prices later!
-					PurchaseManagerAndroidOpenIAB.this.inventory = inventory;
-	
-					// build list of purchases
-					List<Purchase> purchases = inventory.getAllPurchases();
-					List<Transaction> transactions = new ArrayList<Transaction>(purchases.size());
-					for (int i = 0; i < purchases.size(); i++) {
-						transactions.add(transaction(purchases.get(i)));
-					}
-	
-					// send inventory to observer
-					observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
-	
-					// if the observer above didn't throw an error, we consume all consumeables as needed
-					for (int i = 0; i < purchases.size(); i++) {
-						Purchase purchase = purchases.get(i);
-						Offer offer = config.getOffer(purchase.getSku());
-						if (offer == null) {
-							Log.d(TAG, "Offer not found for: " + purchase.getSku());
-						} else if (offer.getType() == OfferType.CONSUMABLE) {
-							// it's a consumable, so we consume right away!
-							helper.consumeAsync(purchase, new IabHelper.OnConsumeFinishedListener() {
-								@Override
-								public void onConsumeFinished (Purchase purchase, IabResult result) {
-									if (!result.isSuccess()) {
-										// NOTE: we should only rarely have an exception due to e.g. network outages etc.
-										Log.e(TAG, "Error while consuming: " + result);
-									}
-								}
-							});
+				    if (result.isSuccess()) {
+						// store the inventory so we can lookup prices later!
+						PurchaseManagerAndroidOpenIAB.this.inventory = inventory;
+
+						// build list of purchases
+						List<Purchase> purchases = inventory.getAllPurchases();
+						List<Transaction> transactions = new ArrayList<Transaction>(purchases.size());
+						for (int i = 0; i < purchases.size(); i++) {
+							transactions.add(transaction(purchases.get(i)));
 						}
+
+						// send inventory to observer
+						observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
+
+						// if the observer above didn't throw an error, we consume all consumeables as needed
+						for (int i = 0; i < purchases.size(); i++) {
+							Purchase purchase = purchases.get(i);
+							Offer offer = config.getOffer(purchase.getSku());
+							if (offer == null) {
+								Log.d(TAG, "Offer not found for: " + purchase.getSku());
+							} else if (offer.getType() == OfferType.CONSUMABLE) {
+								// it's a consumable, so we consume right away!
+								helper.consumeAsync(purchase, new IabHelper.OnConsumeFinishedListener() {
+									@Override
+									public void onConsumeFinished(Purchase purchase, IabResult result) {
+										if (!result.isSuccess()) {
+											// NOTE: we should only rarely have an exception due to e.g. network outages etc.
+											Log.e(TAG, "Error while consuming: " + result);
+										}
+									}
+								});
+							}
+						}
+					} else {
+						observer.handleRestoreError(new RuntimeException(result.toString()));
 					}
 				}
 			});
