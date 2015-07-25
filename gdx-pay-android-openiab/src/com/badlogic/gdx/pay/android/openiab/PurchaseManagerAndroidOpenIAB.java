@@ -153,7 +153,7 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 			}
 		}
 	}
-	
+
 	private void refreshSKUs() {
   		// refresh the identifiers/SKUs: ensures we have the correct mapping in case PurchaseManagerConfig was updated
 		if (config == null) return;
@@ -224,9 +224,9 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 
 		// refresh the SKUs list
 		refreshSKUs();
-		
+
 		// start OpenIAB (needs to be run on UI-thread for some reason!?)
-		activity.runOnUiThread(new Runnable() {       
+		activity.runOnUiThread(new Runnable() {
           @Override
           public void run() {
             helper = new OpenIabHelper(activity, builder.build());
@@ -247,7 +247,10 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
                         // do a restore first to get the inventory
 						if (helper != null) {
 							boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
-							helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
+							List<String> inappSkus = getIdsForEntitlementsAndConsumables();
+							List<String> subsSkus = getIdsForSubscriptions();
+							helper.queryInventoryAsync(querySkuDetails, inappSkus, subsSkus,
+								new IabHelper.QueryInventoryFinishedListener() {
 								@Override
 								public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
 									// store the inventory so we can lookup prices later!
@@ -291,11 +294,11 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 	public void purchase (final String identifier) {
         // refresh the SKUs list
         refreshSKUs();
-      
+
 		// purchase if we have a helper
 		if (helper != null) {
 			String payload = null;
-	
+
 			// make a purchase
 			helper.launchPurchaseFlow(activity, identifier, IabHelper.ITEM_TYPE_INAPP, requestCode,
 				new IabHelper.OnIabPurchaseFinishedListener() {
@@ -303,20 +306,19 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 					public void onIabPurchaseFinished (IabResult result, Purchase purchase) {
 						if (result.isFailure()) {
 							// the purchase has failed
-							
+
 							if (result.getResponse() == IabHelper.IABHELPER_USER_CANCELLED) {
 								observer.handlePurchaseCanceled();
-							}
-							else {
+							} else {
 								observer.handlePurchaseError(new RuntimeException(result.toString()));
 							}
 						} else {
 							// parse transaction data
 							Transaction transaction = transaction(purchase);
-	
+
 							// forward result to listener
 							observer.handlePurchase(transaction);
-	
+
 							// if the listener doesn't throw an error, we consume as needed
 							Offer offer = config.getOffer(purchase.getSku());
 							if (offer == null) {
@@ -327,8 +329,8 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 									@Override
 									public void onConsumeFinished (Purchase purchase, IabResult result) {
 										if (!result.isSuccess()) {
-							                // FIXME: if consume fails, the purchase manager should take note and 
-										    //        try to consume again at a later point in time...
+											// FIXME: if consume fails, the purchase manager should take note and
+											//        try to consume again at a later point in time...
 											Log.e(TAG, "Error while consuming: " + result);
 										}
 									}
@@ -347,15 +349,18 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 	public void purchaseRestore () {
         // refresh the SKUs list
         refreshSKUs();
-    
+
         // restore if we have a helper
 		if (helper != null) {
 			// ask for purchase restore
 			boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
-			helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
+			List<String> inappSkus = getIdsForEntitlementsAndConsumables();
+			List<String> subsSkus = getIdsForSubscriptions();
+			helper.queryInventoryAsync(querySkuDetails, inappSkus, subsSkus,
+				new IabHelper.QueryInventoryFinishedListener() {
 				@Override
-				public void onQueryInventoryFinished (IabResult result, Inventory inventory) {
-				    if (result.isSuccess()) {
+				public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
+					if (result.isSuccess()) {
 						// store the inventory so we can lookup prices later!
 						PurchaseManagerAndroidOpenIAB.this.inventory = inventory;
 
@@ -440,6 +445,30 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 		transaction.setTransactionData(purchase.getOriginalJson());
 		transaction.setTransactionDataSignature(purchase.getSignature());
 		return transaction;
+	}
+
+	private List<String> getIdsForEntitlementsAndConsumables() {
+		final List<String> result = new ArrayList<String>();
+		final int offerCount = config.getOfferCount();
+		for (int i = 0; i < offerCount; i++) {
+			Offer offer = config.getOffer(i);
+			if (offer.getType() == OfferType.ENTITLEMENT || offer.getType() == OfferType.CONSUMABLE) {
+				result.add(offer.getIdentifier());
+			}
+		}
+		return result;
+	}
+
+	private List<String> getIdsForSubscriptions() {
+		final List<String> result = new ArrayList<String>();
+		final int offerCount = config.getOfferCount();
+		for (int i = 0; i < offerCount; i++) {
+			Offer offer = config.getOffer(i);
+			if (offer.getType() == OfferType.SUBSCRIPTION) {
+				result.add(offer.getIdentifier());
+			}
+		}
+		return result;
 	}
 
 	public void onActivityResult (int requestCode, int resultCode, Intent data) {
