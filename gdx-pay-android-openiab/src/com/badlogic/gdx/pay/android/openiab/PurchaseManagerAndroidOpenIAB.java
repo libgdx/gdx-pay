@@ -340,7 +340,7 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 			
 			Offer offer = config.getOffer(identifier);
 			if (offer != null && offer.getType() == OfferType.SUBSCRIPTION)
-		         helper.launchSubscriptionPurchaseFlow(activity, identifier, requestCode, listener, payload);
+				helper.launchSubscriptionPurchaseFlow(activity, identifier, requestCode, listener, payload);
 			else
 				helper.launchPurchaseFlow(activity, identifier, IabHelper.ITEM_TYPE_INAPP, requestCode, listener, payload);
 		}
