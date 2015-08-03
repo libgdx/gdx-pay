@@ -299,46 +299,50 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 		if (helper != null) {
 			String payload = null;
 
-			// make a purchase
-			helper.launchPurchaseFlow(activity, identifier, IabHelper.ITEM_TYPE_INAPP, requestCode,
-				new IabHelper.OnIabPurchaseFinishedListener() {
-					@Override
-					public void onIabPurchaseFinished (IabResult result, Purchase purchase) {
-						if (result.isFailure()) {
-							// the purchase has failed
+			IabHelper.OnIabPurchaseFinishedListener listener = new IabHelper.OnIabPurchaseFinishedListener() {
+				@Override
+				public void onIabPurchaseFinished (IabResult result, Purchase purchase) {
+					if (result.isFailure()) {
+						// the purchase has failed
 
-							if (result.getResponse() == IabHelper.IABHELPER_USER_CANCELLED) {
-								observer.handlePurchaseCanceled();
-							} else {
-								observer.handlePurchaseError(new RuntimeException(result.toString()));
-							}
+						if (result.getResponse() == IabHelper.IABHELPER_USER_CANCELLED) {
+							observer.handlePurchaseCanceled();
 						} else {
-							// parse transaction data
-							Transaction transaction = transaction(purchase);
+							observer.handlePurchaseError(new RuntimeException(result.toString()));
+						}
+					} else {
+						// parse transaction data
+						Transaction transaction = transaction(purchase);
 
-							// forward result to listener
-							observer.handlePurchase(transaction);
+						// forward result to listener
+						observer.handlePurchase(transaction);
 
-							// if the listener doesn't throw an error, we consume as needed
-							Offer offer = config.getOffer(purchase.getSku());
-							if (offer == null) {
-								Log.d(TAG, "Offer not found for: " + purchase.getSku());
-							} else if (offer.getType() == OfferType.CONSUMABLE) {
-								// it's a consumable, so we consume right away!
-								helper.consumeAsync(purchase, new IabHelper.OnConsumeFinishedListener() {
-									@Override
-									public void onConsumeFinished (Purchase purchase, IabResult result) {
-										if (!result.isSuccess()) {
-											// FIXME: if consume fails, the purchase manager should take note and
-											//        try to consume again at a later point in time...
-											Log.e(TAG, "Error while consuming: " + result);
-										}
+						// if the listener doesn't throw an error, we consume as needed
+						Offer offer = config.getOffer(purchase.getSku());
+						if (offer == null) {
+							Log.d(TAG, "Offer not found for: " + purchase.getSku());
+						} else if (offer.getType() == OfferType.CONSUMABLE) {
+							// it's a consumable, so we consume right away!
+							helper.consumeAsync(purchase, new IabHelper.OnConsumeFinishedListener() {
+								@Override
+								public void onConsumeFinished (Purchase purchase, IabResult result) {
+									if (!result.isSuccess()) {
+										// FIXME: if consume fails, the purchase manager should take note and
+										//        try to consume again at a later point in time...
+										Log.e(TAG, "Error while consuming: " + result);
 									}
-								});
-							}
+								}
+							});
 						}
 					}
-				}, payload);
+				}
+			};
+			
+			Offer offer = config.getOffer(identifier);
+			if (offer != null && offer.getType() == OfferType.SUBSCRIPTION)
+				helper.launchSubscriptionPurchaseFlow(activity, identifier, requestCode, listener, payload);
+			else
+				helper.launchPurchaseFlow(activity, identifier, IabHelper.ITEM_TYPE_INAPP, requestCode, listener, payload);
 		}
 		else {
 			Log.e(TAG, "ERROR: purchase(): openIAB helper == null");
