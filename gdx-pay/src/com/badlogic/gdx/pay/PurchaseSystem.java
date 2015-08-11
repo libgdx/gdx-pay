@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 See AUTHORS file.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@ package com.badlogic.gdx.pay;
 import java.lang.reflect.Method;
 
 /** Our purchase system to make InApp payments.
- * 
+ *
  * @author noblemaster */
 public final class PurchaseSystem {
 
@@ -162,18 +162,20 @@ public final class PurchaseSystem {
         }
     }
 
-	/** @see #install(PurchaseObserver, PurchaseManagerConfig, boolean) */
-    public static void install (PurchaseObserver observer, PurchaseManagerConfig config) {
-		install(observer, config, true);
-	}
+    /** @see #install(PurchaseObserver, PurchaseManagerConfig, boolean) */
+    public static void install(PurchaseObserver observer, PurchaseManagerConfig config) {
+        install(observer, config, true);
+    }
 
-	/** Installs a purchase observer.
-	 *
-	 * @param autoFetchInformation tells PurchaseManager to automatically fetch offer details on setup to make
-	 *           {@link PurchaseSystem#getInformation(String)} work properly **/
-	public static void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
+    /**
+     * Installs a purchase observer.
+     *
+     * @param autoFetchInformation tells PurchaseManager to automatically fetch offer details on setup to make {@link
+     * PurchaseSystem#getInformation(String)} work properly *
+     */
+    public static void install(PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
         if (hasManager()) {
-			manager.install(observer, config, autoFetchInformation);
+            manager.install(observer, config, autoFetchInformation);
         } else {
             observer.handleInstallError(new RuntimeException("No purchase manager was available."));
         }
@@ -213,13 +215,15 @@ public final class PurchaseSystem {
             throw new RuntimeException("No purchase manager was found.");
         }
     }
-    
-	/** Returns information about a product provided by the purchase manager.
-	 *
-	 * Note, you should set autoFetchInformation to true in {@link PurchaseSystem#install} to true to make this method work for all
-	 * PurchaseManager implementations
-	 *
-	 * @return {@link Information#UNAVAILABLE} if the product is not available or information was not previously fetched */
+
+    /**
+     * Returns information about a product provided by the purchase manager.
+     * <p/>
+     * Note, you should set autoFetchInformation to true in {@link PurchaseSystem#install} to true to make this method
+     * work for all PurchaseManager implementations
+     *
+     * @return {@link Information#UNAVAILABLE} if the product is not available or information was not previously fetched
+     */
     public static Information getInformation(String identifier) {
         if (hasManager()) {
             return manager.getInformation(identifier);

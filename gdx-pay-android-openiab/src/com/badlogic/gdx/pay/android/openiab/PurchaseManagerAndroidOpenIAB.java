@@ -16,13 +16,16 @@
 
 package com.badlogic.gdx.pay.android.openiab;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import android.app.Activity;
+import android.content.Intent;
+import android.util.Log;
+import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.Offer;
+import com.badlogic.gdx.pay.OfferType;
+import com.badlogic.gdx.pay.PurchaseManager;
+import com.badlogic.gdx.pay.PurchaseManagerConfig;
+import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.Transaction;
 import org.onepf.oms.OpenIabHelper;
 import org.onepf.oms.SkuManager;
 import org.onepf.oms.appstore.googleUtils.IabHelper;
@@ -31,17 +34,12 @@ import org.onepf.oms.appstore.googleUtils.Inventory;
 import org.onepf.oms.appstore.googleUtils.Purchase;
 import org.onepf.oms.appstore.googleUtils.SkuDetails;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.util.Log;
-
-import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.Offer;
-import com.badlogic.gdx.pay.OfferType;
-import com.badlogic.gdx.pay.PurchaseManager;
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.Transaction;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /** The purchase manager implementation for Android via <a href="http://www.onepf.org/openiab">OpenIAB</a>. Supported stores
  * include:
@@ -226,9 +224,9 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 
 		// refresh the SKUs list
 		refreshSKUs();
-		
+
 		// start OpenIAB (needs to be run on UI-thread for some reason!?)
-		activity.runOnUiThread(new Runnable() {       
+		activity.runOnUiThread(new Runnable() {
           @Override
           public void run() {
             helper = new OpenIabHelper(activity, builder.build());
@@ -246,10 +244,10 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
                         // notify about the problem
                         observer.handleInstallError(new RuntimeException("Problem setting up in-app billing: " + result));
                     } else {
-                        // do a restore first to get the inventory
-							// --> that way we get prices and title/description as well!
-							final boolean querySkuDetails = autoFetchInformation;
-                        helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
+						// do a restore first to get the inventory
+						// --> that way we get prices and title/description as well!
+						final boolean querySkuDetails = autoFetchInformation;
+						helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
                             @Override
                             public void onQueryInventoryFinished (IabResult result, Inventory inventory) {
                                 // store the inventory so we can lookup prices later!
