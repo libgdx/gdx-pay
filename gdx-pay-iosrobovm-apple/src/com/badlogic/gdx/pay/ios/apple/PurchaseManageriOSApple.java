@@ -98,8 +98,9 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         return PurchaseManagerConfig.STORE_NAME_IOS_APPLE;
     }
 
+	/* TODO use autoFetchInformation (currently always true) */
     @Override
-    public void install (PurchaseObserver observer, PurchaseManagerConfig config) {
+	public void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
         this.observer = observer;
         this.config = config;
 

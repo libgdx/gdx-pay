@@ -80,6 +80,8 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 	/** The inventory with all the prices/details. */
 	Inventory inventory;
 
+	boolean autoFetchInformation;
+
 	public PurchaseManagerAndroidOpenIAB (Activity activity, int requestCode) {
 		this.activity = activity;
 
@@ -173,9 +175,10 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 	}
 
 	@Override
-	public void install (final PurchaseObserver observer, PurchaseManagerConfig config) {
+	public void install (final PurchaseObserver observer, final PurchaseManagerConfig config, final boolean autoFetchInformation) {
 		this.observer = observer;
 		this.config = config;
+		this.autoFetchInformation = autoFetchInformation;
 
 		// build the OpenIAB options. Pass in the storeKeys as follows:
 		// -------------------------------------------------------------------------
@@ -244,7 +247,8 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
                         observer.handleInstallError(new RuntimeException("Problem setting up in-app billing: " + result));
                     } else {
                         // do a restore first to get the inventory
-                        boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
+							// --> that way we get prices and title/description as well!
+							final boolean querySkuDetails = autoFetchInformation;
                         helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
                             @Override
                             public void onQueryInventoryFinished (IabResult result, Inventory inventory) {
@@ -345,7 +349,8 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
         // restore if we have a helper
 		if (helper != null) {
 			// ask for purchase restore
-			boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
+			// --> that way we get prices and title/description as well!
+			final boolean querySkuDetails = autoFetchInformation;
 			helper.queryInventoryAsync(querySkuDetails, new IabHelper.QueryInventoryFinishedListener() {
 				@Override
 				public void onQueryInventoryFinished (IabResult result, Inventory inventory) {

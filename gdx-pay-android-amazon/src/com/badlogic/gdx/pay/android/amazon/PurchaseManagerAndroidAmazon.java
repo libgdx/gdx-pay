@@ -87,8 +87,9 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		return PurchaseManagerConfig.STORE_NAME_ANDROID_AMAZON;
 	}
 
+	/* TODO use autoFetchInformation */
 	@Override
-	public void install (final PurchaseObserver observer, PurchaseManagerConfig config) {
+	public void install (final PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
 		this.observer = observer;
 		this.config = config;
 		

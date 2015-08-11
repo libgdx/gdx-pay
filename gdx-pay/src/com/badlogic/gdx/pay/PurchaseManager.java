@@ -54,12 +54,13 @@ public interface PurchaseManager {
 	 * Registering an observer is required. If no observer is registered the call to purchase an item will fail with a runtime
 	 * exception to teach you lesson to always remember to set a purchase observer. The purchase observer is needed to make sure
 	 * all purchases have been handled and served to the customer.
-	 * 
+	 * </p>
+	 *
 	 * @param observer The observer which is called whenever purchases have to be handled by the application as well as when the
-	 *           store has been installed. 
-	 * @param config  The configuration. Please note offers inside the configuration can be updated on the fly (e.g. by 
-	 *         downloading the latest offer list from your server if you have one setup). */
-	public void install (PurchaseObserver observer, PurchaseManagerConfig config);
+	 *           store has been installed.
+	 * @param config The configuration. Please note offers inside the configuration can be updated on the fly (e.g. by
+	 * @param autoFetchInformation tells PurchaseManager to automatically fetch offer details on setup */
+	public void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation);
 
 	/** Returns true if the purchase manager is installed (non-disposed) and ready to go. */
 	public boolean installed ();

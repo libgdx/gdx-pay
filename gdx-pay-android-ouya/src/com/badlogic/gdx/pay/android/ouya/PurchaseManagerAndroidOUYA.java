@@ -132,8 +132,9 @@ public class PurchaseManagerAndroidOUYA implements PurchaseManager {
 		return PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA;
 	}
 
+	/* TODO use autoFetchInformation (currently always true) */
 	@Override
-	public void install (final PurchaseObserver observer, PurchaseManagerConfig config) {
+	public void install (final PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
 		this.observer = observer;
 		this.config = config;
 
