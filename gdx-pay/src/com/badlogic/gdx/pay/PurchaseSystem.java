@@ -162,10 +162,18 @@ public final class PurchaseSystem {
         }
     }
 
-    /** Installs a purchase observer. */
+	/** @see #install(PurchaseObserver, PurchaseManagerConfig, boolean) */
     public static void install (PurchaseObserver observer, PurchaseManagerConfig config) {
+		install(observer, config, true);
+	}
+
+	/** Installs a purchase observer.
+	 *
+	 * @param autoFetchInformation tells PurchaseManager to automatically fetch offer details on setup to make
+	 *           {@link PurchaseSystem#getInformation(String)} work properly **/
+	public static void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
         if (hasManager()) {
-            manager.install(observer, config);
+            manager.install(observer, config, autoFetchInformation);
         } else {
             observer.handleInstallError(new RuntimeException("No purchase manager was available."));
         }
@@ -206,7 +214,12 @@ public final class PurchaseSystem {
         }
     }
     
-    /** Returns information about a product provided by the purchase manager. Returns 'null' if the product is not available. */
+	/** Returns information about a product provided by the purchase manager.
+	 *
+	 * Note, you should set autoFetchInformation to true in {@link PurchaseSystem#install} to true to make this method work for all
+	 * PurchaseManager implementations
+	 *
+	 * @return {@link Information#UNAVAILABLE} if the product is not available or information was not previously fetched */
     public static Information getInformation(String identifier) {
         if (hasManager()) {
             return manager.getInformation(identifier);

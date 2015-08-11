@@ -23,7 +23,7 @@ import com.badlogic.gdx.pay.PurchaseObserver;
 
 /**
  * The purchase manager implementation for Google Wallet for GWT.
- * 
+ *
  * @author noblemaster
  */
 public class PurchaseManagerGwtGoogleWallet implements PurchaseManager {
@@ -34,7 +34,7 @@ public class PurchaseManagerGwtGoogleWallet implements PurchaseManager {
   }
 
   @Override
-  public void install(PurchaseObserver observer, PurchaseManagerConfig config) {
+  public void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
     // TODO Auto-generated method stub
 
   }
