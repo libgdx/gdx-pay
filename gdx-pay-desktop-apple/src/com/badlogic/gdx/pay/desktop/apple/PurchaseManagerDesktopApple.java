@@ -32,7 +32,7 @@ public class PurchaseManagerDesktopApple implements PurchaseManager {
 	}
 
 	@Override
-	public void install (PurchaseObserver observer, PurchaseManagerConfig config) {
+	public void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
 		// TODO Auto-generated method stub
 
 	}

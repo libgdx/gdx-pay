@@ -16,13 +16,16 @@
 
 package com.badlogic.gdx.pay.android.openiab;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import android.app.Activity;
+import android.content.Intent;
+import android.util.Log;
+import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.Offer;
+import com.badlogic.gdx.pay.OfferType;
+import com.badlogic.gdx.pay.PurchaseManager;
+import com.badlogic.gdx.pay.PurchaseManagerConfig;
+import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.Transaction;
 import org.onepf.oms.OpenIabHelper;
 import org.onepf.oms.SkuManager;
 import org.onepf.oms.appstore.googleUtils.IabHelper;
@@ -31,17 +34,12 @@ import org.onepf.oms.appstore.googleUtils.Inventory;
 import org.onepf.oms.appstore.googleUtils.Purchase;
 import org.onepf.oms.appstore.googleUtils.SkuDetails;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.util.Log;
-
-import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.Offer;
-import com.badlogic.gdx.pay.OfferType;
-import com.badlogic.gdx.pay.PurchaseManager;
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.Transaction;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /** The purchase manager implementation for Android via <a href="http://www.onepf.org/openiab">OpenIAB</a>. Supported stores
  * include:
@@ -79,6 +77,8 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 	OpenIabHelper helper;
 	/** The inventory with all the prices/details. */
 	Inventory inventory;
+
+	boolean autoFetchInformation;
 
 	public PurchaseManagerAndroidOpenIAB (Activity activity, int requestCode) {
 		this.activity = activity;
@@ -174,9 +174,10 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 	}
 
 	@Override
-	public void install (final PurchaseObserver observer, PurchaseManagerConfig config) {
+	public void install (final PurchaseObserver observer, final PurchaseManagerConfig config, final boolean autoFetchInformation) {
 		this.observer = observer;
 		this.config = config;
+		this.autoFetchInformation = autoFetchInformation;
 
 		// build the OpenIAB options. Pass in the storeKeys as follows:
 		// -------------------------------------------------------------------------
@@ -246,7 +247,7 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
                     } else {
                         // do a restore first to get the inventory
 						if (helper != null) {
-							boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
+							boolean querySkuDetails = autoFetchInformation; // --> that way we get prices and title/description as well!
 							List<String> inappSkus = getIdsForEntitlementsAndConsumables();
 							List<String> subsSkus = getIdsForSubscriptions();
 							helper.queryInventoryAsync(querySkuDetails, inappSkus, subsSkus,
@@ -357,7 +358,7 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
         // restore if we have a helper
 		if (helper != null) {
 			// ask for purchase restore
-			boolean querySkuDetails = true; // --> that way we get prices and title/description as well!
+			boolean querySkuDetails = autoFetchInformation; // --> that way we get prices and title/description as well!
 			List<String> inappSkus = getIdsForEntitlementsAndConsumables();
 			List<String> subsSkus = getIdsForSubscriptions();
 			helper.queryInventoryAsync(querySkuDetails, inappSkus, subsSkus,
