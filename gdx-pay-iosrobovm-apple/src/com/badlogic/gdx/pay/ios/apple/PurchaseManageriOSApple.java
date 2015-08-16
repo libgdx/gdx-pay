@@ -194,18 +194,23 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     /** Converts a purchase to our transaction object. */
     Transaction transaction (SKPaymentTransaction t) {
         SKPayment payment = t.getPayment();
-        SKProduct product = getProductByStoreIdentifier(payment.getProductIdentifier());
-        
+        String productIdentifier = payment.getProductIdentifier();
+        SKProduct product = getProductByStoreIdentifier(productIdentifier);
+        if (product == null) {
+            System.err.println("gdx-pay: Ignoring unknown product: " + productIdentifier);
+            return null;
+        }
+
         // Build the transaction from the payment transaction object.
         Transaction transaction = new Transaction();
         transaction.setIdentifier(config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE, payment.getProductIdentifier()).getIdentifier());
-        
+
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
         transaction.setOrderId(t.getTransactionIdentifier());
         
         transaction.setPurchaseTime(t.getTransactionDate().toDate());
         transaction.setPurchaseText("Purchased: " + product.getLocalizedTitle());
-        transaction.setPurchaseCost((int)Math.round(product.getPrice().doubleValue() * 100)); 
+        transaction.setPurchaseCost((int) Math.round(product.getPrice().doubleValue() * 100));
         transaction.setPurchaseCostCurrency(product.getPriceLocale().getCurrencyCode());
         
         transaction.setReversalTime(null);  // no refunds for iOS!
@@ -289,6 +294,8 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
                     // Parse transaction data.
                     final Transaction t = transaction(transaction);
+                    if (t == null)
+                        break;
 
                     // Find transaction receipt.
                     if (Foundation.getMajorSystemVersion() >= 7) {
@@ -382,7 +389,11 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                     // A product has been restored.
 
                     // Parse transaction data.
-                    restoredTransactions.add(transaction(transaction));
+                    Transaction ta = transaction(transaction);
+                    if (ta == null)
+                        break;
+
+                    restoredTransactions.add(ta);
 
                     // Finish transaction.
                     SKPaymentQueue.getDefaultQueue().finishTransaction(transaction);
