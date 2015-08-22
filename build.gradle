@@ -2,6 +2,7 @@
 ext {
     GROUPID = 'com.badlogicgames.gdxpay'
     VERSION = '0.6.0-SNAPSHOT'
+    GDX_VERSION = '1.4.1'
 }
 
 buildscript {
@@ -50,7 +51,7 @@ project(":gdx-pay-android") {
     dependencies {
         compile project(':gdx-pay')
 
-        compile 'com.badlogicgames.gdx:gdx-backend-android:1.4.1'
+        compile "com.badlogicgames.gdx:gdx-backend-android:$GDX_VERSION"
 
         compile fileTree(dir: 'lib', include: ['*.jar'])
     }
@@ -175,7 +176,7 @@ project(":gdx-pay-tests") {
     
     dependencies {
         compile project(':gdx-pay')
-        compile 'com.badlogicgames.gdx:gdx:1.4.1'
+        compile "com.badlogicgames.gdx:gdx:$GDX_VERSION"
     }
 }
 
@@ -201,10 +202,10 @@ project(":gdx-pay-tests-android") {
         compile project(':gdx-pay-android-ouya')  
         compile fileTree(dir: '../gdx-pay-android-ouya/lib', include: ['*.jar'])
  
-        compile "com.badlogicgames.gdx:gdx-backend-android:1.4.1"
-        natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-armeabi"
-        natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-armeabi-v7a"
-        natives "com.badlogicgames.gdx:gdx-platform:1.4.1:natives-x86"
+        compile "com.badlogicgames.gdx:gdx-backend-android:$GDX_VERSION"
+        natives "com.badlogicgames.gdx:gdx-platform:$GDX_VERSION:natives-armeabi"
+        natives "com.badlogicgames.gdx:gdx-platform:$GDX_VERSION:natives-armeabi-v7a"
+        natives "com.badlogicgames.gdx:gdx-platform:$GDX_VERSION:natives-x86"
     }
 }
 
