@@ -36,7 +36,22 @@ project(":gdx-pay") {
     configurations {
         custom
         compile.extendsFrom custom
-    }   
+    }
+}
+
+project(":gdx-pay-client") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+
+    dependencies {
+        compile project(':gdx-pay')
+        compile "com.badlogicgames.gdx:gdx:$GDX_VERSION"
+    }
 }
 
 project(":gdx-pay-android") {
@@ -49,7 +64,7 @@ project(":gdx-pay-android") {
     }
     
     dependencies {
-        compile project(':gdx-pay')
+        compile project(':gdx-pay-client')
 
         compile "com.badlogicgames.gdx:gdx-backend-android:$GDX_VERSION"
 
@@ -117,7 +132,7 @@ project(":gdx-pay-desktop-apple") {
     }
     
     dependencies {
-        compile project(':gdx-pay')
+        compile project(':gdx-pay-client')
     }
 }
 
@@ -131,7 +146,7 @@ project(":gdx-pay-gwt-googlewallet") {
     }
     
     dependencies {
-        compile project(':gdx-pay')
+        compile project(':gdx-pay-client')
     }
 }
 
@@ -146,7 +161,7 @@ project(":gdx-pay-iosrobovm-apple") {
     }
     
     dependencies {
-        compile project(':gdx-pay')
+        compile project(':gdx-pay-client')
         compile 'org.robovm:robovm-rt:1.0.0'
         compile 'org.robovm:robovm-cocoatouch:1.0.0'
     }
@@ -175,7 +190,7 @@ project(":gdx-pay-tests") {
     }
     
     dependencies {
-        compile project(':gdx-pay')
+        compile project(':gdx-pay-client')
         compile "com.badlogicgames.gdx:gdx:$GDX_VERSION"
     }
 }
@@ -191,7 +206,7 @@ project(":gdx-pay-tests-android") {
     }
 
     dependencies {
-        compile project(':gdx-pay')
+        compile project(':gdx-pay-client')
         compile project(':gdx-pay-tests')   
            
         compile project(':gdx-pay-android')
@@ -220,7 +235,7 @@ project(":gdx-pay-tests-iosrobovm") {
     }
 
     dependencies {
-        compile project(':gdx-pay')
+        compile project(':gdx-pay-client')
         compile project(':gdx-pay-tests')   
            
         compile project(':gdx-pay-iosrobovm-apple')
