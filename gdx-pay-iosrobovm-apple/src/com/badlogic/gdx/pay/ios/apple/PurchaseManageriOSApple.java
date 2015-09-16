@@ -439,16 +439,19 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
     @Override
     public Information getInformation(String identifier) {
-        for(SKProduct p : products) {
-            if(p.getProductIdentifier().equals(identifier)) {
-                if(numberFormatter == null) {
-                    numberFormatter = new NSNumberFormatter();
-                    numberFormatter.setFormatterBehavior(NSNumberFormatterBehavior._10_4);
-                    numberFormatter.setNumberStyle(NSNumberFormatterStyle.Currency);
+        if (products != null) {
+            for (SKProduct p : products) {
+                if (p.getProductIdentifier().equals(identifier)) {
+                    if (numberFormatter == null) {
+                        numberFormatter = new NSNumberFormatter();
+                        numberFormatter.setFormatterBehavior(NSNumberFormatterBehavior._10_4);
+                        numberFormatter.setNumberStyle(NSNumberFormatterStyle.Currency);
+                    }
+                    numberFormatter.setLocale(p.getPriceLocale());
+                    Information i = new Information(p.getLocalizedTitle(), p.getLocalizedDescription(),
+                        numberFormatter.format(p.getPrice()));
+                    return i;
                 }
-                numberFormatter.setLocale(p.getPriceLocale());
-                Information i = new Information(p.getLocalizedTitle(), p.getLocalizedDescription(), numberFormatter.format(p.getPrice()));
-                return i;
             }
         }
         return Information.UNAVAILABLE;
