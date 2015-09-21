@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import libcore.io.Base64;
 import org.robovm.apple.foundation.Foundation;
 import org.robovm.apple.foundation.NSArray;
 import org.robovm.apple.foundation.NSBundle;
@@ -217,7 +218,13 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         transaction.setReversalText(null);
         
         if (payment.getRequestData() != null) {
-            transaction.setTransactionData(payment.getRequestData().toBase64EncodedString(NSDataBase64EncodingOptions.None));
+            final String transactionData;
+            if (Foundation.getMajorSystemVersion() >= 7) {
+                transactionData = payment.getRequestData().toBase64EncodedString(NSDataBase64EncodingOptions.None);
+            } else {
+                transactionData = Base64.encode(payment.getRequestData().getBytes());
+            }
+            transaction.setTransactionData(transactionData);
         }
         else {
             transaction.setTransactionData(null);
@@ -354,8 +361,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                             SKPaymentQueue.getDefaultQueue().finishTransaction(transaction);
                         }
                     } else {
-                        t.setTransactionDataSignature(transaction.getTransactionReceipt().toBase64EncodedString(
-                            NSDataBase64EncodingOptions.None));
+                        t.setTransactionDataSignature(Base64.encode(transaction.getTransactionReceipt().getBytes()));
 
                         log(LOGTYPELOG, "Transaction was completed: " + transaction.getTransactionIdentifier());
 
