@@ -11,7 +11,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.0.0'
-        classpath 'org.robovm:robovm-gradle-plugin:1.0.0'
+        classpath 'org.robovm:robovm-gradle-plugin:1.8.0'
     }
 }
 
@@ -162,8 +162,8 @@ project(":gdx-pay-iosrobovm-apple") {
     
     dependencies {
         compile project(':gdx-pay-client')
-        compile 'org.robovm:robovm-rt:1.0.0'
-        compile 'org.robovm:robovm-cocoatouch:1.0.0'
+        compile 'org.robovm:robovm-rt:1.8.0'
+        compile 'org.robovm:robovm-cocoatouch:1.8.0'
     }
 }
 
