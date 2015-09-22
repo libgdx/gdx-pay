@@ -8,5 +8,9 @@ sourceSets {
         java {
             srcDir 'src'
         }
+
+        resources {
+            srcDir 'resources'
+        }
     }
 }

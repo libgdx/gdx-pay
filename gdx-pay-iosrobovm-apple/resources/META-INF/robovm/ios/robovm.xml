@@ -1,0 +1,5 @@
+<config>
+    <forceLinkClasses>
+        <pattern>com.badlogic.gdx.pay.ios.apple.PurchaseManageriOSApple</pattern>
+    </forceLinkClasses>
+</config>
