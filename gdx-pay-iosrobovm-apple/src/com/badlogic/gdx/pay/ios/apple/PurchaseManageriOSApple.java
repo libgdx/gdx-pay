@@ -270,13 +270,20 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             products = response.getProducts();
             log(LOGTYPELOG, "Products successfully received!");
 
+            final SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
+
             // Create and register our apple transaction observer.
             appleObserver = new AppleTransactionObserver();
-            SKPaymentQueue.getDefaultQueue().addTransactionObserver(appleObserver);
+            defaultQueue.addTransactionObserver(appleObserver);
             log(LOGTYPELOG, "Purchase observer successfully installed!");
 
             // notify of success...
             observer.handleInstall();
+
+            // complete unfinished transactions
+            final NSArray<SKPaymentTransaction> transactions = defaultQueue.getTransactions();
+            log(LOGTYPELOG, "There are " + transactions.size() + " unfinished transactions. Try to finish...");
+            appleObserver.updatedTransactions(defaultQueue, transactions);
         }
 
         @Override
