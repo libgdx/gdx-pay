@@ -60,23 +60,17 @@ import com.badlogic.gdx.pay.Transaction;
  * <li>add the jar-files to your project's lib directory as follows (IAP will work automatically once the files are present):
  * <ul>
  * <li>gdx-pay.jar: This goes into your "core"/lib project.
+ * <li>gdx-pay-client.jar: This goes into your "core"/lib project.
  * <li>gdx-pay-iosrobovm.jar: This goes into your "iOS"/lib directory.
  * </ul>
- * <li>robovm.xml: add the following node:
- * 
- * <pre>
- *  &lt;forceLinkClasses&gt;
- *      &lt;pattern&gt;com.badlogic.gdx.pay.ios.apple.PurchaseManageriOSApple&lt;/pattern&gt;
- *  &lt;/forceLinkClasses&gt;
- * </pre>
- * 
- * </li>
  * </ol>
  * Please note that no code changes for iOS are necessary. As soon as you place the jar files everything will work out of the box
  * (instantiated via reflection).
  * 
  * @author HD_92 (BlueRiverInteractive)
- * @author noblemaster */
+ * @author noblemaster
+ * @author alex-dorokhov
+ * */
 public class PurchaseManageriOSApple implements PurchaseManager {
     private static final String TAG = "GdxPay/AppleIOS";
     private static final boolean LOGDEBUG = true;
@@ -99,7 +93,10 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         return PurchaseManagerConfig.STORE_NAME_IOS_APPLE;
     }
 
-	/* TODO use autoFetchInformation (currently always true) */
+	/**
+     *  @param autoFetchInformation is not used, because without product information on ios it's not possible to fill
+     *  {@link Transaction} object on successful purchase
+     **/
     @Override
 	public void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
         this.observer = observer;
@@ -270,13 +267,20 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             products = response.getProducts();
             log(LOGTYPELOG, "Products successfully received!");
 
+            final SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
+
             // Create and register our apple transaction observer.
             appleObserver = new AppleTransactionObserver();
-            SKPaymentQueue.getDefaultQueue().addTransactionObserver(appleObserver);
+            defaultQueue.addTransactionObserver(appleObserver);
             log(LOGTYPELOG, "Purchase observer successfully installed!");
 
             // notify of success...
             observer.handleInstall();
+
+            // complete unfinished transactions
+            final NSArray<SKPaymentTransaction> transactions = defaultQueue.getTransactions();
+            log(LOGTYPELOG, "There are " + transactions.size() + " unfinished transactions. Try to finish...");
+            appleObserver.updatedTransactions(defaultQueue, transactions);
         }
 
         @Override
