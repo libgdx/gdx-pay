@@ -1,7 +1,7 @@
 
 ext {
     GROUPID = 'com.badlogicgames.gdxpay'
-    VERSION = '0.6.0-SNAPSHOT'
+    VERSION = '0.7.0-SNAPSHOT'
     GDX_VERSION = '1.4.1'
 }
 
