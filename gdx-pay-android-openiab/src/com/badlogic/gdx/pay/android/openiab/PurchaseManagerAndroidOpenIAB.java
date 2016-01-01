@@ -120,8 +120,8 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 				return PurchaseManagerConfig.STORE_NAME_ANDROID_YANDEX;
 			} else {
 				// we should get here: the correct store should always be mapped!
-				Log.e(TAG, "Store name could not be mapped: " + storeNameOpenIAB);
-				return storeNameOpenIAB;
+				Log.d(TAG, "Store name could not be mapped: " + storeNameOpenIAB);
+				return null;
 			}
 		}
 	}
@@ -148,8 +148,8 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 				return OpenIabHelper.NAME_YANDEX;
 			} else {
 				// we should get here: the correct store should always be mapped!
-				Log.e(TAG, "Store name could not be mapped: " + storeName);
-				return storeName;
+				Log.d(TAG, "Store name could not be mapped: " + storeName);
+				return null;
 			}
 		}
 	}
@@ -165,9 +165,12 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 			Set<Map.Entry<String, String>> identifierForStores = offer.getIdentifierForStores();
 			for (Map.Entry<String, String> entry : identifierForStores) {
 				String storeNameOpenIAB = storeNameToOpenIAB(entry.getKey());
-				String identifierForStore = entry.getValue();
-				if (!(SkuManager.getInstance().getStoreSku(storeNameOpenIAB, identifier).equals(identifierForStore))) {
-					SkuManager.getInstance().mapSku(identifier, storeNameOpenIAB, identifierForStore);
+				if (storeNameOpenIAB != null) {
+				    // if the store name is 'null', it doesn't belong to OpenIAB & we ignore (e.g. iOS store!)
+    				String identifierForStore = entry.getValue();
+    				if (!(SkuManager.getInstance().getStoreSku(storeNameOpenIAB, identifier).equals(identifierForStore))) {
+    					SkuManager.getInstance().mapSku(identifier, storeNameOpenIAB, identifierForStore);
+    				}
 				}
 			}
 		}
@@ -219,7 +222,7 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 				(String)config.getStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_YANDEX));
 		}
 		final OpenIabHelper.Options.Builder builder = new OpenIabHelper.Options.Builder();
-		builder.setVerifyMode(OpenIabHelper.Options.VERIFY_SKIP);
+		builder.setVerifyMode(OpenIabHelper.Options.VERIFY_EVERYTHING);
 		builder.setStoreSearchStrategy(OpenIabHelper.Options.SEARCH_STRATEGY_INSTALLER_THEN_BEST_FIT);
 		builder.addStoreKeys(storeKeys);
 
@@ -247,13 +250,17 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
                     } else {
                         // do a restore first to get the inventory
 						if (helper != null) {
+						    Log.d(TAG, "OpenIAB help successfully instantiated. Loading SKU-details...");
 							boolean querySkuDetails = autoFetchInformation; // --> that way we get prices and title/description as well!
-							List<String> inappSkus = getIdsForEntitlementsAndConsumables();
-							List<String> subsSkus = getIdsForSubscriptions();
+							final List<String> inappSkus = getIdsForEntitlementsAndConsumables();
+							final List<String> subsSkus = getIdsForSubscriptions();
 							helper.queryInventoryAsync(querySkuDetails, inappSkus, subsSkus,
 								new IabHelper.QueryInventoryFinishedListener() {
 								@Override
 								public void onQueryInventoryFinished(IabResult result, Inventory inventory) {
+								    // log success
+								    Log.d(TAG, "OpenIAB inventory successfully loaded - ready for purchasing!");
+								    
 									// store the inventory so we can lookup prices later!
 									PurchaseManagerAndroidOpenIAB.this.inventory = inventory;
 
@@ -305,7 +312,6 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 				public void onIabPurchaseFinished (IabResult result, Purchase purchase) {
 					if (result.isFailure()) {
 						// the purchase has failed
-
 						if (result.getResponse() == IabHelper.IABHELPER_USER_CANCELLED) {
 							observer.handlePurchaseCanceled();
 						} else {
@@ -340,10 +346,21 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 			};
 			
 			Offer offer = config.getOffer(identifier);
-			if (offer != null && offer.getType() == OfferType.SUBSCRIPTION)
-				helper.launchSubscriptionPurchaseFlow(activity, identifier, requestCode, listener, payload);
-			else
-				helper.launchPurchaseFlow(activity, identifier, IabHelper.ITEM_TYPE_INAPP, requestCode, listener, payload);
+			if (offer != null) {
+			    // offer found
+			    Log.d(TAG, "Purchasing flow started for '" + identifier + "' (related store identifier: '" + offer.getIdentifierForStore(storeName()) + "'/'" + SkuManager.getInstance().getStoreSku(helper.getConnectedAppstoreName(), identifier) + "').");
+    			if (offer != null && offer.getType() == OfferType.SUBSCRIPTION) {
+    				helper.launchSubscriptionPurchaseFlow(activity, identifier, requestCode, listener, payload);
+    			}
+    			else {
+    				helper.launchPurchaseFlow(activity, identifier, IabHelper.ITEM_TYPE_INAPP, requestCode, listener, payload);
+    			}
+			}
+			else {
+			    // offer not found for identifier
+			    Log.e(TAG, "Offer identifier '" + identifier + "' not found/registered!");
+			    observer.handlePurchaseError(new RuntimeException("Offer identifier '" + identifier + "' not found/registered!"));
+			}
 		}
 		else {
 			Log.e(TAG, "ERROR: purchase(): openIAB helper == null");
