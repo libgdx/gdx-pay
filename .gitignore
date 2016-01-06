@@ -9,6 +9,7 @@
 .gradle
 build/
 dist/
+**/robovm-build/
 
 # Intellij
 .idea/
