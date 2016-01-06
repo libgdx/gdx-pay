@@ -136,7 +136,7 @@ public class IAP implements LifecycleListener, AndroidEventListener {
 		// are we on GooglePlay?
 		try {
 			Class<?> googlePlayClazz = Class.forName("com.badlogic.gdx.pay.android.googleplay.PurchaseManagerAndroidGooglePlay");
-			Method method = googlePlayClazz.getMethod("isRunningViaGooglePlay");
+			Method method = googlePlayClazz.getMethod("isRunningViaGooglePlay", Activity.class);
 			if ((Boolean)method.invoke(googlePlayClazz, activity)) {
 				// we are running on GooglePlay: let's set the purchase manager and be done with it!
 				PurchaseSystem.setManager((PurchaseManager)googlePlayClazz.getConstructor(Activity.class, int.class).newInstance(activity, requestCode));
