@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import libcore.io.Base64;
+
 import org.robovm.apple.foundation.Foundation;
 import org.robovm.apple.foundation.NSArray;
 import org.robovm.apple.foundation.NSBundle;
@@ -31,6 +32,7 @@ import org.robovm.apple.foundation.NSError;
 import org.robovm.apple.foundation.NSNumberFormatter;
 import org.robovm.apple.foundation.NSNumberFormatterBehavior;
 import org.robovm.apple.foundation.NSNumberFormatterStyle;
+import org.robovm.apple.foundation.NSString;
 import org.robovm.apple.foundation.NSURL;
 import org.robovm.apple.storekit.SKErrorCode;
 import org.robovm.apple.storekit.SKPayment;
@@ -45,6 +47,10 @@ import org.robovm.apple.storekit.SKProductsResponse;
 import org.robovm.apple.storekit.SKReceiptRefreshRequest;
 import org.robovm.apple.storekit.SKRequest;
 import org.robovm.apple.storekit.SKRequestDelegateAdapter;
+import org.robovm.objc.ObjCClassNotFoundException;
+import org.robovm.objc.ObjCObject;
+import org.robovm.objc.ObjCRuntime;
+import org.robovm.objc.Selector;
 
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseManager;
@@ -226,7 +232,25 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         else {
             transaction.setTransactionData(null);
         }
-        transaction.setTransactionDataSignature(null);
+        
+        // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9!
+        //       this method below will (hopefully) fail gracefully & do nothing once the functionality is removed from iOS!
+        String transactionDataSignature;
+        try {
+          Selector sel = Selector.register("transactionReceipt");
+          if (ObjCRuntime.class_respondsToSelector(t.getHandle(), sel.getHandle())) {
+            NSData transactionReceipt = ObjCObject.toObjCObject(NSData.class, ObjCRuntime.ptr_objc_msgSend(t.getHandle(), sel.getHandle()), 0);
+            transactionDataSignature = transactionReceipt.toBase64EncodedString(NSDataBase64EncodingOptions.None);
+          }
+          else {
+            transactionDataSignature = null;
+            log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears removed (was deprecated starting iOS 7.0).");
+          }
+        } catch (Throwable e) {
+          log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears broken (was deprecated starting iOS 7.0).", e);         
+          transactionDataSignature = null;
+        }
+        transaction.setTransactionDataSignature(transactionDataSignature);
 
         // return the transaction
         return transaction;
@@ -305,11 +329,19 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
                     // Parse transaction data.
                     final Transaction t = transaction(transaction);
-                    if (t == null)
+                    if (t == null) {
                         break;
+                    }
 
-                    // Find transaction receipt.
-                    if (Foundation.getMajorSystemVersion() >= 7) {
+                    // Find transaction receipt if not set, i.e. t.setTransactionDataSignature() == null
+                    // NOTE: - as long as SKPaymentTransaction.transactionReceipt is not removed but only deprecated, let's use it
+                    //       - FIXME: the function below sends ALL receipts, not just the one we need: we need to parse it out (does NOT work right now)! 
+                    //       - FIXME: the function below should be added also to restore(): this only gets used for direct-purchases ONLY!
+                    //       - parsing "NSBundle.getMainBundle().getAppStoreReceiptURL();": https://developer.apple.com/library/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateLocally.html#//apple_ref/doc/uid/TP40010573-CH1-SW19
+                    //         parsing is not for the faint of heart: lots of low-level coding :-/
+                    //            --> we will use the deprecated feature as long as we can or a volunteer comes forward!
+                    //            --> Apple might also provider better tooling support to parse out specific receipts in the future (yeah, that's going to happen...)
+                    if (t.getTransactionDataSignature() == null) {
                         NSURL receiptURL = NSBundle.getMainBundle().getAppStoreReceiptURL();
                         NSData receipt = NSData.read(receiptURL);
                         if (receipt == null) {
@@ -324,7 +356,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                                         NSURL receiptURL = NSBundle.getMainBundle().getAppStoreReceiptURL();
                                         NSData receipt = NSData.read(receiptURL);
                                         String encodedReceipt = receipt.toBase64EncodedString(NSDataBase64EncodingOptions.None);
-                                        t.setTransactionDataSignature(encodedReceipt);
+// FIXME: parse out actual receipt for this IAP purchase:       t.setTransactionDataSignature(encodedReceipt);
 
                                         log(LOGTYPELOG, "Receipt was fetched!");
                                     } else {
@@ -332,7 +364,6 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                                     }
 
                                     log(LOGTYPELOG, "Transaction was completed: " + transaction.getTransactionIdentifier());
-
                                     observer.handlePurchase(t);
 
                                     // Finish transaction.
@@ -343,9 +374,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                                 public void didFail (SKRequest request, NSError error) {
                                     // Receipt refresh request failed. Let's just continue.
                                     log(LOGTYPEERROR, "Receipt fetching failed: " + error.toString());
-
                                     log(LOGTYPELOG, "Transaction was completed: " + transaction.getTransactionIdentifier());
-
                                     observer.handlePurchase(t);
 
                                     // Finish transaction.
@@ -355,22 +384,20 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                             request.start();
                         } else {
                             String encodedReceipt = receipt.toBase64EncodedString(NSDataBase64EncodingOptions.None);
-                            t.setTransactionDataSignature(encodedReceipt);
+// FIXME: parse out actual receipt for this IAP purchase:        t.setTransactionDataSignature(encodedReceipt);
 
                             log(LOGTYPELOG, "Transaction was completed: " + transaction.getTransactionIdentifier());
-
                             observer.handlePurchase(t);
 
                             // Finish transaction.
                             SKPaymentQueue.getDefaultQueue().finishTransaction(transaction);
                         }
-                    } else {
-                        t.setTransactionDataSignature(Base64.encode(transaction.getTransactionReceipt().getBytes()));
-
+                    }
+                    else {
+                        // we are done: let's report!
                         log(LOGTYPELOG, "Transaction was completed: " + transaction.getTransactionIdentifier());
-
                         observer.handlePurchase(t);
-
+    
                         // Finish transaction.
                         SKPaymentQueue.getDefaultQueue().finishTransaction(transaction);
                     }
@@ -441,9 +468,14 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     }
 
     void log (final int type, final String message) {
+        log(type, message, null);
+    }
+
+    void log (final int type, final String message, Throwable e) {
         if (LOGDEBUG) {
             if (type == LOGTYPELOG) System.out.println('[' + TAG + "] " + message);
             if (type == LOGTYPEERROR) System.err.println('[' + TAG + "] " + message);
+            if (e != null) System.err.println('[' + TAG + "] " + e);
         }
     }
 
@@ -469,6 +501,6 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     
     @Override
     public String toString () {
-        return "AppleIOS";				// FIXME: shouldnt this be PurchaseManagerConfig.STORE_NAME_IOS_APPLE or storeName() ??!!
+        return PurchaseManagerConfig.STORE_NAME_IOS_APPLE;				// FIXME: shouldnt this be PurchaseManagerConfig.STORE_NAME_IOS_APPLE or storeName() ??!!
     }
 }
