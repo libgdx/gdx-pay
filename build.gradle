@@ -90,6 +90,22 @@ project(":gdx-pay-android-openiab") {
     }
 }
 
+project(":gdx-pay-android-googleplay") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+    
+    dependencies {
+        compile project(':gdx-pay-android')
+        
+        custom fileTree(dir: 'lib', include: ['*.jar'])
+    }
+}
+
 project(":gdx-pay-android-ouya") {
     apply plugin : 'java'
     apply from : '../publish.gradle'

@@ -133,6 +133,20 @@ public class IAP implements LifecycleListener, AndroidEventListener {
 			Log.d(TAG, "Failed to locate purchase manager for OUYA-IAP (gdx-pay-android-ouya.jar file not installed)", e);
 		}
 
+		// are we on GooglePlay?
+		try {
+			Class<?> googlePlayClazz = Class.forName("com.badlogic.gdx.pay.android.googleplay.PurchaseManagerAndroidGooglePlay");
+			Method method = googlePlayClazz.getMethod("isRunningViaGooglePlay");
+			if ((Boolean)method.invoke(googlePlayClazz, activity)) {
+				// we are running on GooglePlay: let's set the purchase manager and be done with it!
+				PurchaseSystem.setManager((PurchaseManager)googlePlayClazz.getConstructor(Activity.class, int.class).newInstance(activity, requestCode));
+				return;
+			}
+		} catch (Exception e) {
+			Log.d(TAG, "Failed to locate purchase manager for GooglePlay (gdx-pay-android-googleplay.jar file not installed)", e);
+		}
+
+
 		// let's go with OpenIAB instead if we can find it...
 		try {
 			Class<?> iabClazz = Class.forName("com.badlogic.gdx.pay.android.openiab.PurchaseManagerAndroidOpenIAB");
