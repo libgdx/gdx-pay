@@ -233,19 +233,11 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             transaction.setTransactionData(null);
         }
         
-        // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9!
-        //       this method below will (hopefully) fail gracefully & do nothing once the functionality is removed from iOS!
+        // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9 & hopefully long there after :)
         String transactionDataSignature;
         try {
-          Selector sel = Selector.register("transactionReceipt");
-          if (ObjCRuntime.class_respondsToSelector(t.getHandle(), sel.getHandle())) {
-            NSData transactionReceipt = ObjCObject.toObjCObject(NSData.class, ObjCRuntime.ptr_objc_msgSend(t.getHandle(), sel.getHandle()), 0);
+            NSData transactionReceipt = t.getTransactionReceipt();
             transactionDataSignature = transactionReceipt.toBase64EncodedString(NSDataBase64EncodingOptions.None);
-          }
-          else {
-            transactionDataSignature = null;
-            log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears removed (was deprecated starting iOS 7.0).");
-          }
         } catch (Throwable e) {
           log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears broken (was deprecated starting iOS 7.0).", e);         
           transactionDataSignature = null;
