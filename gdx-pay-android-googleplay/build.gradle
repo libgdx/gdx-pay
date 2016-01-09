@@ -1,0 +1,50 @@
+apply plugin: 'com.android.library'
+
+// TODO KvD fix publishing, runs in errors due to sourcesets
+//    apply from : '../publish.gradle'
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+android {
+    compileSdkVersion 20
+    buildToolsVersion "20.0.0"
+
+    defaultConfig {
+        minSdkVersion 8
+        targetSdkVersion 20
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        testOptions {
+            unitTests.returnDefaultValues = true
+        }
+    }
+
+    lintOptions { // TODO KvD somehow android starts failing on this.
+        abortOnError false
+    }
+}
+
+configurations {
+    custom
+    compile.extendsFrom custom
+}
+
+dependencies {
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+
+    compile project(':gdx-pay-client')
+
+    custom fileTree(dir: 'lib', include: ['*.jar'])
+}
+
+
+// TODO: KvD: dummy, publish.gradle not yet compatible with publish.gradle
+task classes {
+
+}
+
+tasks.withType(Test) {
+    scanForTestClasses = true
+    include "**/*Test.class" // whatever Ant pattern matches your test class files
+}
