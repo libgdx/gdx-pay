@@ -31,6 +31,7 @@ import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.utils.Logger;
 
 import java.util.ArrayList;
 
@@ -54,7 +55,7 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
 
     private IInAppBillingService inAppBillingService;
 
-    Logger logger = new GdxAppLogger("GdxPay/AndroidGooglePlay");
+    Logger  logger = new Logger("GdxPay/AndroidGooglePlay");
 
     public PurchaseManagerAndroidGooglePlay(Activity activity, int requestCode) {
         this.activity = activity;

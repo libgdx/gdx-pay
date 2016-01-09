@@ -9,6 +9,7 @@ import android.os.IBinder;
 
 import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.utils.Logger;
 
 import org.junit.Before;
 import org.junit.Test;

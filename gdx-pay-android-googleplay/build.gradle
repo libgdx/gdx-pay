@@ -34,12 +34,6 @@ dependencies {
     custom fileTree(dir: 'lib', include: ['*.jar'])
 }
 
-
-// TODO: KvD: dummy, publish.gradle not yet compatible with publish.gradle
-task classes {
-
-}
-
 tasks.withType(Test) {
     scanForTestClasses = true
     include "**/*Test.class" // whatever Ant pattern matches your test class files
