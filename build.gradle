@@ -132,8 +132,23 @@ project(":gdx-pay-android-amazon") {
 }
 
 project(":gdx-pay-android-googleplay") {
-    apply plugin : 'java'
-    apply from : '../publish.gradle'
+    apply plugin: 'com.android.library'
+
+    // TODO KvD fix publishing, runs in errors due to sourcesets
+//    apply from : '../publish.gradle'
+
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+
+    android {
+        compileSdkVersion 20
+        buildToolsVersion "20.0.0"
+
+        defaultConfig {
+            minSdkVersion 8
+            targetSdkVersion 20
+        }
+    }
 
     configurations {
         custom
@@ -147,6 +162,12 @@ project(":gdx-pay-android-googleplay") {
         compile project(':gdx-pay-android')
 
         custom fileTree(dir: 'lib', include: ['*.jar'])
+    }
+
+
+    // TODO: KvD: dummy, publish.gradle not yet compatible with publish.gradle
+    task classes {
+
     }
 }
 
