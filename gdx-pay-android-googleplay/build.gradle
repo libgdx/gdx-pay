@@ -18,10 +18,6 @@ android {
             unitTests.returnDefaultValues = true
         }
     }
-
-    lintOptions { // TODO KvD somehow android starts failing on this.
-        abortOnError false
-    }
 }
 
 configurations {
