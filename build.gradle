@@ -2,16 +2,25 @@
 ext {
     GROUPID = 'com.badlogicgames.gdxpay'
     VERSION = '0.9.0-SNAPSHOT'
-    GDX_VERSION = '1.4.1'
+
+    gdxVersion = '1.8.0'
+    openIabVersion = '0.9.7.2'
+    junitVersion = '4.12'
+    mockitoVersion = '1.10.19'
 }
 
 buildscript {
+    ext {
+        androidToolsVersion = '1.5.0'
+        roboVMVersion = '1.12.0'
+    }
+
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.0.0'
-        classpath 'org.robovm:robovm-gradle-plugin:1.8.0'
+        classpath "com.android.tools.build:gradle:${androidToolsVersion}"
+        classpath "org.robovm:robovm-gradle-plugin:${roboVMVersion}"
     }
 }
 
@@ -50,23 +59,23 @@ project(":gdx-pay-client") {
 
     dependencies {
         compile project(':gdx-pay')
-        compile "com.badlogicgames.gdx:gdx:$GDX_VERSION"
+        compile "com.badlogicgames.gdx:gdx:${gdxVersion}"
     }
 }
 
 project(":gdx-pay-android") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
-    
+
     configurations {
         custom
         compile.extendsFrom custom
     }
-    
+
     dependencies {
         compile project(':gdx-pay-client')
 
-        compile "com.badlogicgames.gdx:gdx-backend-android:$GDX_VERSION"
+        compile "com.badlogicgames.gdx:gdx-backend-android:${gdxVersion}"
 
         compile fileTree(dir: 'lib', include: ['*.jar'])
     }
@@ -80,31 +89,12 @@ project(":gdx-pay-android-openiab") {
         custom
         compile.extendsFrom custom
     }
-    
+
     dependencies {
         compile project(':gdx-pay-android')
 
         custom 'org.onepf:openiab:0.9.8.7'
-        
-        custom fileTree(dir: 'lib', include: ['*.jar'])
-    }
-}
 
-project(":gdx-pay-android-googleplay") {
-    apply plugin : 'java'
-    apply from : '../publish.gradle'
-
-    configurations {
-        custom
-        compile.extendsFrom custom
-    }
-    
-    dependencies {
-        testCompile 'junit:junit:4.12'
-        testCompile "org.mockito:mockito-core:1.10.19"
-
-        compile project(':gdx-pay-android')
-        
         custom fileTree(dir: 'lib', include: ['*.jar'])
     }
 }
@@ -117,7 +107,7 @@ project(":gdx-pay-android-ouya") {
         custom
         compile.extendsFrom custom
     }
-    
+
     dependencies {
         compile project(':gdx-pay-android')
 
@@ -133,8 +123,27 @@ project(":gdx-pay-android-amazon") {
         custom
         compile.extendsFrom custom
     }
-    
+
     dependencies {
+        compile project(':gdx-pay-android')
+
+        custom fileTree(dir: 'lib', include: ['*.jar'])
+    }
+}
+
+project(":gdx-pay-android-googleplay") {
+    apply plugin : 'java'
+    apply from : '../publish.gradle'
+
+    configurations {
+        custom
+        compile.extendsFrom custom
+    }
+
+    dependencies {
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-core:${mockitoVersion}"
+
         compile project(':gdx-pay-android')
 
         custom fileTree(dir: 'lib', include: ['*.jar'])
@@ -149,7 +158,7 @@ project(":gdx-pay-desktop-apple") {
         custom
         compile.extendsFrom custom
     }
-    
+
     dependencies {
         compile project(':gdx-pay-client')
     }
@@ -163,7 +172,7 @@ project(":gdx-pay-gwt-googlewallet") {
         custom
         compile.extendsFrom custom
     }
-    
+
     dependencies {
         compile project(':gdx-pay-client')
     }
@@ -178,11 +187,11 @@ project(":gdx-pay-iosrobovm-apple") {
         custom
         compile.extendsFrom custom
     }
-    
+
     dependencies {
         compile project(':gdx-pay-client')
-        compile 'org.robovm:robovm-rt:1.8.0'
-        compile 'org.robovm:robovm-cocoatouch:1.8.0'
+        compile "org.robovm:robovm-rt:$roboVMVersion"
+        compile "org.robovm:robovm-cocoatouch:$roboVMVersion"
     }
 }
 
@@ -194,7 +203,7 @@ project(":gdx-pay-server") {
         custom
         compile.extendsFrom custom
     }
-    
+
     dependencies {
         compile project(':gdx-pay')
     }
@@ -207,10 +216,10 @@ project(":gdx-pay-tests") {
         custom
         compile.extendsFrom custom
     }
-    
+
     dependencies {
         compile project(':gdx-pay-client')
-        compile "com.badlogicgames.gdx:gdx:$GDX_VERSION"
+        compile "com.badlogicgames.gdx:gdx:${gdxVersion}"
     }
 }
 
@@ -218,28 +227,30 @@ project(":gdx-pay-tests-android") {
 
     apply plugin: 'com.android.application'
 
-    configurations { 
+    configurations {
         custom
         compile.extendsFrom custom
-        natives 
+        natives
     }
 
     dependencies {
         compile project(':gdx-pay-client')
-        compile project(':gdx-pay-tests')   
-           
+        compile project(':gdx-pay-tests')
+
         compile project(':gdx-pay-android')
-        
+
         compile project(':gdx-pay-android-openiab')
-        compile 'org.onepf:openiab:0.9.7.2'      
-        
-        compile project(':gdx-pay-android-ouya')  
+
+
+        compile "org.onepf:openiab:${openIabVersion}"
+
+        compile project(':gdx-pay-android-ouya')
         compile fileTree(dir: '../gdx-pay-android-ouya/lib', include: ['*.jar'])
- 
-        compile "com.badlogicgames.gdx:gdx-backend-android:$GDX_VERSION"
-        natives "com.badlogicgames.gdx:gdx-platform:$GDX_VERSION:natives-armeabi"
-        natives "com.badlogicgames.gdx:gdx-platform:$GDX_VERSION:natives-armeabi-v7a"
-        natives "com.badlogicgames.gdx:gdx-platform:$GDX_VERSION:natives-x86"
+
+        compile "com.badlogicgames.gdx:gdx-backend-android:${gdxVersion}"
+        natives "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-armeabi"
+        natives "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-armeabi-v7a"
+        natives "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-x86"
     }
 }
 
@@ -247,22 +258,22 @@ project(":gdx-pay-tests-iosrobovm") {
 	apply plugin: 'java'
     apply plugin: 'robovm'
 
-    configurations { 
+    configurations {
         custom
         compile.extendsFrom custom
-        natives 
+        natives
     }
 
     dependencies {
         compile project(':gdx-pay-client')
-        compile project(':gdx-pay-tests')   
-           
+        compile project(':gdx-pay-tests')
+
         compile project(':gdx-pay-iosrobovm-apple')
 
-        compile "org.robovm:robovm-rt:1.0.0"
-        compile "org.robovm:robovm-cocoatouch:1.0.0"
-        compile "com.badlogicgames.gdx:gdx-backend-robovm:1.5.5"
-        natives "com.badlogicgames.gdx:gdx-platform:1.5.5:natives-ios"
+        compile "org.robovm:robovm-rt:${roboVMVersion}"
+        compile "org.robovm:robovm-cocoatouch:${roboVMVersion}"
+        compile "com.badlogicgames.gdx:gdx-backend-robovm:${gdxVersion}"
+        natives "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-ios"
     }
 }
 
