@@ -21,7 +21,11 @@ package com.badlogic.gdx.pay;
  * @author noblemaster */
 public interface PurchaseObserver {
 
-	/** Called when the purchase manager has successfully initialized. */
+	/** Called when the purchase manager has successfully initialized.
+	 *
+	 * <p>The in-app purchase service has been connected, and in-app products have been successfully
+	 * retrieved from the in-app payment service. </p>
+	 */
 	public void handleInstall ();
 
 	/** Called when the installation of the purchase manager failed.
