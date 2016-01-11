@@ -12,3 +12,4 @@
 * update root README.md (update versions)
 * integrate publish.gradle (support android library project).
 * Check for TODO's
+* Verify purchase authenticity

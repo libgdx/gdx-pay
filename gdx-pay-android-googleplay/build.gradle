@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'de.mobilej.unmock'
+
 
 // TODO KvD fix publishing, runs in errors due to sourcesets
 //    apply from : '../publish.gradle'
@@ -30,6 +32,7 @@ dependencies {
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
 
     compile project(':gdx-pay-client')
+    compile "com.google.code.findbugs:jsr305:${jsr305Version}"
 
     custom fileTree(dir: 'lib', include: ['*.jar'])
 }
@@ -38,3 +41,4 @@ tasks.withType(Test) {
     scanForTestClasses = true
     include "**/*Test.class" // Ignore non-test classes, Android Gralde plugin tries to execute non-test classes too.
 }
+

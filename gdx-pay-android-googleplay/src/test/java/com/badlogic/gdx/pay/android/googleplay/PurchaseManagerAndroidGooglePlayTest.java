@@ -19,6 +19,8 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkProductFullEditionEntitlement;
+import static com.badlogic.gdx.pay.android.googleplay.PurchaseManagerAndroidGooglePlay.PURCHASE_TYPE_IN_APP;
 import static com.badlogic.gdx.pay.android.googleplay.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -87,12 +89,6 @@ public class PurchaseManagerAndroidGooglePlayTest {
         installWithSimpleProduct();
 
         verify(activity).bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE));
-        assertRunAsyncCalledAndReset();
-    }
-
-    private void assertRunAsyncCalledAndReset() {
-        assertTrue("Expected runAsync() to be called", runAsyncCalled);
-        runAsyncCalled = false;
     }
 
     @Test
@@ -114,29 +110,51 @@ public class PurchaseManagerAndroidGooglePlayTest {
     }
 
     @Test
-    public void shouldRequestSkusWhenConnectSucceeds() throws Exception {
+    public void shoulInstallWhenConnectAndGetSkuDetailsSucceeds() throws Exception {
 
+        ServiceConnection connection = bindAndFetchNewConnection();
+
+        whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
+
+        assertRunAsyncNotCalled();
+
+        connection.onServiceConnected(null, null);
+
+        verifyBillingGetSkuDetailsCalled();
+
+        assertRunAsyncCalledAndReset();
+
+        verify(purchaseObserver).handleInstall();
+    }
+
+    private void assertRunAsyncNotCalled() {
+        assertFalse("runAsync should not have been called.", runAsyncCalled);
+    }
+
+    protected ServiceConnection bindAndFetchNewConnection() {
         whenActivityBindReturn(true);
 
         installWithSimpleProduct();
 
         verify(activity).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
 
-        ServiceConnection connection = serviceConnectionArgumentCaptor.getValue();
+        return serviceConnectionArgumentCaptor.getValue();
+    }
 
+    protected void whenBillingServiceGetSkuDetailsReturn(Bundle skuDetailsResponse) throws android.os.RemoteException {
         when(inAppBillingService.getSkuDetails(
                         eq(PurchaseManagerAndroidGooglePlay.BILLING_API_VERSION),
                         isA(String.class),
-                        eq(PurchaseManagerAndroidGooglePlay.PURCHASE_TYPE_IN_APP),
+                        eq(PURCHASE_TYPE_IN_APP),
                         isA(Bundle.class))
-        ).thenReturn(new Bundle(1));
+        ).thenReturn(skuDetailsResponse);
+    }
 
-        connection.onServiceConnected(null, null);
-
+    protected void verifyBillingGetSkuDetailsCalled() throws android.os.RemoteException {
         verify(inAppBillingService).getSkuDetails(
                 eq(PurchaseManagerAndroidGooglePlay.BILLING_API_VERSION),
                 isA(String.class),
-                eq("inapp"),
+                eq(PURCHASE_TYPE_IN_APP),
                 isA(Bundle.class));
     }
 
@@ -156,4 +174,8 @@ public class PurchaseManagerAndroidGooglePlayTest {
         purchaseManager.install(purchaseObserver, managerConfigGooglePlayOneOfferBuyFullEditionProduct(), false);
     }
 
+    private void assertRunAsyncCalledAndReset() {
+        assertTrue("Expected runAsync() to be called", runAsyncCalled);
+        runAsyncCalled = false;
+    }
 }

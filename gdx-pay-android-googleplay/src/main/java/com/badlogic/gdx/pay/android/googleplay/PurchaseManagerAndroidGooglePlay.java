@@ -23,7 +23,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.RemoteException;
 
 import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.pay.Information;
@@ -34,6 +33,8 @@ import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.utils.Logger;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The purchase manager implementation for Google Play (Android).
@@ -64,6 +65,7 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
     private IInAppBillingService inAppBillingService;
 
     Logger logger = new Logger("GdxPay/AndroidGooglePlay");
+    private final Map<String, Information> informationMap = new ConcurrentHashMap<String, Information>();
 
     public PurchaseManagerAndroidGooglePlay(Activity activity, int requestCode) {
         this.activity = activity;
@@ -74,14 +76,7 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
 
     @Override
     public void install(final PurchaseObserver observer, final PurchaseManagerConfig config, final boolean autoFetchInformation) {
-
-        runAsync(new Runnable() {
-            @Override
-            public void run() {
-                installChainBindService(observer, config);
-            }
-        });
-
+        installChainBindService(observer, config);
     }
 
     private void installChainBindService(PurchaseObserver observer, PurchaseManagerConfig config) {
@@ -106,17 +101,13 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
         return serviceIntent;
     }
 
-    private void requestSkus(final PurchaseObserver observer, final PurchaseManagerConfig purchaseManagerConfig) {
+    private void loadInformationsViaSkus(final PurchaseObserver observer, final PurchaseManagerConfig purchaseManagerConfig) {
         runAsync(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Bundle skuDetails = inAppBillingService.getSkuDetails(BILLING_API_VERSION,
-                            activity.getPackageName(), PURCHASE_TYPE_IN_APP,
-                            createSkus(purchaseManagerConfig));
-
-                    convertSkuResponseToInventory(skuDetails, observer);
-                } catch (RemoteException e) {
+                    loadSkusAndFillPurchaseInformation(purchaseManagerConfig, observer);
+                } catch (Exception e) {
                     // TODO: not yet unit tested.
                     observer.handleInstallError(new GdxPayInstallFailureException(e, purchaseManagerConfig));
                 }
@@ -124,8 +115,13 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
         });
     }
 
-    private void convertSkuResponseToInventory(Bundle skuDetails, PurchaseObserver observer) {
-        // TODO: store data, and unit test
+    protected void loadSkusAndFillPurchaseInformation(PurchaseManagerConfig purchaseManagerConfig, PurchaseObserver observer) throws android.os.RemoteException {
+        Bundle skuDetailsResponse = inAppBillingService.getSkuDetails(BILLING_API_VERSION,
+                activity.getPackageName(), PURCHASE_TYPE_IN_APP,
+                createSkus(purchaseManagerConfig));
+
+        informationMap.clear();
+        informationMap.putAll(GetSkusDetailsResponseBundleToInformationConverter.convertSkuDetailsResponse(skuDetailsResponse));
 
         observer.handleInstall();
     }
@@ -181,7 +177,7 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
     }
 
     private void onServiceConnected(PurchaseObserver observer, PurchaseManagerConfig config) {
-        requestSkus(observer, config);
+        loadInformationsViaSkus(observer, config);
     }
 
     protected IInAppBillingService lookupByStubAsInterface(IBinder service) {

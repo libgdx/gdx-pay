@@ -7,20 +7,24 @@ ext {
     openIabVersion = '0.9.7.2'
     junitVersion = '4.12'
     mockitoVersion = '1.10.19'
+    jsr305Version = '3.0.1'
 }
 
 buildscript {
     ext {
         androidToolsVersion = '1.5.0'
         roboVMVersion = '1.12.0'
+        unmockVersion = "0.3.6"
     }
 
     repositories {
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath "com.android.tools.build:gradle:${androidToolsVersion}"
         classpath "org.robovm:robovm-gradle-plugin:${roboVMVersion}"
+        classpath "de.mobilej.unmock:UnMockPlugin:${unmockVersion}"
     }
 }
 
