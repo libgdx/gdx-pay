@@ -157,7 +157,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
         assertFalse("runAsync should not have been called.", runAsyncCalled);
     }
 
-    protected ServiceConnection bindAndFetchNewConnection() {
+    private ServiceConnection bindAndFetchNewConnection() {
         whenActivityBindReturn(true);
 
         installWithSimpleProduct();
@@ -169,7 +169,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
         return serviceConnectionArgumentCaptor.getValue();
     }
 
-    protected void whenBillingServiceGetSkuDetailsReturn(Bundle skuDetailsResponse) throws android.os.RemoteException {
+    private void whenBillingServiceGetSkuDetailsReturn(Bundle skuDetailsResponse) throws android.os.RemoteException {
         when(inAppBillingService.getSkuDetails(
                         eq(AndroidGooglePlayPurchaseManager.BILLING_API_VERSION),
                         isA(String.class),
@@ -178,7 +178,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
         ).thenReturn(skuDetailsResponse);
     }
 
-    protected void verifyBillingGetSkuDetailsCalled() throws android.os.RemoteException {
+    private void verifyBillingGetSkuDetailsCalled() throws android.os.RemoteException {
         verify(inAppBillingService).getSkuDetails(
                 eq(AndroidGooglePlayPurchaseManager.BILLING_API_VERSION),
                 isA(String.class),
