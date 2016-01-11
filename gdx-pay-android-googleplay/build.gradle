@@ -5,16 +5,16 @@ apply plugin: 'de.mobilej.unmock'
 // TODO KvD fix publishing, runs in errors due to sourcesets
 //    apply from : '../publish.gradle'
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 android {
-    compileSdkVersion 20
+    compileSdkVersion 23
     buildToolsVersion "20.0.0"
 
     defaultConfig {
         minSdkVersion 8
-        targetSdkVersion 20
+        targetSdkVersion 23
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
         testOptions {
             unitTests.returnDefaultValues = true
@@ -30,6 +30,7 @@ configurations {
 dependencies {
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile "org.assertj:assertj-core:${assertJVersion}"
 
     compile project(':gdx-pay-client')
     compile "com.google.code.findbugs:jsr305:${jsr305Version}"

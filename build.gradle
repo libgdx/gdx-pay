@@ -3,6 +3,7 @@ ext {
     GROUPID = 'com.badlogicgames.gdxpay'
     VERSION = '0.9.0-SNAPSHOT'
 
+    assertJVersion = '2.3.0'
     gdxVersion = '1.8.0'
     openIabVersion = '0.9.7.2'
     junitVersion = '4.12'
