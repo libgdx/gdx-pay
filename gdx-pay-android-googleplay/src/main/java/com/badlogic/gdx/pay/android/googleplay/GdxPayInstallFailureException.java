@@ -11,6 +11,11 @@ public class GdxPayInstallFailureException extends RuntimeException {
         this.requestConfig = requestConfig;
     }
 
+    public GdxPayInstallFailureException(String message, PurchaseManagerConfig requestConfig) {
+        super(message);
+        this.requestConfig = requestConfig;
+    }
+
     public PurchaseManagerConfig getRequestConfig() {
         return requestConfig;
     }

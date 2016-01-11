@@ -69,6 +69,9 @@ public class PurchaseManagerAndroidGooglePlayTest {
 
     @Test
     public void installShouldStartActivityIntent() throws Exception {
+
+        whenActivityBindReturn(true);
+
         installWithSimpleProduct();
 
         verify(activity).bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE));
@@ -76,9 +79,16 @@ public class PurchaseManagerAndroidGooglePlayTest {
 
     @Test
     public void shouldCallObserverInstallErrorOnActivityBindFailure() throws Exception {
-        when(activity.bindService(isA(Intent.class), isA(ServiceConnection.class),
-                eq(Context.BIND_AUTO_CREATE)))
-                .thenThrow(new SecurityException("Not allowed to bind to this service"));
+        whenActivityBindThrow(new SecurityException("Not allowed to bind to this service"));
+
+        installWithSimpleProduct();
+
+        verify(purchaseObserver).handleInstallError(isA(GdxPayInstallFailureException.class));
+    }
+
+    @Test
+    public void shouldCallObserverInstallErrorWhenActivityBindReturnsFalse() throws Exception {
+        whenActivityBindReturn(false);
 
         installWithSimpleProduct();
 
@@ -88,13 +98,14 @@ public class PurchaseManagerAndroidGooglePlayTest {
     @Test
     public void shouldRequestSkusWhenConnectSucceeds() throws Exception {
 
+        whenActivityBindReturn(true);
+
         installWithSimpleProduct();
 
         verify(activity).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
 
         ServiceConnection connection = serviceConnectionArgumentCaptor.getValue();
 
-        // "inapp" of "subs"
         when(inAppBillingService.getSkuDetails(
                         eq(PurchaseManagerAndroidGooglePlay.BILLING_API_VERSION),
                         isA(String.class),
@@ -109,6 +120,17 @@ public class PurchaseManagerAndroidGooglePlayTest {
                 isA(String.class),
                 eq("inapp"),
                 isA(Bundle.class));
+    }
+
+    private void whenActivityBindThrow(SecurityException exception) {
+        when(activity.bindService(isA(Intent.class), isA(ServiceConnection.class),
+                eq(Context.BIND_AUTO_CREATE)))
+                .thenThrow(exception);
+
+    }
+
+    private void whenActivityBindReturn(boolean returnValue) {
+        when(activity.bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE))).thenReturn(returnValue);
 
     }
 

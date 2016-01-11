@@ -44,10 +44,12 @@ import java.util.ArrayList;
 public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
 
     public static final int BILLING_API_VERSION = 3;
+
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
 
     /** Our Android activity. */
     private Activity activity;
+
     /** The request code to use for onActivityResult (arbitrary chosen). */
     private int requestCode;
 
@@ -70,7 +72,9 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
         try {
             inAppBillingServiceConnection = new BillingServiceInitializingServiceConnection(observer, config);
 
-            activity.bindService(createBindBillingServiceIntent(), inAppBillingServiceConnection, Context.BIND_AUTO_CREATE);
+            if (!activity.bindService(createBindBillingServiceIntent(), inAppBillingServiceConnection, Context.BIND_AUTO_CREATE)) {
+                observer.handleInstallError(new GdxPayInstallFailureException("Failed to bind to service", config));
+            }
         } catch (Exception e) {
             observer.handleInstallError(new GdxPayInstallFailureException(e, config));
         }
