@@ -26,15 +26,15 @@ import android.os.IBinder;
 
 import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.utils.Logger;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsRequestConverter.convertConfigToItemIdList;
 
 /**
  * The purchase manager implementation for Google Play (Android).
@@ -103,33 +103,18 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     }
 
     protected void loadSkusAndFillPurchaseInformation(PurchaseManagerConfig purchaseManagerConfig, PurchaseObserver observer) throws android.os.RemoteException {
+        Bundle skusRequest = convertConfigToItemIdList(purchaseManagerConfig);
+        logger.error("getSkuDetails("+BILLING_API_VERSION + ", " + activity.getPackageName() + ", " + skusRequest);
+
         Bundle skuDetailsResponse = inAppBillingService.getSkuDetails(BILLING_API_VERSION,
                 activity.getPackageName(), PURCHASE_TYPE_IN_APP,
-                createSkus(purchaseManagerConfig));
+                skusRequest);
 
         informationMap.clear();
         informationMap.putAll(GetSkusDetailsResponseBundleToInformationConverter.convertSkuDetailsResponse(skuDetailsResponse));
 
         observer.handleInstall();
     }
-
-    private Bundle createSkus(PurchaseManagerConfig purchaseManagerConfig) {
-        Bundle bundle = new Bundle();
-
-        ArrayList<String> skuList = new ArrayList<>();
-
-        for (int i = 0; i < purchaseManagerConfig.getOfferCount(); i++) {
-            Offer offer = purchaseManagerConfig.getOffer(i);
-
-            skuList.add(offer.getIdentifier());
-        }
-
-        Bundle querySkus = new Bundle();
-        querySkus.putStringArrayList("ITEM_ID_LIST", skuList);
-
-        return bundle;
-    }
-
 
     @Override
     public boolean installed() {
