@@ -16,7 +16,8 @@
 
 package com.badlogic.gdx.pay;
 
-/** An IAP purchase manager (client). Items for purchase are referenced by an item identifier integer value. Make sure to register
+/**
+ * An IAP purchase manager (client). Items for purchase are referenced by an item identifier integer value. Make sure to register
  * the same identifier on all the IAP services desired for easy porting. The same identifier should be registered in the IAP item
  * setup screen of each IAP service (Google Play IAP, Amazon IAP, iOS IAP, Apple Mac Store IAP, Steam etc). For stores that
  * support textual item identifiers (most of them except Steam) prefix a "item_" before the item identifier number.
@@ -40,43 +41,61 @@ package com.badlogic.gdx.pay;
  * code changes are needed within your Android project. In your "core" project is where it all happens: Have a look at
  * PayTest.java to see how it works.
  * <p>
- * 
- * @author noblemaster */
+ *
+ * @author noblemaster
+ */
 public interface PurchaseManager {
 
-	/** Returns the store name. */
-	String storeName ();
+    /**
+     * Returns the store name.
+     */
+    String storeName();
 
-	/** Registers a purchase observer which handles installs of apps on a new device or aborted purchases from a previous session
-	 * that were not yet handled by the application. The observer is called for all unfinished transactions. The observer is also
-	 * called for refunds of previous purchased items.
-	 * <p>
-	 * Registering an observer is required. If no observer is registered the call to purchase an item will fail with a runtime
-	 * exception to teach you lesson to always remember to set a purchase observer. The purchase observer is needed to make sure
-	 * all purchases have been handled and served to the customer.
-	 * </p>
-	 *
-	 * @param observer The observer which is called whenever purchases have to be handled by the application as well as when the
-	 *           store has been installed.
-	 * @param config The configuration. Please note offers inside the configuration can be updated on the fly (e.g. by
-	 * @param autoFetchInformation tells PurchaseManager to automatically fetch offer details on setup */
-	void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation);
+    /**
+     * Registers a purchase observer which handles installs of apps on a new device or aborted purchases from a previous session
+     * that were not yet handled by the application. The observer is called for all unfinished transactions. The observer is also
+     * called for refunds of previous purchased items.
+     * <p>
+     * Registering an observer is required. If no observer is registered the call to purchase an item will fail with a runtime
+     * exception to teach you lesson to always remember to set a purchase observer. The purchase observer is needed to make sure
+     * all purchases have been handled and served to the customer.
+     * </p>
+     *
+     * @param observer             The observer which is called whenever purchases have to be handled by the application as well as when the
+     *                             store has been installed.
+     * @param config               The configuration. Please note offers inside the configuration can be updated on the fly (e.g. by
+     * @param autoFetchInformation tells PurchaseManager to automatically fetch offer details on setup
+     */
+    void install(PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation);
 
-	/** Returns true if the purchase manager is installed (non-disposed) and ready to go. */
-	boolean installed ();
+    /**
+     * Returns true if the purchase manager is installed (non-disposed) and ready to go.
+     */
+    boolean installed();
 
-	/** Disposes the purchase manager. */
-	void dispose ();
+    /**
+     * Disposes the purchase manager.
+     */
+    void dispose();
 
-	/** Requests to purchase an item. The listener will always be called once the purchase has either completed or failed.
-	 * <p>
-	 * Note: a GDX runtime exception if throw if you have not registered a purchase observer.
-	 * @param identifier The item to purchase. */
-	void purchase (String identifier);
+    /**
+     * Requests to purchase an item. The listener will always be called once the purchase has either completed or failed.
+     * <p>
+     * Note: a GDX runtime exception if throw if you have not registered a purchase observer.
+     *
+     * @param identifier The item to purchase.
+     */
+    void purchase(String identifier);
 
-	/** Restores existing purchases. */
-	void purchaseRestore ();
+    /**
+     * Restores existing purchases.
+     */
+    void purchaseRestore();
 
-    /** Returns information about a product provided by the purchase manager. Returns 'null' if the product is not available. */
-	Information getInformation(String identifier);
+    /**
+     * Returns information about a product provided by the purchase manager.
+     *
+     * @return the information for given identifier, or {@link Information#UNAVAILABLE} if no product for given <code>identifier</code> is loaded.
+     */
+    Information getInformation(String identifier);
 }
