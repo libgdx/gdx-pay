@@ -45,7 +45,7 @@ package com.badlogic.gdx.pay;
 public interface PurchaseManager {
 
 	/** Returns the store name. */
-	public String storeName ();
+	String storeName ();
 
 	/** Registers a purchase observer which handles installs of apps on a new device or aborted purchases from a previous session
 	 * that were not yet handled by the application. The observer is called for all unfinished transactions. The observer is also
@@ -60,26 +60,23 @@ public interface PurchaseManager {
 	 *           store has been installed.
 	 * @param config The configuration. Please note offers inside the configuration can be updated on the fly (e.g. by
 	 * @param autoFetchInformation tells PurchaseManager to automatically fetch offer details on setup */
-	public void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation);
+	void install (PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation);
 
 	/** Returns true if the purchase manager is installed (non-disposed) and ready to go. */
-	public boolean installed ();
+	boolean installed ();
 
 	/** Disposes the purchase manager. */
-	public void dispose ();
+	void dispose ();
 
 	/** Requests to purchase an item. The listener will always be called once the purchase has either completed or failed.
 	 * <p>
 	 * Note: a GDX runtime exception if throw if you have not registered a purchase observer.
 	 * @param identifier The item to purchase. */
-	public void purchase (String identifier);
+	void purchase (String identifier);
 
 	/** Restores existing purchases. */
-	public void purchaseRestore ();
+	void purchaseRestore ();
 
     /** Returns information about a product provided by the purchase manager. Returns 'null' if the product is not available. */
-	public Information getInformation(String identifier);
-	
-	@Override
-	public String toString ();
+	Information getInformation(String identifier);
 }

@@ -24,8 +24,8 @@ import com.badlogic.gdx.pay.Transaction;
 public interface PurchaseVerifier {
 
 	/** Returns the store name this verifier is used for. */
-	public String storeName();
+	String storeName();
 
 	/** Returns true if the transaction was determined valid. */
-	public boolean isValid(Transaction transaction);
+	boolean isValid(Transaction transaction);
 }
