@@ -13,21 +13,36 @@ import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.DET
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.ITEM_ID_LIST;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.RESPONSE_CODE;
 import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_OK;
+import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE;
 
 public class GetSkuDetailsResponseBundleObjectMother {
 
     public static Bundle skuDetailsResponseResultOkProductFullEditionEntitlement() {
-        Bundle bundle = new Bundle(2);
-        bundle.putInt(RESPONSE_CODE, BILLING_RESPONSE_RESULT_OK.getCode());
-        ArrayList<String> skuList = new ArrayList<String>();
         Offer offer = OfferObjectMother.offerFullEditionEntitlement();
-        skuList.add(offer.getIdentifier());
-        bundle.putStringArrayList(ITEM_ID_LIST, skuList);
-        bundle.putStringArrayList(DETAILS_LIST, makeDetailListPrice1Euro(offer));
+
+        Bundle bundle = new Bundle(3);
+
+        bundle.putInt(RESPONSE_CODE, BILLING_RESPONSE_RESULT_OK.getCode());
+        bundle.putStringArrayList(ITEM_ID_LIST, itemIdList(offer));
+        bundle.putStringArrayList(DETAILS_LIST, detailListPrice1Euro(offer));
+
         return bundle;
     }
 
-    private static ArrayList<String> makeDetailListPrice1Euro(Offer offer) {
+    protected static ArrayList<String> itemIdList(Offer offer) {
+        ArrayList<String> skuList = new ArrayList<String>();
+        skuList.add(offer.getIdentifier());
+        return skuList;
+    }
+
+    public static Bundle skuDetailsResponseResultNetworkError() {
+        Bundle bundle = new Bundle(1);
+        bundle.putInt(RESPONSE_CODE, BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE.getCode());
+
+        return bundle;
+    }
+
+    private static ArrayList<String> detailListPrice1Euro(Offer offer) {
         JSONObject object = new JSONObject();
 
         try {

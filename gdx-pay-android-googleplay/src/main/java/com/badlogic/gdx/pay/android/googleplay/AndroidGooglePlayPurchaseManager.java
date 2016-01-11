@@ -38,40 +38,27 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The purchase manager implementation for Google Play (Android).
- * <p>
- * Include the gdx-pay-android-googleplay.jar for this to work (plus gdx-pay-android.jar). Also update the "uses-permission" settings
- * in AndroidManifest.xml and your proguard settings.</p>
- *
+
  * @author noblemaster
  */
-public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
+public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     public static final int BILLING_API_VERSION = 3;
 
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
 
-    /**
-     * Our Android activity.
-     */
     private Activity activity;
-
-    /**
-     * The request code to use for onActivityResult (arbitrary chosen).
-     */
-    private int requestCode;
 
     private ServiceConnection inAppBillingServiceConnection;
 
     private IInAppBillingService inAppBillingService;
 
     Logger logger = new Logger("GdxPay/AndroidGooglePlay");
+
     private final Map<String, Information> informationMap = new ConcurrentHashMap<String, Information>();
 
-    public PurchaseManagerAndroidGooglePlay(Activity activity, int requestCode) {
+    public AndroidGooglePlayPurchaseManager(Activity activity) {
         this.activity = activity;
-
-        // the request code for onActivityResult
-        this.requestCode = requestCode;
     }
 
     @Override
@@ -200,7 +187,7 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
 
             logger.debug("CashierAndroidGoogle: Service Connected SUCCESSFULLY!");
 
-            PurchaseManagerAndroidGooglePlay.this.onServiceConnected(observer, config);
+            AndroidGooglePlayPurchaseManager.this.onServiceConnected(observer, config);
         }
 
         @Override

@@ -19,9 +19,12 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
 import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkProductFullEditionEntitlement;
-import static com.badlogic.gdx.pay.android.googleplay.PurchaseManagerAndroidGooglePlay.PURCHASE_TYPE_IN_APP;
+import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.PURCHASE_TYPE_IN_APP;
 import static com.badlogic.gdx.pay.android.googleplay.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
+import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
@@ -30,9 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class PurchaseManagerAndroidGooglePlayTest {
-
-    private static final int REQUEST_CODE = 1032;
+public class AndroidGooglePlayPurchaseManagerTest {
 
     @Mock
     Activity activity;
@@ -46,11 +47,14 @@ public class PurchaseManagerAndroidGooglePlayTest {
     @Captor
     ArgumentCaptor<ServiceConnection> serviceConnectionArgumentCaptor;
 
+    @Captor
+    ArgumentCaptor<Throwable> throwableArgumentCaptor;
+
     @Mock
     IInAppBillingService inAppBillingService;
 
 
-    private PurchaseManagerAndroidGooglePlay purchaseManager;
+    private AndroidGooglePlayPurchaseManager purchaseManager;
 
     boolean runAsyncCalled;
 
@@ -59,7 +63,7 @@ public class PurchaseManagerAndroidGooglePlayTest {
 
         runAsyncCalled = false;
 
-        purchaseManager = new PurchaseManagerAndroidGooglePlay(activity, REQUEST_CODE) {
+        purchaseManager = new AndroidGooglePlayPurchaseManager(activity) {
             @Override
             protected IInAppBillingService lookupByStubAsInterface(IBinder binder) {
                 return inAppBillingService;
@@ -110,13 +114,10 @@ public class PurchaseManagerAndroidGooglePlayTest {
     }
 
     @Test
-    public void shoulInstallWhenConnectAndGetSkuDetailsSucceeds() throws Exception {
-
+    public void shouldInstallWhenConnectAndGetSkuDetailsSucceeds() throws Exception {
         ServiceConnection connection = bindAndFetchNewConnection();
 
         whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
-
-        assertRunAsyncNotCalled();
 
         connection.onServiceConnected(null, null);
 
@@ -125,6 +126,27 @@ public class PurchaseManagerAndroidGooglePlayTest {
         assertRunAsyncCalledAndReset();
 
         verify(purchaseObserver).handleInstall();
+    }
+
+    @Test
+    public void shouldCallHandleInstallErrorWhenGetSkuDetailsResponseResultIsNetworkError() throws Exception {
+        ServiceConnection connection = bindAndFetchNewConnection();
+
+        whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultNetworkError());
+
+        connection.onServiceConnected(null, null);
+
+        verifyBillingGetSkuDetailsCalled();
+
+        assertRunAsyncCalledAndReset();
+
+        verify(purchaseObserver).handleInstallError(throwableArgumentCaptor.capture());
+
+
+        Throwable throwable = throwableArgumentCaptor.getValue();
+
+        assertThat(throwable).isInstanceOf(GdxPayInstallFailureException.class)
+                .hasMessageContaining(BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE.getMessage());
     }
 
     private void assertRunAsyncNotCalled() {
@@ -138,12 +160,14 @@ public class PurchaseManagerAndroidGooglePlayTest {
 
         verify(activity).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
 
+        assertRunAsyncNotCalled();
+
         return serviceConnectionArgumentCaptor.getValue();
     }
 
     protected void whenBillingServiceGetSkuDetailsReturn(Bundle skuDetailsResponse) throws android.os.RemoteException {
         when(inAppBillingService.getSkuDetails(
-                        eq(PurchaseManagerAndroidGooglePlay.BILLING_API_VERSION),
+                        eq(AndroidGooglePlayPurchaseManager.BILLING_API_VERSION),
                         isA(String.class),
                         eq(PURCHASE_TYPE_IN_APP),
                         isA(Bundle.class))
@@ -152,7 +176,7 @@ public class PurchaseManagerAndroidGooglePlayTest {
 
     protected void verifyBillingGetSkuDetailsCalled() throws android.os.RemoteException {
         verify(inAppBillingService).getSkuDetails(
-                eq(PurchaseManagerAndroidGooglePlay.BILLING_API_VERSION),
+                eq(AndroidGooglePlayPurchaseManager.BILLING_API_VERSION),
                 isA(String.class),
                 eq(PURCHASE_TYPE_IN_APP),
                 isA(Bundle.class));
@@ -167,7 +191,6 @@ public class PurchaseManagerAndroidGooglePlayTest {
 
     private void whenActivityBindReturn(boolean returnValue) {
         when(activity.bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE))).thenReturn(returnValue);
-
     }
 
     private void installWithSimpleProduct() {

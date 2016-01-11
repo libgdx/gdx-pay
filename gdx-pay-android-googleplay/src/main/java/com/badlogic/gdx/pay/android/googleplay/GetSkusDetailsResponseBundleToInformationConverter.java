@@ -27,7 +27,7 @@ public class GetSkusDetailsResponseBundleToInformationConverter {
         }
 
         if (responseCode != BILLING_RESPONSE_RESULT_OK) {
-            throw new IllegalArgumentException("Unexpected response code: " + response );
+            throw new IllegalArgumentException("Unexpected response code: " + responseCode );
         }
 
         ArrayList<String> skuDetailsStringList = skuDetailsResponse.getStringArrayList(DETAILS_LIST);
