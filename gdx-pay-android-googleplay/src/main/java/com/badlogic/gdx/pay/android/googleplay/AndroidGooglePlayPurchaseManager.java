@@ -55,7 +55,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     Logger logger = new Logger("GdxPay/AndroidGooglePlay");
 
-    private final Map<String, Information> informationMap = new ConcurrentHashMap<String, Information>();
+    private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
 
     public AndroidGooglePlayPurchaseManager(Activity activity) {
         this.activity = activity;
@@ -116,7 +116,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     private Bundle createSkus(PurchaseManagerConfig purchaseManagerConfig) {
         Bundle bundle = new Bundle();
 
-        ArrayList<String> skuList = new ArrayList<String>();
+        ArrayList<String> skuList = new ArrayList<>();
 
         for (int i = 0; i < purchaseManagerConfig.getOfferCount(); i++) {
             Offer offer = purchaseManagerConfig.getOffer(i);
@@ -138,7 +138,8 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     @Override
     public void dispose() {
-        // FIXME
+        unbindIfBound();
+        clearCaches();
     }
 
     @Override
@@ -153,13 +154,29 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     @Override
     public Information getInformation(String identifier) {
-        // FIXME
-        return null;
+        Information information = informationMap.get(identifier);
+
+        if (information == null) {
+            return Information.UNAVAILABLE;
+        }
+
+        return information;
     }
 
     @Override
     public String storeName() {
         return PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE;
+    }
+
+
+    private void clearCaches() {
+        informationMap.clear();
+    }
+
+    private void unbindIfBound() {
+        if (inAppBillingServiceConnection != null) {
+            activity.unbindService(inAppBillingServiceConnection);
+        }
     }
 
     private void onServiceConnected(PurchaseObserver observer, PurchaseManagerConfig config) {
@@ -181,10 +198,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-
             inAppBillingService = lookupByStubAsInterface(service);
-
-            logger.debug("CashierAndroidGoogle: Service Connected SUCCESSFULLY!");
 
             AndroidGooglePlayPurchaseManager.this.onServiceConnected(observer, config);
         }
@@ -192,8 +206,6 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             inAppBillingService = null;
-
-            logger.debug("CashierAndroidGoogle: Service Disconnected.");
         }
     }
 }

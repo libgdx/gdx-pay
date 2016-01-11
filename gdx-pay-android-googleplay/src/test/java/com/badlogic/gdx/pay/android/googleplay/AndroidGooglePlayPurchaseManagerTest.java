@@ -8,9 +8,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.utils.Logger;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,10 +24,15 @@ import org.mockito.runners.MockitoJUnitRunner;
 import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
 import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkProductFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.PURCHASE_TYPE_IN_APP;
+import static com.badlogic.gdx.pay.android.googleplay.InformationObjectMother.informationFullEditionEntitlement;
+import static com.badlogic.gdx.pay.android.googleplay.OfferObjectMother.offerFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
 import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -90,7 +97,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
         whenActivityBindReturn(true);
 
-        installWithSimpleProduct();
+        requestPurchaseMangerInstallWithFullEditionOffer();
 
         verify(activity).bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE));
     }
@@ -99,7 +106,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     public void shouldCallObserverInstallErrorOnActivityBindFailure() throws Exception {
         whenActivityBindThrow(new SecurityException("Not allowed to bind to this service"));
 
-        installWithSimpleProduct();
+        requestPurchaseMangerInstallWithFullEditionOffer();
 
         verify(purchaseObserver).handleInstallError(isA(GdxPayInstallFailureException.class));
     }
@@ -108,20 +115,14 @@ public class AndroidGooglePlayPurchaseManagerTest {
     public void shouldCallObserverInstallErrorWhenActivityBindReturnsFalse() throws Exception {
         whenActivityBindReturn(false);
 
-        installWithSimpleProduct();
+        requestPurchaseMangerInstallWithFullEditionOffer();
 
         verify(purchaseObserver).handleInstallError(isA(GdxPayInstallFailureException.class));
     }
 
     @Test
     public void shouldInstallWhenConnectAndGetSkuDetailsSucceeds() throws Exception {
-        ServiceConnection connection = bindAndFetchNewConnection();
-
-        whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
-
-        connection.onServiceConnected(null, null);
-
-        verifyBillingGetSkuDetailsCalled();
+        bindFetchNewConnectionAndInstallPurchaseSystem();
 
         assertRunAsyncCalledAndReset();
 
@@ -153,6 +154,45 @@ public class AndroidGooglePlayPurchaseManagerTest {
         assertFalse(purchaseManager.installed());
     }
 
+    @Test
+    public void disposeShouldMarkServiceUninstalled() throws Exception {
+        bindFetchNewConnectionAndInstallPurchaseSystem();
+
+        purchaseManager.dispose();
+
+        assertFalse(purchaseManager.installed());
+    }
+
+    @Test
+    public void getInformationForExistingSkuShouldReturnIt() throws Exception {
+        bindFetchNewConnectionAndInstallPurchaseSystem();
+        String identifier = offerFullEditionEntitlement().getIdentifier();
+        Information expectedInformation = informationFullEditionEntitlement();
+
+        Information actualInformation = purchaseManager.getInformation(identifier);
+
+        assertEquals(expectedInformation, actualInformation);
+    }
+
+    @Test
+    public void getInformationForNonExistingProductShouldReturnInformationUnavailable() throws Exception {
+        bindFetchNewConnectionAndInstallPurchaseSystem();
+
+        Information information = purchaseManager.getInformation("nonExistingIdentifier");
+
+        assertSame(Information.UNAVAILABLE, information);
+    }
+
+    private void bindFetchNewConnectionAndInstallPurchaseSystem() throws android.os.RemoteException {
+        ServiceConnection connection = bindAndFetchNewConnection();
+
+        whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
+
+        connection.onServiceConnected(null, null);
+
+        verifyBillingGetSkuDetailsCalled();
+    }
+
     private void assertRunAsyncNotCalled() {
         assertFalse("runAsync should not have been called.", runAsyncCalled);
     }
@@ -160,7 +200,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     private ServiceConnection bindAndFetchNewConnection() {
         whenActivityBindReturn(true);
 
-        installWithSimpleProduct();
+        requestPurchaseMangerInstallWithFullEditionOffer();
 
         verify(activity).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
 
@@ -190,14 +230,13 @@ public class AndroidGooglePlayPurchaseManagerTest {
         when(activity.bindService(isA(Intent.class), isA(ServiceConnection.class),
                 eq(Context.BIND_AUTO_CREATE)))
                 .thenThrow(exception);
-
     }
 
     private void whenActivityBindReturn(boolean returnValue) {
         when(activity.bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE))).thenReturn(returnValue);
     }
 
-    private void installWithSimpleProduct() {
+    private void requestPurchaseMangerInstallWithFullEditionOffer() {
         purchaseManager.install(purchaseObserver, managerConfigGooglePlayOneOfferBuyFullEditionProduct(), false);
     }
 
