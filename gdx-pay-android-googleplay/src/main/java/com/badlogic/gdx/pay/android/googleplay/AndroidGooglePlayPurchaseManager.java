@@ -133,8 +133,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     @Override
     public boolean installed() {
-        // FIXME
-        return false;
+        return !informationMap.isEmpty();
     }
 
     @Override

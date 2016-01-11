@@ -126,6 +126,8 @@ public class AndroidGooglePlayPurchaseManagerTest {
         assertRunAsyncCalledAndReset();
 
         verify(purchaseObserver).handleInstall();
+
+        assertTrue(purchaseManager.installed());
     }
 
     @Test
@@ -147,6 +149,8 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
         assertThat(throwable).isInstanceOf(GdxPayInstallFailureException.class)
                 .hasMessageContaining(BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE.getMessage());
+
+        assertFalse(purchaseManager.installed());
     }
 
     private void assertRunAsyncNotCalled() {
