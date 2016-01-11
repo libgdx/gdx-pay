@@ -35,29 +35,35 @@ import com.badlogic.gdx.utils.Logger;
 
 import java.util.ArrayList;
 
-/** The purchase manager implementation for Google Play (Android).
+/**
+ * The purchase manager implementation for Google Play (Android).
  * <p>
  * Include the gdx-pay-android-googleplay.jar for this to work (plus gdx-pay-android.jar). Also update the "uses-permission" settings
- * in AndroidManifest.xml and your proguard settings.
+ * in AndroidManifest.xml and your proguard settings.</p>
  *
- * @author noblemaster */
+ * @author noblemaster
+ */
 public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
 
     public static final int BILLING_API_VERSION = 3;
 
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
 
-    /** Our Android activity. */
+    /**
+     * Our Android activity.
+     */
     private Activity activity;
 
-    /** The request code to use for onActivityResult (arbitrary chosen). */
+    /**
+     * The request code to use for onActivityResult (arbitrary chosen).
+     */
     private int requestCode;
 
     private ServiceConnection inAppBillingServiceConnection;
 
     private IInAppBillingService inAppBillingService;
 
-    Logger  logger = new Logger("GdxPay/AndroidGooglePlay");
+    Logger logger = new Logger("GdxPay/AndroidGooglePlay");
 
     public PurchaseManagerAndroidGooglePlay(Activity activity, int requestCode) {
         this.activity = activity;
@@ -69,6 +75,16 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
     @Override
     public void install(final PurchaseObserver observer, final PurchaseManagerConfig config, final boolean autoFetchInformation) {
 
+        runAsync(new Runnable() {
+            @Override
+            public void run() {
+                installChainBindService(observer, config);
+            }
+        });
+
+    }
+
+    private void installChainBindService(PurchaseObserver observer, PurchaseManagerConfig config) {
         try {
             inAppBillingServiceConnection = new BillingServiceInitializingServiceConnection(observer, config);
 
@@ -80,9 +96,8 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
         }
     }
 
-    // TODO: really run async.
     protected void runAsync(Runnable runnable) {
-        runnable.run();
+        new Thread(runnable).start();
     }
 
     private Intent createBindBillingServiceIntent() {
@@ -165,6 +180,13 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
         return PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE;
     }
 
+    private void onServiceConnected(PurchaseObserver observer, PurchaseManagerConfig config) {
+        requestSkus(observer, config);
+    }
+
+    protected IInAppBillingService lookupByStubAsInterface(IBinder service) {
+        return IInAppBillingService.Stub.asInterface(service);
+    }
 
     private class BillingServiceInitializingServiceConnection implements ServiceConnection {
         private final PurchaseObserver observer;
@@ -182,7 +204,7 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
 
             logger.debug("CashierAndroidGoogle: Service Connected SUCCESSFULLY!");
 
-            requestSkus(observer, config);
+            PurchaseManagerAndroidGooglePlay.this.onServiceConnected(observer, config);
         }
 
         @Override
@@ -191,9 +213,5 @@ public class PurchaseManagerAndroidGooglePlay implements PurchaseManager {
 
             logger.debug("CashierAndroidGoogle: Service Disconnected.");
         }
-    }
-
-    protected IInAppBillingService lookupByStubAsInterface(IBinder service) {
-        return IInAppBillingService.Stub.asInterface(service);
     }
 }

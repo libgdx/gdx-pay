@@ -21,6 +21,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import static com.badlogic.gdx.pay.android.googleplay.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
@@ -49,12 +50,23 @@ public class PurchaseManagerAndroidGooglePlayTest {
 
     private PurchaseManagerAndroidGooglePlay purchaseManager;
 
+    boolean runAsyncCalled;
+
     @Before
     public void setUp() throws Exception {
+
+        runAsyncCalled = false;
+
         purchaseManager = new PurchaseManagerAndroidGooglePlay(activity, REQUEST_CODE) {
             @Override
             protected IInAppBillingService lookupByStubAsInterface(IBinder binder) {
                 return inAppBillingService;
+            }
+
+            @Override
+            protected void runAsync(Runnable runnable) {
+                runnable.run();
+                runAsyncCalled = true;
             }
         };
         purchaseManager.logger = logger;
@@ -75,6 +87,12 @@ public class PurchaseManagerAndroidGooglePlayTest {
         installWithSimpleProduct();
 
         verify(activity).bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE));
+        assertRunAsyncCalledAndReset();
+    }
+
+    private void assertRunAsyncCalledAndReset() {
+        assertTrue("Expected runAsync() to be called", runAsyncCalled);
+        runAsyncCalled = false;
     }
 
     @Test
