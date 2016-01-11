@@ -13,3 +13,4 @@
 * integrate publish.gradle (support android library project).
 * Check for TODO's
 * Verify purchase authenticity
+* Move testdata (objectmothers) to a common place (gdx-pay-testdata?)
