@@ -6,7 +6,6 @@ package com.badlogic.gdx.pay;
  *
  * @author noblemaster
  */
-// TODO KvD: test equals, toString
 public final class Information {
 
     /**

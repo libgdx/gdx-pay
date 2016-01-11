@@ -43,16 +43,6 @@ allprojects {
     version = VERSION
 }
 
-project(":gdx-pay") {
-    apply plugin : 'java'
-    apply from : '../publish.gradle'
-
-    configurations {
-        custom
-        compile.extendsFrom custom
-    }
-}
-
 project(":gdx-pay-client") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
@@ -65,6 +55,7 @@ project(":gdx-pay-client") {
     dependencies {
         compile project(':gdx-pay')
         compile "com.badlogicgames.gdx:gdx:${gdxVersion}"
+        testCompile "junit:junit:${junitVersion}"
     }
 }
 
