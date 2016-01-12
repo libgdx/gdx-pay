@@ -11,6 +11,9 @@
 * Verify purchase authenticity
 * Handle restore()
 * Refactor and cleanup.
+* Integrate publish.gradle to android project to be able to publish to a maven repo.
+* test SNAPSHOT version
+* release new version.
 
 
 ## Milestone 2

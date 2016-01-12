@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 
 import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.pay.Information;
@@ -46,6 +47,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     public static final int BILLING_API_VERSION = 3;
 
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
+    public static final String LOG_TAG = "GdxPay/AndroidPlay";
 
     private Activity activity;
 
@@ -53,11 +55,13 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     private IInAppBillingService inAppBillingService;
 
-    Logger logger = new Logger("GdxPay/AndroidGooglePlay");
+    Logger logger = new Logger(LOG_TAG);
 
     private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
 
-    public AndroidGooglePlayPurchaseManager(Activity activity) {
+    @SuppressWarnings("UnusedParameters") // requestCode is set by IAP.java which auto-configures IAP.
+    // not yet using it though (probably needed when doing purchases and restores).
+    public AndroidGooglePlayPurchaseManager(Activity activity, int requestCode) {
         this.activity = activity;
     }
 
@@ -65,6 +69,30 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     public void install(final PurchaseObserver observer, final PurchaseManagerConfig config, final boolean autoFetchInformation) {
         installChainBindService(observer, config);
     }
+
+    /**
+     * Used by IAP for automatic configuration of gdx-pay.
+     */
+    public static boolean isRunningViaGooglePlay(Activity activity) {
+        // who installed us?
+        String packageNameInstaller;
+        try {
+            // obtain the package name for the installer!
+            packageNameInstaller = activity.getPackageManager().getInstallerPackageName(activity.getPackageName());
+
+            // package name matches the string below if we were installed by Google Play!
+            return packageNameInstaller.equals("com.android.vending");
+        }
+        catch (Throwable e) {
+            // error: output to console (we usually shouldn't get here!)
+            Log.e(LOG_TAG, "Cannot determine installer package name.", e);
+
+            return false;
+        }
+    }
+
+
+
 
     private void installChainBindService(PurchaseObserver observer, PurchaseManagerConfig config) {
         try {

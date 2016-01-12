@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 
@@ -12,7 +13,6 @@ import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.utils.Logger;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +31,6 @@ import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPO
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
@@ -65,12 +64,15 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
     boolean runAsyncCalled;
 
+    @Mock
+    private PackageManager packageManager;
+
     @Before
     public void setUp() throws Exception {
 
         runAsyncCalled = false;
 
-        purchaseManager = new AndroidGooglePlayPurchaseManager(activity) {
+        purchaseManager = new AndroidGooglePlayPurchaseManager(activity, 1032) {
             @Override
             protected IInAppBillingService lookupByStubAsInterface(IBinder binder) {
                 return inAppBillingService;
@@ -85,6 +87,20 @@ public class AndroidGooglePlayPurchaseManagerTest {
         purchaseManager.logger = logger;
 
         when(activity.getPackageName()).thenReturn("com.gdx.pay.dummy.activity");
+    }
+
+    @Test
+    public void runningOnGooglePlayShouldReturnFalseWhenInstalledViaAmazon() throws Exception {
+
+        whenGetInstallerPackageNameReturn("com.amazon.venezia");
+
+        assertFalse(AndroidGooglePlayPurchaseManager.isRunningViaGooglePlay(activity));
+    }
+
+    @Test
+    public void runningOnGooglePlayShouldReturnTrueWhenInstalledViaGooglePlay() throws Exception {
+        whenGetInstallerPackageNameReturn("com.android.vending");
+        assertTrue(AndroidGooglePlayPurchaseManager.isRunningViaGooglePlay(activity));
     }
 
     @Test
@@ -181,6 +197,11 @@ public class AndroidGooglePlayPurchaseManagerTest {
         Information information = purchaseManager.getInformation("nonExistingIdentifier");
 
         assertSame(Information.UNAVAILABLE, information);
+    }
+
+    private void whenGetInstallerPackageNameReturn(String installerPackageName) {
+        when(activity.getPackageManager()).thenReturn(packageManager);
+        when(packageManager.getInstallerPackageName(isA(String.class))).thenReturn(installerPackageName);
     }
 
     private void bindFetchNewConnectionAndInstallPurchaseSystem() throws android.os.RemoteException {
