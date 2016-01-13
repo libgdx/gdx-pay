@@ -9,4 +9,5 @@ public class GdxPayException extends RuntimeException {
     public GdxPayException(String message) {
         super(message);
     }
+
 }

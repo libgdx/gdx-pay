@@ -27,6 +27,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     public static final int BILLING_API_VERSION = 3;
 
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
+    public static final String ERROR_NOT_CONNECTED_TO_GOOGLE_IAB = "Not connected to Google In-app Billing service";
 
     private ServiceConnection billingServiceConnection;
 
@@ -62,7 +63,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     public Map<String, Information> getProductSkuDetails(List<String> productIds) {
         try {
             return fetchSkuDetails(productIds);
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e) {
             throw new GdxPayException("getProductSkuDetails(" + productIds + " failed)", e);
         }
     }
@@ -109,7 +111,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     private IInAppBillingService billingService() {
         if (!isConnected()) {
-            throw new GdxPayException("Not connected to Google IAP service.");
+            throw new GdxPayException(ERROR_NOT_CONNECTED_TO_GOOGLE_IAB);
         }
         return billingService;
     }

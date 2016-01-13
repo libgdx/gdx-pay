@@ -106,7 +106,7 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     @Test
-    public void shouldThrowExceptionWhenGetSkuDetailsResponseResultIsNetworkError() throws Exception {
+    public void shouldReturnSkusWhenResponseIsOk() throws Exception {
 
         whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
 
@@ -120,11 +120,18 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     @Test
-    public void shouldReturnSkusWhenResponseIsOk() throws Exception {
+    public void shouldThrowExceptionWhenGetSkuDetailsResponseResultIsNetworkError() throws Exception {
         whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultNetworkError());
 
         activityBindAndConnect();
 
+        thrown.expect(GdxPayException.class);
+
+        billingService.getProductSkuDetails(singletonList("TEST"));
+    }
+
+    @Test
+    public void shouldThrowExceptionOnGetSkuDetailsWhenDisconnected() throws Exception {
         thrown.expect(GdxPayException.class);
 
         billingService.getProductSkuDetails(singletonList("TEST"));
