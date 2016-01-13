@@ -28,6 +28,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
     public static final String ERROR_NOT_CONNECTED_TO_GOOGLE_IAB = "Not connected to Google In-app Billing service";
+    public static final String ERROR_ON_SERVICE_DISCONNECTED_RECEIVED = "onServiceDisconnected() received.";
 
     private ServiceConnection billingServiceConnection;
 
@@ -137,7 +138,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             billingService = null;
-            connectionListener.disconnected(new GdxPayException("onServiceDisconnected() received."));
+            connectionListener.disconnected(new GdxPayException(ERROR_ON_SERVICE_DISCONNECTED_RECEIVED));
         }
     }
 }
