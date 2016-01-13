@@ -17,57 +17,67 @@
 package com.badlogic.gdx.pay.android.googleplay;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 
-import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
+import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.utils.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsRequestConverter.convertConfigToItemIdList;
-
 /**
  * The purchase manager implementation for Google Play (Android).
-
+ *
  * @author noblemaster
  */
 public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
-    public static final int BILLING_API_VERSION = 3;
-
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
     public static final String LOG_TAG = "GdxPay/AndroidPlay";
 
-    private Activity activity;
+    private final GoogleInAppBillingService googleInAppBillingService;
 
-    private ServiceConnection inAppBillingServiceConnection;
-
-    private IInAppBillingService inAppBillingService;
 
     Logger logger = new Logger(LOG_TAG);
 
     private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
 
-    @SuppressWarnings("UnusedParameters") // requestCode is set by IAP.java which auto-configures IAP.
+
+    public AndroidGooglePlayPurchaseManager(GoogleInAppBillingService googleInAppBillingService) {
+        this.googleInAppBillingService = googleInAppBillingService;
+    }
+
+    // TODO unit test method called by IAP.java
+    @SuppressWarnings({"UnusedParameters", "unused"})
+    // requestCode is set by IAP.java which auto-configures IAP.
     // not yet using it though (probably needed when doing purchases and restores).
     public AndroidGooglePlayPurchaseManager(Activity activity, int requestCode) {
-        this.activity = activity;
+
+        googleInAppBillingService = new V3GoogleInAppBillingService(activity);
     }
 
     @Override
     public void install(final PurchaseObserver observer, final PurchaseManagerConfig config, final boolean autoFetchInformation) {
-        installChainBindService(observer, config);
+
+        googleInAppBillingService.connect(new GoogleInAppBillingService.ConnectResultListener() {
+            @Override
+            public void connected() {
+                onServiceConnected(observer, config);
+            }
+
+            @Override
+            public void disconnected(Exception exception) {
+                observer.handleInstallError(new GdxPayException("Failed to bind to service", exception));
+            }
+        });
     }
 
     /**
@@ -82,8 +92,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
             // package name matches the string below if we were installed by Google Play!
             return packageNameInstaller.equals("com.android.vending");
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             // error: output to console (we usually shouldn't get here!)
             Log.e(LOG_TAG, "Cannot determine installer package name.", e);
 
@@ -92,66 +101,40 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     }
 
 
-
-
-    private void installChainBindService(PurchaseObserver observer, PurchaseManagerConfig config) {
-        try {
-            inAppBillingServiceConnection = new BillingServiceInitializingServiceConnection(observer, config);
-
-            if (!activity.bindService(createBindBillingServiceIntent(), inAppBillingServiceConnection, Context.BIND_AUTO_CREATE)) {
-                observer.handleInstallError(new GdxPayInstallFailureException("Failed to bind to service", config));
-            }
-        } catch (Exception e) {
-            observer.handleInstallError(new GdxPayInstallFailureException(e, config));
-        }
-    }
-
     protected void runAsync(Runnable runnable) {
         new Thread(runnable).start();
     }
 
-    private Intent createBindBillingServiceIntent() {
-        Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
-        serviceIntent.setPackage("com.android.vending");
-        return serviceIntent;
-    }
+    protected void loadSkusAndFillPurchaseInformation(PurchaseManagerConfig purchaseManagerConfig) throws android.os.RemoteException {
 
-    private void loadInformationsViaSkus(final PurchaseObserver observer, final PurchaseManagerConfig purchaseManagerConfig) {
-        runAsync(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    loadSkusAndFillPurchaseInformation(purchaseManagerConfig, observer);
-                } catch (Exception e) {
-                    // TODO: not yet unit tested.
-                    observer.handleInstallError(new GdxPayInstallFailureException(e, purchaseManagerConfig));
-                }
-            }
-        });
-    }
+        List<String> productIds = productIdStringList(purchaseManagerConfig);
 
-    protected void loadSkusAndFillPurchaseInformation(PurchaseManagerConfig purchaseManagerConfig, PurchaseObserver observer) throws android.os.RemoteException {
-        Bundle skusRequest = convertConfigToItemIdList(purchaseManagerConfig);
-        logger.error("getSkuDetails("+BILLING_API_VERSION + ", " + activity.getPackageName() + ", " + skusRequest);
 
-        Bundle skuDetailsResponse = inAppBillingService.getSkuDetails(BILLING_API_VERSION,
-                activity.getPackageName(), PURCHASE_TYPE_IN_APP,
-                skusRequest);
+        Map<String, Information> skuDetails = googleInAppBillingService.getProductSkuDetails(productIds);
 
         informationMap.clear();
-        informationMap.putAll(GetSkusDetailsResponseBundleToInformationConverter.convertSkuDetailsResponse(skuDetailsResponse));
+        informationMap.putAll(skuDetails);
+    }
 
-        observer.handleInstall();
+    private List<String> productIdStringList(PurchaseManagerConfig purchaseManagerConfig) {
+        List<String> list = new ArrayList<>();
+        for (int i = 0; i < purchaseManagerConfig.getOfferCount(); i++) {
+            Offer offer = purchaseManagerConfig.getOffer(i);
+
+            list.add(offer.getIdentifier());
+        }
+
+        return list;
     }
 
     @Override
     public boolean installed() {
-        return !informationMap.isEmpty();
+        return googleInAppBillingService.isConnected();
     }
 
     @Override
     public void dispose() {
-        unbindIfBound();
+        googleInAppBillingService.disconnect();
         clearCaches();
     }
 
@@ -186,39 +169,22 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         informationMap.clear();
     }
 
-    private void unbindIfBound() {
-        if (inAppBillingServiceConnection != null) {
-            activity.unbindService(inAppBillingServiceConnection);
-        }
+
+    private void onServiceConnected(final PurchaseObserver observer, final PurchaseManagerConfig config) {
+        runAsync(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    loadSkusAndFillPurchaseInformation(config);
+                } catch (Exception e) {
+                    // TODO: this situation not yet unit-tested
+
+                    logger.error("Failed to load skus in onServiceConnected()", e);
+                }
+                observer.handleInstall();
+            }
+        });
     }
 
-    private void onServiceConnected(PurchaseObserver observer, PurchaseManagerConfig config) {
-        loadInformationsViaSkus(observer, config);
-    }
-
-    protected IInAppBillingService lookupByStubAsInterface(IBinder service) {
-        return IInAppBillingService.Stub.asInterface(service);
-    }
-
-    private class BillingServiceInitializingServiceConnection implements ServiceConnection {
-        private final PurchaseObserver observer;
-        private final PurchaseManagerConfig config;
-
-        public BillingServiceInitializingServiceConnection(PurchaseObserver observer, PurchaseManagerConfig config) {
-            this.observer = observer;
-            this.config = config;
-        }
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            inAppBillingService = lookupByStubAsInterface(service);
-
-            AndroidGooglePlayPurchaseManager.this.onServiceConnected(observer, config);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            inAppBillingService = null;
-        }
-    }
 }

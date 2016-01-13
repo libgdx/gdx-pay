@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.DETAILS_LIST;
@@ -44,8 +45,8 @@ public class GetSkusDetailsResponseBundleToInformationConverter {
         }
     }
 
-    protected static Map<String, Information> convertSkuDetailsToInformationMap(ArrayList<String> skuDetailsStringList) throws JSONException {
-        Map<String, Information> products = new HashMap<String, Information>();
+    private static Map<String, Information> convertSkuDetailsToInformationMap(List<String> skuDetailsStringList) throws JSONException {
+        Map<String, Information> products = new HashMap<>();
 
         for (String thisResponse : skuDetailsStringList) {
             JSONObject object = new JSONObject(thisResponse);
