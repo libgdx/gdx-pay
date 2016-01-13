@@ -7,7 +7,7 @@ import android.content.pm.PackageManager;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
-import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectResultListener;
+import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.utils.Logger;
 
 import org.junit.Before;
@@ -47,7 +47,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     ArgumentCaptor<ServiceConnection> serviceConnectionArgumentCaptor;
 
     @Captor
-    ArgumentCaptor<ConnectResultListener> connectResultListenerArgumentCaptor;
+    ArgumentCaptor<ConnectionListener> connectResultListenerArgumentCaptor;
 
     @Captor
     ArgumentCaptor<Throwable> throwableArgumentCaptor;
@@ -105,11 +105,10 @@ public class AndroidGooglePlayPurchaseManagerTest {
     public void shouldCallObserverInstallErrorOnConnectFailure() throws Exception {
         requestPurchaseMangerInstallWithFullEditionOffer();
 
-
         verify(googleInAppBillingService).connect(connectResultListenerArgumentCaptor.capture());
 
-
-        connectResultListenerArgumentCaptor.getValue().disconnected(new SecurityException("Test"));
+        connectResultListenerArgumentCaptor.getValue()
+                .disconnected(new GdxPayException("Disconnected", new SecurityException("Test")));
 
 
         verify(purchaseObserver).handleInstallError(isA(GdxPayException.class));
@@ -149,7 +148,6 @@ public class AndroidGooglePlayPurchaseManagerTest {
         verify(googleInAppBillingService).disconnect();
 
         when(googleInAppBillingService.isConnected()).thenReturn(false);
-
 
         assertFalse(purchaseManager.installed());
     }

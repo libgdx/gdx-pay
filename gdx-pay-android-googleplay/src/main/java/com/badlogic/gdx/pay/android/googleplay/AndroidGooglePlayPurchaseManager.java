@@ -25,6 +25,7 @@ import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
+import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.utils.Logger;
 
@@ -42,6 +43,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
     public static final String LOG_TAG = "GdxPay/AndroidPlay";
+    public static final String GOOGLE_PLAY_PACKAGE_INSTALLER = "com.android.vending";
 
     private final GoogleInAppBillingService googleInAppBillingService;
 
@@ -67,48 +69,41 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     @Override
     public void install(final PurchaseObserver observer, final PurchaseManagerConfig config, final boolean autoFetchInformation) {
 
-        googleInAppBillingService.connect(new GoogleInAppBillingService.ConnectResultListener() {
+        googleInAppBillingService.connect(new ConnectionListener() {
             @Override
             public void connected() {
                 onServiceConnected(observer, config);
             }
 
             @Override
-            public void disconnected(Exception exception) {
+            public void disconnected(GdxPayException exception) {
                 observer.handleInstallError(new GdxPayException("Failed to bind to service", exception));
             }
         });
     }
 
     /**
-     * Used by IAP for automatic configuration of gdx-pay.
+     * Used by IAP.java with reflection for automatic configuration of gdx-pay.
      */
     public static boolean isRunningViaGooglePlay(Activity activity) {
-        // who installed us?
         String packageNameInstaller;
         try {
-            // obtain the package name for the installer!
             packageNameInstaller = activity.getPackageManager().getInstallerPackageName(activity.getPackageName());
 
-            // package name matches the string below if we were installed by Google Play!
-            return packageNameInstaller.equals("com.android.vending");
+            return packageNameInstaller.equals(GOOGLE_PLAY_PACKAGE_INSTALLER);
         } catch (Throwable e) {
-            // error: output to console (we usually shouldn't get here!)
             Log.e(LOG_TAG, "Cannot determine installer package name.", e);
 
             return false;
         }
     }
 
-
     protected void runAsync(Runnable runnable) {
         new Thread(runnable).start();
     }
 
-    protected void loadSkusAndFillPurchaseInformation(PurchaseManagerConfig purchaseManagerConfig) throws android.os.RemoteException {
-
+    private void loadSkusAndFillPurchaseInformation(PurchaseManagerConfig purchaseManagerConfig) throws android.os.RemoteException {
         List<String> productIds = productIdStringList(purchaseManagerConfig);
-
 
         Map<String, Information> skuDetails = googleInAppBillingService.getProductSkuDetails(productIds);
 
@@ -169,7 +164,6 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         informationMap.clear();
     }
 
-
     private void onServiceConnected(final PurchaseObserver observer, final PurchaseManagerConfig config) {
         runAsync(new Runnable() {
             @Override
@@ -186,5 +180,4 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
             }
         });
     }
-
 }

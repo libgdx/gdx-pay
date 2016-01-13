@@ -12,7 +12,7 @@ import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.OfferObjectMother;
-import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectResultListener;
+import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,6 +40,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class V3GoogleInAppBillingServiceTest {
+
     @Mock
     Activity activity;
 
@@ -50,7 +51,7 @@ public class V3GoogleInAppBillingServiceTest {
     IInAppBillingService inAppBillingService;
 
     @Mock
-    ConnectResultListener connectResultListener;
+    ConnectionListener connectionListener;
 
     private V3GoogleInAppBillingService billingService;
 
@@ -85,7 +86,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         requestConnect();
 
-        verify(connectResultListener).disconnected(isA(GdxPayException.class));
+        verify(connectionListener).disconnected(isA(GdxPayException.class));
     }
 
     @Test
@@ -94,14 +95,14 @@ public class V3GoogleInAppBillingServiceTest {
 
         requestConnect();
 
-        verify(connectResultListener).disconnected(isA(GdxPayException.class));
+        verify(connectionListener).disconnected(isA(GdxPayException.class));
     }
 
     @Test
     public void shouldCallConnectSuccessWhenConnectSucceeds() throws Exception {
         activityBindAndConnect();
 
-        verify(connectResultListener).connected();
+        verify(connectionListener).connected();
     }
 
     @Test
@@ -166,6 +167,6 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     private void requestConnect() {
-        billingService.connect(connectResultListener);
+        billingService.connect(connectionListener);
     }
 }

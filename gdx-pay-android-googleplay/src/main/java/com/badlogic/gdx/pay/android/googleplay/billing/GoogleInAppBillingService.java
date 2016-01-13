@@ -1,13 +1,14 @@
 package com.badlogic.gdx.pay.android.googleplay.billing;
 
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 
 import java.util.List;
 import java.util.Map;
 
 public interface GoogleInAppBillingService {
 
-    void connect(ConnectResultListener callback);
+    void connect(ConnectionListener callback);
 
     Map<String, Information> getProductSkuDetails(List<String> productIds);
 
@@ -15,9 +16,9 @@ public interface GoogleInAppBillingService {
 
     boolean isConnected();
 
-    interface ConnectResultListener {
+    interface ConnectionListener {
         void connected();
 
-        void disconnected(Exception exception);
+        void disconnected(GdxPayException exception);
     }
 }

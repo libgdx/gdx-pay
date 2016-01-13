@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsRequestConverter.convertConfigToItemIdList;
 import static com.badlogic.gdx.pay.android.googleplay.GetSkusDetailsResponseBundleToInformationConverter.convertSkuDetailsResponse;
 
@@ -28,7 +30,9 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     private ServiceConnection billingServiceConnection;
 
+    @Nullable
     private IInAppBillingService billingService;
+
     private Activity activity;
 
     public V3GoogleInAppBillingService(Activity activity) {
@@ -36,19 +40,16 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     @Override
-    public void connect(ConnectResultListener callback) {
-
+    public void connect(ConnectionListener callback) {
         try {
-
             billingServiceConnection = new BillingServiceInitializingServiceConnection(callback);
 
             if (!activity.bindService(createBindBillingServiceIntent(), billingServiceConnection, Context.BIND_AUTO_CREATE)) {
                 callback.disconnected(new GdxPayException("Failed to bind to service"));
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             callback.disconnected(new GdxPayException("Failed to connect", e));
         }
-
     }
 
     private Intent createBindBillingServiceIntent() {
@@ -57,12 +58,11 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         return serviceIntent;
     }
 
-
     @Override
     public Map<String, Information> getProductSkuDetails(List<String> productIds) {
         try {
             return fetchSkuDetails(productIds);
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             throw new GdxPayException("getProductSkuDetails(" + productIds + " failed)", e);
         }
     }
@@ -82,6 +82,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     @Override
     public void disconnect() {
+        billingService = null;
         unbindIfBound();
     }
 
@@ -96,14 +97,21 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         }
     }
 
-    protected Bundle executeGetSkuDetails(Bundle skusRequest)  {
+    private Bundle executeGetSkuDetails(Bundle skusRequest) {
         try {
-            return billingService.getSkuDetails(BILLING_API_VERSION,
-                    activity.getPackageName(), PURCHASE_TYPE_IN_APP,
-                    skusRequest);
+            String packageName = activity.getPackageName();
+            return billingService().getSkuDetails(BILLING_API_VERSION, packageName,
+                    PURCHASE_TYPE_IN_APP, skusRequest);
         } catch (RemoteException e) {
             throw new GdxPayException("getProductSkuDetails failed for bundle:" + skusRequest, e);
         }
+    }
+
+    private IInAppBillingService billingService() {
+        if (!isConnected()) {
+            throw new GdxPayException("Not connected to Google IAP service.");
+        }
+        return billingService;
     }
 
     protected IInAppBillingService lookupByStubAsInterface(IBinder service) {
@@ -111,24 +119,23 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     private class BillingServiceInitializingServiceConnection implements ServiceConnection {
-        private ConnectResultListener connectResultListener;
+        private ConnectionListener connectionListener;
 
-        public BillingServiceInitializingServiceConnection(ConnectResultListener connectResultListener) {
+        public BillingServiceInitializingServiceConnection(ConnectionListener connectionListener) {
 
-            this.connectResultListener = connectResultListener;
+            this.connectionListener = connectionListener;
         }
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-
             billingService = lookupByStubAsInterface(service);
-            connectResultListener.connected();
+            connectionListener.connected();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             billingService = null;
-            connectResultListener.disconnected(new GdxPayException("onServiceDisconnected() received."));
+            connectionListener.disconnected(new GdxPayException("onServiceDisconnected() received."));
         }
     }
 }
