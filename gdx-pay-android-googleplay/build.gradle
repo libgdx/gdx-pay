@@ -32,7 +32,6 @@ dependencies {
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
     testCompile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     testCompile "org.assertj:assertj-core:${assertJVersion}"
-
     compile "com.badlogicgames.gdx:gdx-backend-android:${gdxVersion}"
 
 

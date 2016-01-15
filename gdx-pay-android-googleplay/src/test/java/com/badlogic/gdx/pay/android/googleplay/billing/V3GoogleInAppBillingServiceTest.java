@@ -12,7 +12,7 @@ import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
-import com.badlogic.gdx.pay.android.googleplay.OfferObjectMother;
+import com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 
 import org.junit.Before;
@@ -30,10 +30,10 @@ import java.util.Collections;
 import java.util.Map;
 
 import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.PURCHASE_TYPE_IN_APP;
-import static com.badlogic.gdx.pay.android.googleplay.GetBuyIntentResponseObjectMother.buyIntentResponseOk;
-import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
-import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkProductFullEditionEntitlement;
-import static com.badlogic.gdx.pay.android.googleplay.InformationObjectMother.informationFullEditionEntitlement;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.GetBuyIntentResponseObjectMother.buyIntentResponseOk;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkProductFullEditionEntitlement;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.BILLING_API_VERSION;
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.DEFAULT_DEVELOPER_PAYLOAD;
 import static java.util.Collections.singletonList;
@@ -164,6 +164,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         verify(androidApplication).startIntentSenderForResult(Mockito.isA(IntentSender.class),
                 eq(ACTIVITY_RESULT_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
+
 
     }
 

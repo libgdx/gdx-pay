@@ -1,4 +1,4 @@
-package com.badlogic.gdx.pay.android.googleplay;
+package com.badlogic.gdx.pay.android.googleplay.testdata;
 
 import android.app.PendingIntent;
 import android.content.IntentSender;

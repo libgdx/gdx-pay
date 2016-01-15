@@ -1,4 +1,4 @@
-package com.badlogic.gdx.pay.android.googleplay;
+package com.badlogic.gdx.pay.android.googleplay.testdata;
 
 import com.badlogic.gdx.pay.Information;
 

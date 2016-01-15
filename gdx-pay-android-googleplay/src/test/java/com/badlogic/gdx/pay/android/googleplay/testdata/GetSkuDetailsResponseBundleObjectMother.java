@@ -1,9 +1,10 @@
-package com.badlogic.gdx.pay.android.googleplay;
+package com.badlogic.gdx.pay.android.googleplay.testdata;
 
 import android.os.Bundle;
 
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
+import com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,7 +14,6 @@ import java.util.ArrayList;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.DETAILS_LIST;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.ITEM_ID_LIST;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.RESPONSE_CODE;
-import static com.badlogic.gdx.pay.android.googleplay.InformationObjectMother.informationFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_OK;
 import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE;
 
@@ -21,7 +21,7 @@ public class GetSkuDetailsResponseBundleObjectMother {
 
     public static Bundle skuDetailsResponseResultOkProductFullEditionEntitlement() {
         Offer offer = OfferObjectMother.offerFullEditionEntitlement();
-        Information information = informationFullEditionEntitlement();
+        Information information = InformationObjectMother.informationFullEditionEntitlement();
 
         Bundle bundle = new Bundle(3);
 

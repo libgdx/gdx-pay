@@ -1,9 +1,9 @@
-package com.badlogic.gdx.pay.android.googleplay;
+package com.badlogic.gdx.pay.android.googleplay.testdata;
 
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 
 import static com.badlogic.gdx.pay.PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE;
-import static com.badlogic.gdx.pay.android.googleplay.OfferObjectMother.offerFullEditionEntitlement;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
 
 public class PurchaseManagerConfigObjectMother {
 
