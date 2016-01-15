@@ -7,8 +7,8 @@ apply plugin : 'java'
 apply from : '../publish.gradle'
 
 configurations {
-    custom
-    compile.extendsFrom custom
+    compileAndIncludeClassesInLibraryJar
+    compile.extendsFrom compileAndIncludeClassesInLibraryJar
 }
 
 dependencies {
