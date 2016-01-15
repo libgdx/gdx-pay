@@ -23,8 +23,8 @@ android {
 }
 
 configurations {
-    custom
-    compile.extendsFrom custom
+    compileAndIncludeClassesInLibraryJar
+    compile.extendsFrom compileAndIncludeClassesInLibraryJar
 }
 
 dependencies {
@@ -35,7 +35,7 @@ dependencies {
     compile project(':gdx-pay-client')
     compile "com.google.code.findbugs:jsr305:${jsr305Version}"
 
-    custom fileTree(dir: 'lib', include: ['*.jar'])
+    compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
 }
 
 tasks.withType(Test) {

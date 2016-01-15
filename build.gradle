@@ -52,8 +52,8 @@ project(":gdx-pay-client") {
     apply from : '../publish.gradle'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
@@ -68,8 +68,8 @@ project(":gdx-pay-android") {
     apply from : '../publish.gradle'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
@@ -86,16 +86,16 @@ project(":gdx-pay-android-openiab") {
     apply from : '../publish.gradle'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
         compile project(':gdx-pay-android')
 
-        custom 'org.onepf:openiab:0.9.8.7'
+        compileAndIncludeClassesInLibraryJar 'org.onepf:openiab:0.9.8.7'
 
-        custom fileTree(dir: 'lib', include: ['*.jar'])
+        compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
     }
 }
 
@@ -104,14 +104,14 @@ project(":gdx-pay-android-ouya") {
     apply from : '../publish.gradle'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
         compile project(':gdx-pay-android')
 
-        custom fileTree(dir: 'lib', include: ['*.jar'])
+        compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
     }
 }
 
@@ -120,14 +120,14 @@ project(":gdx-pay-android-amazon") {
     apply from : '../publish.gradle'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
         compile project(':gdx-pay-android')
 
-        custom fileTree(dir: 'lib', include: ['*.jar'])
+        compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
     }
 }
 
@@ -136,8 +136,8 @@ project(":gdx-pay-desktop-apple") {
     apply from : '../publish.gradle'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
@@ -150,8 +150,8 @@ project(":gdx-pay-gwt-googlewallet") {
     apply from : '../publish.gradle'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
@@ -165,8 +165,8 @@ project(":gdx-pay-iosrobovm-apple") {
     apply from : '../publish.gradle'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
@@ -181,8 +181,8 @@ project(":gdx-pay-server") {
     apply from : '../publish.gradle'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
@@ -194,8 +194,8 @@ project(":gdx-pay-tests") {
     apply plugin : 'java'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
     }
 
     dependencies {
@@ -209,8 +209,8 @@ project(":gdx-pay-tests-android") {
     apply plugin: 'com.android.application'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
         natives
     }
 
@@ -240,8 +240,8 @@ project(":gdx-pay-tests-iosrobovm") {
     apply plugin: 'robovm'
 
     configurations {
-        custom
-        compile.extendsFrom custom
+        compileAndIncludeClassesInLibraryJar
+        compile.extendsFrom compileAndIncludeClassesInLibraryJar
         natives
     }
 
