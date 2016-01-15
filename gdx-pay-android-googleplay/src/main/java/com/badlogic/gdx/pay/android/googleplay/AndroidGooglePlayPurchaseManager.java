@@ -47,7 +47,6 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     private final GoogleInAppBillingService googleInAppBillingService;
 
-
     Logger logger = new Logger(LOG_TAG);
 
     private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
@@ -63,7 +62,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     // not yet using it though (probably needed when doing purchases and restores).
     public AndroidGooglePlayPurchaseManager(Activity activity, int activityResultCode) {
 
-        googleInAppBillingService = new V3GoogleInAppBillingService(activity, 1002);
+        googleInAppBillingService = new V3GoogleInAppBillingService(activity, activityResultCode);
     }
 
     @Override
