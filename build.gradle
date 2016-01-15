@@ -51,11 +51,6 @@ project(":gdx-pay-client") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
-    configurations {
-        compileAndIncludeClassesInLibraryJar
-        compile.extendsFrom compileAndIncludeClassesInLibraryJar
-    }
-
     dependencies {
         compile project(':gdx-pay')
         compile "com.badlogicgames.gdx:gdx:${gdxVersion}"
@@ -66,11 +61,6 @@ project(":gdx-pay-client") {
 project(":gdx-pay-android") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
-
-    configurations {
-        compileAndIncludeClassesInLibraryJar
-        compile.extendsFrom compileAndIncludeClassesInLibraryJar
-    }
 
     dependencies {
         compile project(':gdx-pay-client')
@@ -135,11 +125,6 @@ project(":gdx-pay-desktop-apple") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
-    configurations {
-        compileAndIncludeClassesInLibraryJar
-        compile.extendsFrom compileAndIncludeClassesInLibraryJar
-    }
-
     dependencies {
         compile project(':gdx-pay-client')
     }
@@ -148,11 +133,6 @@ project(":gdx-pay-desktop-apple") {
 project(":gdx-pay-gwt-googlewallet") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
-
-    configurations {
-        compileAndIncludeClassesInLibraryJar
-        compile.extendsFrom compileAndIncludeClassesInLibraryJar
-    }
 
     dependencies {
         compile project(':gdx-pay-client')
@@ -163,11 +143,6 @@ project(":gdx-pay-iosrobovm-apple") {
     apply plugin : 'java'
     apply plugin : 'robovm'
     apply from : '../publish.gradle'
-
-    configurations {
-        compileAndIncludeClassesInLibraryJar
-        compile.extendsFrom compileAndIncludeClassesInLibraryJar
-    }
 
     dependencies {
         compile project(':gdx-pay-client')
@@ -180,11 +155,6 @@ project(":gdx-pay-server") {
     apply plugin : 'java'
     apply from : '../publish.gradle'
 
-    configurations {
-        compileAndIncludeClassesInLibraryJar
-        compile.extendsFrom compileAndIncludeClassesInLibraryJar
-    }
-
     dependencies {
         compile project(':gdx-pay')
     }
@@ -192,11 +162,6 @@ project(":gdx-pay-server") {
 
 project(":gdx-pay-tests") {
     apply plugin : 'java'
-
-    configurations {
-        compileAndIncludeClassesInLibraryJar
-        compile.extendsFrom compileAndIncludeClassesInLibraryJar
-    }
 
     dependencies {
         compile project(':gdx-pay-client')
@@ -209,8 +174,6 @@ project(":gdx-pay-tests-android") {
     apply plugin: 'com.android.application'
 
     configurations {
-        compileAndIncludeClassesInLibraryJar
-        compile.extendsFrom compileAndIncludeClassesInLibraryJar
         natives
     }
 
@@ -240,8 +203,6 @@ project(":gdx-pay-tests-iosrobovm") {
     apply plugin: 'robovm'
 
     configurations {
-        compileAndIncludeClassesInLibraryJar
-        compile.extendsFrom compileAndIncludeClassesInLibraryJar
         natives
     }
 
