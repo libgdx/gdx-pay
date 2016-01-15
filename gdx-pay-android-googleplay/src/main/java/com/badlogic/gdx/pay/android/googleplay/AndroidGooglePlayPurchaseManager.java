@@ -19,6 +19,7 @@ package com.badlogic.gdx.pay.android.googleplay;
 import android.app.Activity;
 import android.util.Log;
 
+import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseManager;
@@ -60,8 +61,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     @SuppressWarnings({"UnusedParameters", "unused"})
     // requestCode is set by IAP.java which auto-configures IAP.
     // not yet using it though (probably needed when doing purchases and restores).
-    public AndroidGooglePlayPurchaseManager(Activity activity, int activityResultCode) {
-
+    public AndroidGooglePlayPurchaseManager(AndroidApplication activity, int activityResultCode) {
         googleInAppBillingService = new V3GoogleInAppBillingService(activity, activityResultCode);
     }
 
@@ -79,6 +79,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
                 observer.handleInstallError(new GdxPayException("Failed to bind to service", exception));
             }
         });
+
     }
 
     /**

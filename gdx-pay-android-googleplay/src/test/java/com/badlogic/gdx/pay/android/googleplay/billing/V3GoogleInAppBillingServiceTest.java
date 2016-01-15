@@ -1,6 +1,5 @@
 package com.badlogic.gdx.pay.android.googleplay.billing;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -9,6 +8,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
@@ -49,7 +49,7 @@ public class V3GoogleInAppBillingServiceTest {
     public static final String INSTALLER_PACKAGE_NAME = "com.gdx.pay.dummy.activity";
     public static final int ACTIVITY_RESULT_CODE = 1002;
     @Mock
-    Activity activity;
+    AndroidApplication androidApplication;
 
     @Captor
     ArgumentCaptor<ServiceConnection> serviceConnectionArgumentCaptor;
@@ -70,9 +70,9 @@ public class V3GoogleInAppBillingServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        when(activity.getPackageName()).thenReturn(INSTALLER_PACKAGE_NAME);
+        when(androidApplication.getPackageName()).thenReturn(INSTALLER_PACKAGE_NAME);
 
-        v3InAppbillingService = new V3GoogleInAppBillingService(activity, ACTIVITY_RESULT_CODE) {
+        v3InAppbillingService = new V3GoogleInAppBillingService(androidApplication, ACTIVITY_RESULT_CODE) {
             @Override
             protected IInAppBillingService lookupByStubAsInterface(IBinder binder) {
                 return nativeInAppBillingService;
@@ -87,7 +87,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         requestConnect();
 
-        verify(activity).bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE));
+        verify(androidApplication).bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE));
     }
 
     @Test
@@ -162,7 +162,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
 
-        verify(activity).startIntentSenderForResult(Mockito.isA(IntentSender.class),
+        verify(androidApplication).startIntentSenderForResult(Mockito.isA(IntentSender.class),
                 eq(ACTIVITY_RESULT_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
 
     }
@@ -187,20 +187,20 @@ public class V3GoogleInAppBillingServiceTest {
 
         requestConnect();
 
-        verify(activity).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
+        verify(androidApplication).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
 
         return serviceConnectionArgumentCaptor.getValue();
     }
 
     private void whenActivityBindThrow(SecurityException exception) {
-        when(activity.bindService(isA(Intent.class), isA(ServiceConnection.class),
+        when(androidApplication.bindService(isA(Intent.class), isA(ServiceConnection.class),
                 eq(Context.BIND_AUTO_CREATE)))
                 .thenThrow(exception);
     }
 
 
     private void whenActivityBindReturn(boolean returnValue) {
-        when(activity.bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE))).thenReturn(returnValue);
+        when(androidApplication.bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE))).thenReturn(returnValue);
     }
 
     private void requestConnect() {

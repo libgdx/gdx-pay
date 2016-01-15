@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants;
@@ -44,10 +45,10 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     private final String installerPackageName;
 
-    public V3GoogleInAppBillingService(Activity activity, int activityResultCode) {
-        this.activity = activity;
+    public V3GoogleInAppBillingService(AndroidApplication application, int activityResultCode) {
+        this.activity = application;
         this.activityResultCode = activityResultCode;
-        installerPackageName = activity.getPackageName();
+        installerPackageName = application.getPackageName();
     }
 
     @Override
@@ -168,6 +169,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             billingService = lookupByStubAsInterface(service);
+
             connectionListener.connected();
         }
 
