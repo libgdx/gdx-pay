@@ -3,6 +3,7 @@ package com.badlogic.gdx.pay.android.googleplay.billing;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -22,15 +23,19 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.Map;
 
 import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.PURCHASE_TYPE_IN_APP;
+import static com.badlogic.gdx.pay.android.googleplay.GetBuyIntentResponseObjectMother.buyIntentResponseOk;
 import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
 import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkProductFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.InformationObjectMother.informationFullEditionEntitlement;
+import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.BILLING_API_VERSION;
+import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.DEFAULT_DEVELOPER_PAYLOAD;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
@@ -41,6 +46,8 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class V3GoogleInAppBillingServiceTest {
 
+    public static final String INSTALLER_PACKAGE_NAME = "com.gdx.pay.dummy.activity";
+    public static final int ACTIVITY_RESULT_CODE = 1002;
     @Mock
     Activity activity;
 
@@ -48,26 +55,29 @@ public class V3GoogleInAppBillingServiceTest {
     ArgumentCaptor<ServiceConnection> serviceConnectionArgumentCaptor;
 
     @Mock
-    IInAppBillingService inAppBillingService;
+    IInAppBillingService nativeInAppBillingService;
 
     @Mock
     ConnectionListener connectionListener;
 
-    private V3GoogleInAppBillingService billingService;
+    @Mock
+    private GoogleInAppBillingService.PurchaseRequestListener purchaseRequestCallback;
+
+    private V3GoogleInAppBillingService v3InAppbillingService;
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() throws Exception {
-        billingService = new V3GoogleInAppBillingService(activity) {
+        when(activity.getPackageName()).thenReturn(INSTALLER_PACKAGE_NAME);
+
+        v3InAppbillingService = new V3GoogleInAppBillingService(activity, ACTIVITY_RESULT_CODE) {
             @Override
             protected IInAppBillingService lookupByStubAsInterface(IBinder binder) {
-                return inAppBillingService;
+                return nativeInAppBillingService;
             }
         };
-
-        when(activity.getPackageName()).thenReturn("com.gdx.pay.dummy.activity");
     }
 
     @Test
@@ -114,7 +124,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         Offer offer = OfferObjectMother.offerFullEditionEntitlement();
 
-        Map<String, Information> details = billingService.getProductSkuDetails(singletonList(offer.getIdentifier()));
+        Map<String, Information> details = v3InAppbillingService.getProductSkuDetails(singletonList(offer.getIdentifier()));
 
         assertEquals(details, Collections.singletonMap(offer.getIdentifier(), informationFullEditionEntitlement()));
     }
@@ -127,14 +137,34 @@ public class V3GoogleInAppBillingServiceTest {
 
         thrown.expect(GdxPayException.class);
 
-        billingService.getProductSkuDetails(singletonList("TEST"));
+        v3InAppbillingService.getProductSkuDetails(singletonList("TEST"));
     }
 
     @Test
     public void shouldThrowExceptionOnGetSkuDetailsWhenDisconnected() throws Exception {
         thrown.expect(GdxPayException.class);
 
-        billingService.getProductSkuDetails(singletonList("TEST"));
+        v3InAppbillingService.getProductSkuDetails(singletonList("TEST"));
+    }
+
+    @Test
+    public void shouldStartSenderIntentForSBuyIntentResponseOk() throws Exception {
+        activityBindAndConnect();
+
+        Offer offer = OfferObjectMother.offerFullEditionEntitlement();
+
+        Bundle buyIntentResponseOk = buyIntentResponseOk();
+        when(nativeInAppBillingService.getBuyIntent(BILLING_API_VERSION,
+                                INSTALLER_PACKAGE_NAME,
+                                offer.getIdentifier(),
+                V3GoogleInAppBillingService.PURCHASE_TYPE_IN_APP, DEFAULT_DEVELOPER_PAYLOAD))
+                .thenReturn(buyIntentResponseOk);
+
+        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
+
+        verify(activity).startIntentSenderForResult(Mockito.isA(IntentSender.class),
+                eq(ACTIVITY_RESULT_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
+
     }
 
     private void activityBindAndConnect() {
@@ -144,8 +174,8 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     private void whenBillingServiceGetSkuDetailsReturn(Bundle skuDetailsResponse) throws android.os.RemoteException {
-        when(inAppBillingService.getSkuDetails(
-                        eq(V3GoogleInAppBillingService.BILLING_API_VERSION),
+        when(nativeInAppBillingService.getSkuDetails(
+                        eq(BILLING_API_VERSION),
                         isA(String.class),
                         eq(PURCHASE_TYPE_IN_APP),
                         isA(Bundle.class))
@@ -174,6 +204,6 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     private void requestConnect() {
-        billingService.connect(connectionListener);
+        v3InAppbillingService.connect(connectionListener);
     }
 }

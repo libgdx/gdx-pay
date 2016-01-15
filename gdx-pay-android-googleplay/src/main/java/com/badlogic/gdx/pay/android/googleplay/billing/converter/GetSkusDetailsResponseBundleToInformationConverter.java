@@ -1,8 +1,10 @@
-package com.badlogic.gdx.pay.android.googleplay;
+package com.badlogic.gdx.pay.android.googleplay.billing.converter;
 
 import android.os.Bundle;
 
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants;
+import com.badlogic.gdx.pay.android.googleplay.ResponseCode;
 
 import org.json.JSONException;
 import org.json.JSONObject;

@@ -12,6 +12,8 @@ public interface GoogleInAppBillingService {
 
     Map<String, Information> getProductSkuDetails(List<String> productIds);
 
+    void startPurchaseRequest(String productId, PurchaseRequestListener listener);
+
     void disconnect();
 
     boolean isConnected();
@@ -20,5 +22,13 @@ public interface GoogleInAppBillingService {
         void connected();
 
         void disconnected(GdxPayException exception);
+    }
+
+    interface PurchaseRequestListener {
+        void purchaseSuccess();
+
+        void purchaseError(GdxPayException exception);
+
+        void purchaseCancelled();
     }
 }

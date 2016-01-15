@@ -1,9 +1,11 @@
 package com.badlogic.gdx.pay.android.googleplay.billing;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -19,8 +21,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import static com.badlogic.gdx.pay.android.googleplay.GetSkuDetailsRequestConverter.convertConfigToItemIdList;
-import static com.badlogic.gdx.pay.android.googleplay.GetSkusDetailsResponseBundleToInformationConverter.convertSkuDetailsResponse;
+import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkuDetailsRequestConverter.convertConfigToItemIdList;
+import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkusDetailsResponseBundleToInformationConverter.convertSkuDetailsResponse;
 
 public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
@@ -29,16 +31,22 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
     public static final String ERROR_NOT_CONNECTED_TO_GOOGLE_IAB = "Not connected to Google In-app Billing service";
     public static final String ERROR_ON_SERVICE_DISCONNECTED_RECEIVED = "onServiceDisconnected() received.";
+    public static final String DEFAULT_DEVELOPER_PAYLOAD = "JustRandomStringTooHardToRememberTralala";
 
     private ServiceConnection billingServiceConnection;
 
     @Nullable
     private IInAppBillingService billingService;
 
-    private Activity activity;
+    private final Activity activity;
+    private int activityResultCode;
 
-    public V3GoogleInAppBillingService(Activity activity) {
+    private final String installerPackageName;
+
+    public V3GoogleInAppBillingService(Activity activity, int activityResultCode) {
         this.activity = activity;
+        this.activityResultCode = activityResultCode;
+        installerPackageName = activity.getPackageName();
     }
 
     @Override
@@ -67,6 +75,34 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         }
         catch (RuntimeException e) {
             throw new GdxPayException("getProductSkuDetails(" + productIds + " failed)", e);
+        }
+    }
+
+    @Override
+    public void startPurchaseRequest(String productId, PurchaseRequestListener listener) {
+        PendingIntent pendingIntent = getBuyIntent(productId);
+
+        System.out.println(pendingIntent);
+
+        startPurchaseIntentSenderForResult(productId, pendingIntent);
+    }
+
+    protected void startPurchaseIntentSenderForResult(String productId, PendingIntent pendingIntent) {
+        try {
+            activity.startIntentSenderForResult(pendingIntent.getIntentSender(),
+                    activityResultCode, new Intent(), 0, 0, 0);
+        } catch(IntentSender.SendIntentException  e) {
+            throw new GdxPayException("startIntentSenderForResult failed for product: " + productId, e);
+        }
+    }
+
+    protected PendingIntent getBuyIntent(String productId) {
+        try {
+            Bundle intent = billingService().getBuyIntent(BILLING_API_VERSION, installerPackageName, productId, PURCHASE_TYPE_IN_APP, DEFAULT_DEVELOPER_PAYLOAD);
+
+            return intent.getParcelable("BUY_INTENT");
+        } catch (RemoteException e) {
+            throw new GdxPayException("Failed to get buy intent for product: " + productId, e);
         }
     }
 
@@ -102,8 +138,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     private Bundle executeGetSkuDetails(Bundle skusRequest) {
         try {
-            String packageName = activity.getPackageName();
-            return billingService().getSkuDetails(BILLING_API_VERSION, packageName,
+            return billingService().getSkuDetails(BILLING_API_VERSION, installerPackageName,
                     PURCHASE_TYPE_IN_APP, skusRequest);
         } catch (RemoteException e) {
             throw new GdxPayException("getProductSkuDetails failed for bundle:" + skusRequest, e);
