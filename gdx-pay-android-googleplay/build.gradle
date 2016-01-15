@@ -9,12 +9,12 @@ sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "20.0.0"
+    compileSdkVersion androidCompileSdkVersion
+    buildToolsVersion androidBuildToolsVersion
 
     defaultConfig {
-        minSdkVersion 8
-        targetSdkVersion 23
+        minSdkVersion androidMinimalSdkVersion
+        targetSdkVersion androidTargetSdkVersion
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
         testOptions {
             unitTests.returnDefaultValues = true
@@ -48,7 +48,7 @@ tasks.withType(Test) {
 
 unMock {
     // URI to download the android-all.jar from. e.g. https://oss.sonatype.org/content/groups/public/org/robolectric/android-all/
-    downloadFrom 'https://oss.sonatype.org/content/groups/public/org/robolectric/android-all/4.3_r2-robolectric-0/android-all-4.3_r2-robolectric-0.jar'
+    downloadFrom "https://oss.sonatype.org/content/groups/public/org/robolectric/android-all/${robolectricVersion}/android-all-${robolectricVersion}.jar"
 
     keep "android.widget.BaseAdapter"
     keep "android.widget.ArrayAdapter"

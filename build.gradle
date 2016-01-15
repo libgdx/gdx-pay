@@ -7,9 +7,14 @@ ext {
     GROUPID = 'com.badlogicgames.gdxpay'
     VERSION = '0.9.0-SNAPSHOT'
 
+    androidBuildToolsVersion = '20.0.0'
+    androidCompileSdkVersion = 23
+    androidMinimalSdkVersion = 8
+    androidTargetSdkVersion = 23
     assertJVersion = '2.3.0'
     gdxVersion = '1.8.0'
-    openIabVersion = '0.9.7.2'
+    openIabVersion = '0.9.8.7'
+    robolectricVersion = '4.3_r2-robolectric-0'
     junitVersion = '4.12'
     mockitoVersion = '1.10.19'
     jsr305Version = '3.0.1'
@@ -83,7 +88,7 @@ project(":gdx-pay-android-openiab") {
     dependencies {
         compile project(':gdx-pay-android')
 
-        compileAndIncludeClassesInLibraryJar 'org.onepf:openiab:0.9.8.7'
+        compileAndIncludeClassesInLibraryJar "org.onepf:openiab:${openIabVersion}"
 
         compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
     }
