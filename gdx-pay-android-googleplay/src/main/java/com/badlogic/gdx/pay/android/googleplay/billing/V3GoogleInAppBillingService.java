@@ -14,6 +14,7 @@ import android.os.RemoteException;
 import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
+import com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants;
 
 import java.util.HashMap;
 import java.util.List;
@@ -100,7 +101,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         try {
             Bundle intent = billingService().getBuyIntent(BILLING_API_VERSION, installerPackageName, productId, PURCHASE_TYPE_IN_APP, DEFAULT_DEVELOPER_PAYLOAD);
 
-            return intent.getParcelable("BUY_INTENT");
+            return intent.getParcelable(GoogleBillingConstants.BUY_INTENT);
         } catch (RemoteException e) {
             throw new GdxPayException("Failed to get buy intent for product: " + productId, e);
         }

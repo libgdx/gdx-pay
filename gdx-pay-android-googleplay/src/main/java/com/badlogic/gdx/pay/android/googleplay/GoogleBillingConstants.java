@@ -9,4 +9,5 @@ public class GoogleBillingConstants {
     public static final String SKU_TITLE = "title";
     public static final String SKU_DESCRIPTION = "description";
     public static final String ITEM_ID_LIST = "ITEM_ID_LIST";
+    public static final String BUY_INTENT = "BUY_INTENT";
 }
