@@ -1,5 +1,6 @@
 package com.badlogic.gdx.pay.android.googleplay.billing;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,7 +18,6 @@ import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants;
-import com.badlogic.gdx.pay.android.googleplay.ResponseCode;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 
 import java.util.HashMap;
@@ -97,7 +97,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         startPurchaseIntentSenderForResult(productId, pendingIntent, listener);
     }
 
-    protected void startPurchaseIntentSenderForResult(String productId, PendingIntent pendingIntent, final PurchaseRequestListener listener) {
+    private void startPurchaseIntentSenderForResult(String productId, PendingIntent pendingIntent, final PurchaseRequestListener listener) {
         try {
             androidApplication.startIntentSenderForResult(pendingIntent.getIntentSender(),
                     activityRequestCode, new Intent(), 0, 0, 0);
@@ -106,17 +106,25 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
                 @Override
                 public void onEvent(int resultCode, Intent data) {
 
-                    if (resultCode == ResponseCode.BILLING_RESPONSE_RESULT_OK.getCode()) {
-                        try {
-                            listener.purchaseSuccess(convertPurchaseResponseDataToTransaction(data));
-                        } catch (GdxPayException e) {
-                            listener.purchaseError(new GdxPayException("Error converting purchase succes response", e));
-                        }
-                    } else {
-                        // TODO: handle purchase error, cancelled
-                        throw new RuntimeException("Wat nu?");
+                    if (resultCode == Activity.RESULT_OK) {
+                        handleResultOk(data);
+                        return;
                     }
 
+                    if (resultCode == Activity.RESULT_CANCELED) {
+                        listener.purchaseCancelled();
+                        return;
+                    }
+
+                    listener.purchaseError(new GdxPayException("Unexpected resultCode:" + resultCode + "with data:" + data));
+                }
+
+                protected void handleResultOk(Intent data) {
+                    try {
+                        listener.purchaseSuccess(convertPurchaseResponseDataToTransaction(data));
+                    } catch (GdxPayException e) {
+                        listener.purchaseError(new GdxPayException("Error converting purchase succes response", e));
+                    }
                 }
             });
         } catch (IntentSender.SendIntentException e) {

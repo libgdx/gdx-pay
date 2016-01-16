@@ -1,5 +1,6 @@
 package com.badlogic.gdx.pay.android.googleplay.billing;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -32,7 +33,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.PURCHASE_TYPE_IN_APP;
-import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_OK;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetBuyIntentResponseObjectMother.buyIntentResponseOk;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkProductFullEditionEntitlement;
@@ -43,7 +43,6 @@ import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
@@ -176,7 +175,7 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     @Test
-    public void shouldCallPurchaseListenerOnActivityResultAfterSuccesfulPurchaseRequest() throws Exception {
+    public void shouldCallPurchaseListenerOnActivityResultAfterSuccessfulPurchaseRequest() throws Exception {
         Offer offer = offerFullEditionEntitlement();
 
         bindConnectAndStartPurchaseRequest(offer);
@@ -188,9 +187,27 @@ public class V3GoogleInAppBillingServiceTest {
         when(purchaseResponseActivityResultConverter.convertToTransaction(isA(Intent.class)))
                 .thenReturn(transactionFullEditionEuroGooglePlay());
 
-        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, BILLING_RESPONSE_RESULT_OK.getCode(), PurchaseRequestActivityResultObjectMother.activityResultPurchaseFullEditionSuccess());
+        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_OK, PurchaseRequestActivityResultObjectMother.activityResultPurchaseFullEditionSuccess());
 
         verify(purchaseRequestCallback).purchaseSuccess(isA(Transaction.class));
+    }
+
+    @Test
+    public void shouldCallPurchaseCancalledOnResultCodeZero() throws Exception {
+        Offer offer = offerFullEditionEntitlement();
+
+        bindConnectAndStartPurchaseRequest(offer);
+
+        AndroidEventListener eventListener = captureAndroidEventListener();
+
+        whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
+
+        when(purchaseResponseActivityResultConverter.convertToTransaction(isA(Intent.class)))
+                .thenReturn(transactionFullEditionEuroGooglePlay());
+
+        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_CANCELED,new Intent());
+
+        verify(purchaseRequestCallback).purchaseCancelled();
     }
 
     private AndroidEventListener captureAndroidEventListener() {
