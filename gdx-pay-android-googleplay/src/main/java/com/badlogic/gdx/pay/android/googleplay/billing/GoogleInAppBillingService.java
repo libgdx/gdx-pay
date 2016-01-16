@@ -11,7 +11,7 @@ public interface GoogleInAppBillingService {
 
     void requestConnect(ConnectionListener callback);
 
-    Map<String, Information> getProductSkuDetails(List<String> productIds);
+    Map<String, Information> getProductsDetails(List<String> productIds);
 
     void startPurchaseRequest(String productId, PurchaseRequestListener listener);
 

@@ -35,6 +35,7 @@ import java.util.Map;
 import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.PURCHASE_TYPE_IN_APP;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetBuyIntentResponseObjectMother.buyIntentResponseOk;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkIncompleteDetailList;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkProductFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.BILLING_API_VERSION;
@@ -135,7 +136,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         Offer offer = offerFullEditionEntitlement();
 
-        Map<String, Information> details = v3InAppbillingService.getProductSkuDetails(singletonList(offer.getIdentifier()));
+        Map<String, Information> details = v3InAppbillingService.getProductsDetails(singletonList(offer.getIdentifier()));
 
         assertEquals(details, Collections.singletonMap(offer.getIdentifier(), informationFullEditionEntitlement()));
     }
@@ -148,14 +149,14 @@ public class V3GoogleInAppBillingServiceTest {
 
         thrown.expect(GdxPayException.class);
 
-        v3InAppbillingService.getProductSkuDetails(singletonList("TEST"));
+        v3InAppbillingService.getProductsDetails(singletonList("TEST"));
     }
 
     @Test
     public void shouldThrowExceptionOnGetSkuDetailsWhenDisconnected() throws Exception {
         thrown.expect(GdxPayException.class);
 
-        v3InAppbillingService.getProductSkuDetails(singletonList("TEST"));
+        v3InAppbillingService.getProductsDetails(singletonList("TEST"));
     }
 
     @Test
@@ -191,6 +192,25 @@ public class V3GoogleInAppBillingServiceTest {
 
         verify(purchaseRequestCallback).purchaseSuccess(isA(Transaction.class));
     }
+
+    @Test
+    public void shouldCallPurchaseErrorIfConvertingIntentDataToTransactionFails() throws Exception {
+        Offer offer = offerFullEditionEntitlement();
+
+        bindConnectAndStartPurchaseRequest(offer);
+
+        AndroidEventListener eventListener = captureAndroidEventListener();
+
+        whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkIncompleteDetailList());
+
+        when(purchaseResponseActivityResultConverter.convertToTransaction(isA(Intent.class)))
+                .thenThrow(new GdxPayException("Exception parsing Json"));
+
+        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_OK, PurchaseRequestActivityResultObjectMother.activityResultPurchaseFullEditionSuccess());
+
+        verify(purchaseRequestCallback).purchaseError(isA(GdxPayException.class));
+    }
+
 
     @Test
     public void shouldCallPurchaseCancalledOnResultCodeZero() throws Exception {

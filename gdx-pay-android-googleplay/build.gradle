@@ -33,8 +33,6 @@ dependencies {
     testCompile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     testCompile "org.assertj:assertj-core:${assertJVersion}"
     compile "com.badlogicgames.gdx:gdx-backend-android:${gdxVersion}"
-
-
     compile project(':gdx-pay-client')
     compile "com.google.code.findbugs:jsr305:${jsr305Version}"
 

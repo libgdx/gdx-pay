@@ -83,11 +83,11 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     @Override
-    public Map<String, Information> getProductSkuDetails(List<String> productIds) {
+    public Map<String, Information> getProductsDetails(List<String> productIds) {
         try {
             return fetchSkuDetails(productIds);
         } catch (RuntimeException e) {
-            throw new GdxPayException("getProductSkuDetails(" + productIds + " failed)", e);
+            throw new GdxPayException("getProductsDetails(" + productIds + " failed)", e);
         }
     }
 
@@ -120,11 +120,15 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
                 }
 
                 protected void handleResultOk(Intent data) {
+                    final Transaction transaction;
                     try {
-                        listener.purchaseSuccess(convertPurchaseResponseDataToTransaction(data));
+                        transaction = convertPurchaseResponseDataToTransaction(data);
                     } catch (GdxPayException e) {
-                        listener.purchaseError(new GdxPayException("Error converting purchase succes response", e));
+                        listener.purchaseError(new GdxPayException("Error converting purchase success response: " + data, e));
+                        return;
                     }
+
+                    listener.purchaseSuccess(transaction);
                 }
             });
         } catch (IntentSender.SendIntentException e) {
@@ -186,7 +190,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
             return billingService().getSkuDetails(BILLING_API_VERSION, installerPackageName,
                     PURCHASE_TYPE_IN_APP, skusRequest);
         } catch (RemoteException e) {
-            throw new GdxPayException("getProductSkuDetails failed for bundle:" + skusRequest, e);
+            throw new GdxPayException("getProductsDetails failed for bundle:" + skusRequest, e);
         }
     }
 

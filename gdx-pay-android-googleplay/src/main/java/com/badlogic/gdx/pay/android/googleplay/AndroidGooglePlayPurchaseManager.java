@@ -25,8 +25,10 @@ import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
+import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 import com.badlogic.gdx.utils.Logger;
@@ -52,6 +54,8 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     Logger logger = new Logger(LOG_TAG);
 
     private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
+    private PurchaseObserver observer;
+    private PurchaseManagerConfig purchaseManagerConfig;
 
 
     public AndroidGooglePlayPurchaseManager(GoogleInAppBillingService googleInAppBillingService) {
@@ -59,7 +63,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     }
 
     // TODO unit test method called by IAP.java
-    @SuppressWarnings({"UnusedParameters", "unused"})
+    @SuppressWarnings({"unused"})
     // requestCode is set by IAP.java which auto-configures IAP.
     // not yet using it though (probably needed when doing purchases and restores).
     public AndroidGooglePlayPurchaseManager(AndroidApplication activity, int activityRequestCode) {
@@ -68,12 +72,14 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     }
 
     @Override
-    public void install(final PurchaseObserver observer, final PurchaseManagerConfig config, final boolean autoFetchInformation) {
+    public void install(final PurchaseObserver observer, final PurchaseManagerConfig purchaseManagerConfig, final boolean autoFetchInformation) {
+        this.observer = observer;
+        this.purchaseManagerConfig = purchaseManagerConfig;
 
         googleInAppBillingService.requestConnect(new ConnectionListener() {
             @Override
             public void connected() {
-                onServiceConnected(observer, config);
+                onServiceConnected(observer);
             }
 
             @Override
@@ -104,16 +110,16 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         new Thread(runnable).start();
     }
 
-    private void loadSkusAndFillPurchaseInformation(PurchaseManagerConfig purchaseManagerConfig) throws android.os.RemoteException {
-        List<String> productIds = productIdStringList(purchaseManagerConfig);
+    private void loadSkusAndFillPurchaseInformation()  {
+        List<String> productIds = productIdStringList();
 
-        Map<String, Information> skuDetails = googleInAppBillingService.getProductSkuDetails(productIds);
+        Map<String, Information> skuDetails = googleInAppBillingService.getProductsDetails(productIds);
 
         informationMap.clear();
         informationMap.putAll(skuDetails);
     }
 
-    private List<String> productIdStringList(PurchaseManagerConfig purchaseManagerConfig) {
+    private List<String> productIdStringList() {
         List<String> list = new ArrayList<>();
         for (int i = 0; i < purchaseManagerConfig.getOfferCount(); i++) {
             Offer offer = purchaseManagerConfig.getOffer(i);
@@ -133,11 +139,62 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     public void dispose() {
         googleInAppBillingService.disconnect();
         clearCaches();
+        observer = null;
     }
+
+
 
     @Override
     public void purchase(String identifier) {
-        // FIXME
+        assertInstalled();
+
+        if (!productsLoaded()) {
+            loadProductsAndPurchaseAsynchronously(identifier);
+
+            return;
+        }
+
+        googleInAppBillingService.startPurchaseRequest(identifier, new PurchaseRequestListener() {
+
+            @Override
+            public void purchaseSuccess(Transaction transaction) {
+                if (observer != null) {
+                    observer.handlePurchase(transaction);
+                }
+            }
+
+            @Override
+            public void purchaseError(GdxPayException exception) {
+                if (observer != null) {
+                    observer.handlePurchaseError(exception);
+                }
+
+            }
+
+            @Override
+            public void purchaseCancelled() {
+                if (observer != null) {
+                    observer.handlePurchaseCanceled();
+                }
+            }
+        });
+    }
+
+    private boolean productsLoaded() {
+        return !informationMap.isEmpty();
+    }
+
+    private void loadProductsAndPurchaseAsynchronously(final String identifier) {
+        runAsync(new Runnable() {
+            @Override
+            public void run() {
+                loadSkusAndFillPurchaseInformation();
+
+                if (productsLoaded()) {
+                    purchase(identifier);
+                }
+            }
+        });
     }
 
     @Override
@@ -166,20 +223,27 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         informationMap.clear();
     }
 
-    private void onServiceConnected(final PurchaseObserver observer, final PurchaseManagerConfig config) {
+    private void onServiceConnected(final PurchaseObserver observer) {
         runAsync(new Runnable() {
             @Override
             public void run() {
 
                 try {
-                    loadSkusAndFillPurchaseInformation(config);
+                    loadSkusAndFillPurchaseInformation();
                 } catch (Exception e) {
-                    // TODO: this situation not yet unit-tested
-
+                    // TODO: this situation not yet unit-tested.
                     logger.error("Failed to load skus in onServiceConnected()", e);
                 }
                 observer.handleInstall();
             }
         });
     }
+
+    private void assertInstalled() {
+        if (!installed()) {
+            throw new GdxPayException("Payment system must be installed to perform this action.");
+        }
+    }
+
+
 }

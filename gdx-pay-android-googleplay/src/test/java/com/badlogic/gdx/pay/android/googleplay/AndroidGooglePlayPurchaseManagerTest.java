@@ -5,22 +5,29 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
+import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestListener;
 import com.badlogic.gdx.utils.Logger;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
@@ -52,12 +59,17 @@ public class AndroidGooglePlayPurchaseManagerTest {
     @Captor
     ArgumentCaptor<Throwable> throwableArgumentCaptor;
 
+    @Captor
+    ArgumentCaptor<PurchaseRequestListener> purchaseRequestListenerArgumentCaptor;
 
     @Mock
     GoogleInAppBillingService googleInAppBillingService;
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     private AndroidGooglePlayPurchaseManager purchaseManager;
+
 
     boolean runAsyncCalled;
 
@@ -157,14 +169,13 @@ public class AndroidGooglePlayPurchaseManagerTest {
         String identifier = offerFullEditionEntitlement().getIdentifier();
         Information expectedInformation = informationFullEditionEntitlement();
 
-        when(googleInAppBillingService.getProductSkuDetails(singletonList(identifier))).
-                thenReturn(singletonMap(identifier, expectedInformation));
+        whenGetProductsDetailsReturn(identifier, expectedInformation);
 
         bindFetchNewConnectionAndInstallPurchaseSystem();
 
         Information actualInformation = purchaseManager.getInformation(identifier);
 
-        verify(googleInAppBillingService).getProductSkuDetails(singletonList(identifier));
+        verify(googleInAppBillingService).getProductsDetails(singletonList(identifier));
         assertEquals(expectedInformation, actualInformation);
     }
 
@@ -175,6 +186,40 @@ public class AndroidGooglePlayPurchaseManagerTest {
         Information information = purchaseManager.getInformation("nonExistingIdentifier");
 
         assertSame(Information.UNAVAILABLE, information);
+    }
+
+    @Test
+    public void purchaseProductWhenNotInstalledThrowsException() {
+        thrown.expect(GdxPayException.class);
+        purchaseManager.purchase("PRODUCT");
+    }
+
+    @Test
+    public void purchaseSuccesShouldDelegateResultToObserver() throws Exception {
+
+        Offer offer = offerFullEditionEntitlement();
+        Information information = informationFullEditionEntitlement();
+
+        whenGetProductsDetailsReturn(offer.getIdentifier(), information);
+
+        bindFetchNewConnectionAndInstallPurchaseSystem();
+
+        String productIdentifier = offerFullEditionEntitlement().getIdentifier();
+        purchaseManager.purchase(productIdentifier);
+
+        verify(googleInAppBillingService).startPurchaseRequest(Mockito.eq(productIdentifier), purchaseRequestListenerArgumentCaptor.capture());
+
+        PurchaseRequestListener listener = purchaseRequestListenerArgumentCaptor.getValue();
+
+        Transaction transaction = transactionFullEditionEuroGooglePlay();
+        listener.purchaseSuccess(transaction);
+
+        verify(purchaseObserver).handlePurchase(transaction);
+    }
+
+    private void whenGetProductsDetailsReturn(String identifier, Information expectedInformation) {
+        when(googleInAppBillingService.getProductsDetails(singletonList(identifier))).
+                thenReturn(singletonMap(identifier, expectedInformation));
     }
 
     private void whenGetInstallerPackageNameReturn(String installerPackageName) {
@@ -205,7 +250,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     }
 
     private void verifyBillingGetSkuDetailsCalled() throws android.os.RemoteException {
-        verify(googleInAppBillingService).getProductSkuDetails(singletonList(offerFullEditionEntitlement().getIdentifier()));
+        verify(googleInAppBillingService).getProductsDetails(singletonList(offerFullEditionEntitlement().getIdentifier()));
     }
 
     private void requestPurchaseMangerInstallWithFullEditionOffer() {
