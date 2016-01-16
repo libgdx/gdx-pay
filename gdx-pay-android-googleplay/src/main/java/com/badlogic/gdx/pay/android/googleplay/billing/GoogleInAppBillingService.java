@@ -1,6 +1,7 @@
 package com.badlogic.gdx.pay.android.googleplay.billing;
 
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public interface GoogleInAppBillingService {
     }
 
     interface PurchaseRequestListener {
-        void purchaseSuccess();
+        void purchaseSuccess(Transaction transaction);
 
         void purchaseError(GdxPayException exception);
 

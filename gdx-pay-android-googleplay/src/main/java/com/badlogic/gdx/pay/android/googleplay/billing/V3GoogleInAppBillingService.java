@@ -1,6 +1,5 @@
 package com.badlogic.gdx.pay.android.googleplay.billing;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,9 +12,13 @@ import android.os.RemoteException;
 
 import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.backends.android.AndroidApplication;
+import com.badlogic.gdx.backends.android.AndroidEventListener;
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants;
+import com.badlogic.gdx.pay.android.googleplay.ResponseCode;
+import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,9 +27,11 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkuDetailsRequestConverter.convertConfigToItemIdList;
-import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkusDetailsResponseBundleToInformationConverter.convertSkuDetailsResponse;
+import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkusDetailsResponseBundleConverter.convertSkuDetailsResponse;
+import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkusDetailsResponseBundleConverter.convertToSkuDetailsList;
+import static java.util.Collections.singletonList;
 
-public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
+public class V3GoogleInAppBillingService implements GoogleInAppBillingService, SkuDetailsFinder {
 
     public static final int BILLING_API_VERSION = 3;
 
@@ -40,23 +45,30 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Nullable
     private IInAppBillingService billingService;
 
-    private final Activity activity;
-    private int activityResultCode;
+
+    private final AndroidApplication androidApplication;
+
+    private int activityRequestCode;
 
     private final String installerPackageName;
+    private final V3GoogleInAppBillingServiceAndroidEventListener androidEventListener = new V3GoogleInAppBillingServiceAndroidEventListener();
 
-    public V3GoogleInAppBillingService(AndroidApplication application, int activityResultCode) {
-        this.activity = application;
-        this.activityResultCode = activityResultCode;
+    private GdxPayAsyncOperationResultListener asyncOperationResultListener;
+
+
+    public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode) {
+        this.androidApplication = application;
+        this.activityRequestCode = activityRequestCode;
         installerPackageName = application.getPackageName();
     }
 
+    // TODO: implement handling of reconnects.
     @Override
     public void connect(ConnectionListener callback) {
         try {
             billingServiceConnection = new BillingServiceInitializingServiceConnection(callback);
 
-            if (!activity.bindService(createBindBillingServiceIntent(), billingServiceConnection, Context.BIND_AUTO_CREATE)) {
+            if (!androidApplication.bindService(createBindBillingServiceIntent(), billingServiceConnection, Context.BIND_AUTO_CREATE)) {
                 callback.disconnected(new GdxPayException("Failed to bind to service"));
             }
         } catch (Exception e) {
@@ -74,8 +86,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     public Map<String, Information> getProductSkuDetails(List<String> productIds) {
         try {
             return fetchSkuDetails(productIds);
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             throw new GdxPayException("getProductSkuDetails(" + productIds + " failed)", e);
         }
     }
@@ -83,19 +94,44 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public void startPurchaseRequest(String productId, PurchaseRequestListener listener) {
         PendingIntent pendingIntent = getBuyIntent(productId);
-
-        System.out.println(pendingIntent);
-
-        startPurchaseIntentSenderForResult(productId, pendingIntent);
+        startPurchaseIntentSenderForResult(productId, pendingIntent, listener);
     }
 
-    protected void startPurchaseIntentSenderForResult(String productId, PendingIntent pendingIntent) {
+    protected void startPurchaseIntentSenderForResult(String productId, PendingIntent pendingIntent, final PurchaseRequestListener listener) {
         try {
-            activity.startIntentSenderForResult(pendingIntent.getIntentSender(),
-                    activityResultCode, new Intent(), 0, 0, 0);
-        } catch(IntentSender.SendIntentException  e) {
-            throw new GdxPayException("startIntentSenderForResult failed for product: " + productId, e);
+            androidApplication.startIntentSenderForResult(pendingIntent.getIntentSender(),
+                    activityRequestCode, new Intent(), 0, 0, 0);
+
+            listenForAppBillingActivityEventOnce(new GdxPayAsyncOperationResultListener() {
+                @Override
+                public void onEvent(int resultCode, Intent data) {
+
+                    if (resultCode == ResponseCode.BILLING_RESPONSE_RESULT_OK.getCode()) {
+                        try {
+                            listener.purchaseSuccess(convertPurchaseResponseDataToTransaction(data));
+                        } catch (GdxPayException e) {
+                            listener.purchaseError(new GdxPayException("Error converting purchase succes response", e));
+                        }
+                    } else {
+                        // TODO: handle purchase error, cancelled
+                        throw new RuntimeException("Wat nu?");
+                    }
+
+                }
+            });
+        } catch (IntentSender.SendIntentException e) {
+            listener.purchaseError(new GdxPayException("startIntentSenderForResult failed for product: " + productId, e));
         }
+    }
+
+    private Transaction convertPurchaseResponseDataToTransaction(Intent responseIntentData) {
+
+
+        return PurchaseResponseActivityResultConverter.convertToTransaction(responseIntentData, this);
+    }
+
+    private void listenForAppBillingActivityEventOnce(GdxPayAsyncOperationResultListener gdxPayAsyncListener) {
+        asyncOperationResultListener = gdxPayAsyncListener;
     }
 
     protected PendingIntent getBuyIntent(String productId) {
@@ -124,7 +160,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public void disconnect() {
         billingService = null;
-        unbindIfBound();
+        disconnectFromActivity();
     }
 
     @Override
@@ -132,10 +168,11 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         return billingService != null;
     }
 
-    private void unbindIfBound() {
+    private void disconnectFromActivity() {
         if (billingServiceConnection != null) {
-            activity.unbindService(billingServiceConnection);
+            androidApplication.unbindService(billingServiceConnection);
         }
+        androidApplication.removeAndroidEventListener(androidEventListener);
     }
 
     private Bundle executeGetSkuDetails(Bundle skusRequest) {
@@ -158,6 +195,20 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         return IInAppBillingService.Stub.asInterface(service);
     }
 
+    @Override
+    public SkuDetails getSkuDetails(String productId) {
+        Bundle skusRequest = convertConfigToItemIdList(singletonList(productId));
+
+        Bundle bundle = executeGetSkuDetails(skusRequest);
+        List<SkuDetails> skuDetailses = convertToSkuDetailsList(bundle);
+
+        if (skuDetailses.isEmpty()) {
+            throw new GdxPayException("SkuDetails not found for product: " + productId);
+        }
+
+        return skuDetailses.get(0);
+    }
+
     private class BillingServiceInitializingServiceConnection implements ServiceConnection {
         private ConnectionListener connectionListener;
 
@@ -171,12 +222,36 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
             billingService = lookupByStubAsInterface(service);
 
             connectionListener.connected();
+
+            androidApplication.addAndroidEventListener(androidEventListener);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             billingService = null;
+            androidApplication.removeAndroidEventListener(androidEventListener);
             connectionListener.disconnected(new GdxPayException(ERROR_ON_SERVICE_DISCONNECTED_RECEIVED));
         }
+    }
+
+    private void onGdxPayActivityEvent(int resultCode, Intent data) {
+        if (this.asyncOperationResultListener != null) {
+            asyncOperationResultListener.onEvent(resultCode, data);
+            asyncOperationResultListener = null;
+        }
+    }
+
+    private final class V3GoogleInAppBillingServiceAndroidEventListener implements AndroidEventListener {
+
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            if (activityRequestCode == requestCode) {
+                onGdxPayActivityEvent(resultCode, data);
+            }
+        }
+    }
+
+    private interface GdxPayAsyncOperationResultListener {
+        void onEvent(int resultCode, Intent data);
     }
 }

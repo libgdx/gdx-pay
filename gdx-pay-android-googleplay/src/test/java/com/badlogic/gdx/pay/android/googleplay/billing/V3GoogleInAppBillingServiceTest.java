@@ -23,7 +23,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Collections;
@@ -38,6 +37,7 @@ import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBilli
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.DEFAULT_DEVELOPER_PAYLOAD;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
@@ -130,6 +130,19 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     @Test
+    public void getSkuDetailsShouldRespondSkuDetailsWhenResponseIsOk() throws Exception {
+        whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
+
+        activityBindAndConnect();
+
+        Offer offer = OfferObjectMother.offerFullEditionEntitlement();
+
+        SkuDetails skuDetails = v3InAppbillingService.getSkuDetails(offer.getIdentifier());
+
+        assertNotNull(skuDetails);
+    }
+
+    @Test
     public void shouldThrowExceptionWhenGetSkuDetailsResponseResultIsNetworkError() throws Exception {
         whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultNetworkError());
 
@@ -162,10 +175,8 @@ public class V3GoogleInAppBillingServiceTest {
 
         v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
 
-        verify(androidApplication).startIntentSenderForResult(Mockito.isA(IntentSender.class),
+        verify(androidApplication).startIntentSenderForResult(isA(IntentSender.class),
                 eq(ACTIVITY_RESULT_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
-
-
     }
 
     private void activityBindAndConnect() {

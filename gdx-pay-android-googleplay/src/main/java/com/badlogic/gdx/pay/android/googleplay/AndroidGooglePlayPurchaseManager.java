@@ -61,8 +61,8 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     @SuppressWarnings({"UnusedParameters", "unused"})
     // requestCode is set by IAP.java which auto-configures IAP.
     // not yet using it though (probably needed when doing purchases and restores).
-    public AndroidGooglePlayPurchaseManager(AndroidApplication activity, int activityResultCode) {
-        googleInAppBillingService = new V3GoogleInAppBillingService(activity, activityResultCode);
+    public AndroidGooglePlayPurchaseManager(AndroidApplication activity, int activityRequestCode) {
+        googleInAppBillingService = new V3GoogleInAppBillingService(activity, activityRequestCode);
     }
 
     @Override

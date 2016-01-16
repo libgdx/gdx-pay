@@ -53,6 +53,9 @@ public class GetSkuDetailsResponseBundleObjectMother {
             object.put(GoogleBillingConstants.SKU_DESCRIPTION, information.getLocalDescription());
             object.put(GoogleBillingConstants.SKU_PRICE, information.getLocalPricing());
             object.put(GoogleBillingConstants.SKU_PRODUCT_ID, offer.getIdentifier());
+            // TODO: extend Information with priceInCents, priceCurrency
+            object.put(GoogleBillingConstants.PRICE_AMOUNT_MICROS, "2990000");
+            object.put(GoogleBillingConstants.PRICE_CURRENCY_CODE, "EUR");
         } catch(JSONException e) {
             throw new IllegalStateException("Failed to create json object", e);
         }
