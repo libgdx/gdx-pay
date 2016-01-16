@@ -193,12 +193,12 @@ public class V3GoogleInAppBillingServiceTest {
         verify(purchaseRequestCallback).purchaseSuccess(isA(Transaction.class));
     }
 
-    protected AndroidEventListener captureAndroidEventListener() {
+    private AndroidEventListener captureAndroidEventListener() {
         verify(androidApplication).addAndroidEventListener(androidEventListenerArgumentCaptor.capture());
         return androidEventListenerArgumentCaptor.getValue();
     }
 
-    protected void bindConnectAndStartPurchaseRequest(Offer offer) throws android.os.RemoteException {
+    private void bindConnectAndStartPurchaseRequest(Offer offer) throws android.os.RemoteException {
         activityBindAndConnect();
 
 
@@ -207,7 +207,7 @@ public class V3GoogleInAppBillingServiceTest {
         v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
     }
 
-    protected void whenStartPurchaseRequestForOfferReturn(Offer offer, Bundle buyIntentResponseOk) throws android.os.RemoteException {
+    private void whenStartPurchaseRequestForOfferReturn(Offer offer, Bundle buyIntentResponseOk) throws android.os.RemoteException {
         when(nativeInAppBillingService.getBuyIntent(BILLING_API_VERSION,
                                 INSTALLER_PACKAGE_NAME,
                                 offer.getIdentifier(),
