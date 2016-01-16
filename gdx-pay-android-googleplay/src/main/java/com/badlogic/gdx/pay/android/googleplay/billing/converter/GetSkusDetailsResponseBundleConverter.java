@@ -18,7 +18,7 @@ import java.util.Map;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.DETAILS_LIST;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PRICE_AMOUNT_MICROS;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PRICE_CURRENCY_CODE;
-import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.SKU_PRODUCT_ID;
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PRODUCT_ID;
 import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_OK;
 
 public class GetSkusDetailsResponseBundleConverter {
@@ -40,7 +40,7 @@ public class GetSkusDetailsResponseBundleConverter {
                         SkuDetails.newBuilder()
                                 .priceAmountCents(object.getLong(PRICE_AMOUNT_MICROS) / 10_000)
                                 .priceCurrencyCode(object.getString(PRICE_CURRENCY_CODE))
-                                .productId(object.getString(SKU_PRODUCT_ID))
+                                .productId(object.getString(PRODUCT_ID))
                                 .build()
                 );
             }
@@ -91,7 +91,7 @@ public class GetSkusDetailsResponseBundleConverter {
 
         for (String thisResponse : skuDetailsStringList) {
             JSONObject object = new JSONObject(thisResponse);
-            String sku = object.getString(SKU_PRODUCT_ID);
+            String sku = object.getString(PRODUCT_ID);
             String price = object.getString(GoogleBillingConstants.SKU_PRICE);
             String title = object.getString(GoogleBillingConstants.SKU_TITLE);
             String description = object.getString(GoogleBillingConstants.SKU_DESCRIPTION);

@@ -64,7 +64,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService, S
 
     // TODO: implement handling of reconnects.
     @Override
-    public void connect(ConnectionListener callback) {
+    public void requestConnect(ConnectionListener callback) {
         try {
             billingServiceConnection = new BillingServiceInitializingServiceConnection(callback);
 
@@ -134,7 +134,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService, S
         asyncOperationResultListener = gdxPayAsyncListener;
     }
 
-    protected PendingIntent getBuyIntent(String productId) {
+    private PendingIntent getBuyIntent(String productId) {
         try {
             Bundle intent = billingService().getBuyIntent(BILLING_API_VERSION, installerPackageName, productId, PURCHASE_TYPE_IN_APP, DEFAULT_DEVELOPER_PAYLOAD);
 

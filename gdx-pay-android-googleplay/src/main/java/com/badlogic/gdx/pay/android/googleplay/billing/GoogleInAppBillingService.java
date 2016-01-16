@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface GoogleInAppBillingService {
 
-    void connect(ConnectionListener callback);
+    void requestConnect(ConnectionListener callback);
 
     Map<String, Information> getProductSkuDetails(List<String> productIds);
 

@@ -105,7 +105,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     public void shouldCallObserverInstallErrorOnConnectFailure() throws Exception {
         requestPurchaseMangerInstallWithFullEditionOffer();
 
-        verify(googleInAppBillingService).connect(connectResultListenerArgumentCaptor.capture());
+        verify(googleInAppBillingService).requestConnect(connectResultListenerArgumentCaptor.capture());
 
         connectResultListenerArgumentCaptor.getValue()
                 .disconnected(new GdxPayException("Disconnected", new SecurityException("Test")));
@@ -195,7 +195,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     private void connectToBillingService() {
         requestPurchaseMangerInstallWithFullEditionOffer();
 
-        verify(googleInAppBillingService).connect(connectResultListenerArgumentCaptor.capture());
+        verify(googleInAppBillingService).requestConnect(connectResultListenerArgumentCaptor.capture());
 
         assertRunAsyncNotCalled();
 

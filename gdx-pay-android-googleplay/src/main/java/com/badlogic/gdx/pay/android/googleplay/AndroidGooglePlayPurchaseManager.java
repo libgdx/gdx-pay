@@ -68,7 +68,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     @Override
     public void install(final PurchaseObserver observer, final PurchaseManagerConfig config, final boolean autoFetchInformation) {
 
-        googleInAppBillingService.connect(new ConnectionListener() {
+        googleInAppBillingService.requestConnect(new ConnectionListener() {
             @Override
             public void connected() {
                 onServiceConnected(observer, config);

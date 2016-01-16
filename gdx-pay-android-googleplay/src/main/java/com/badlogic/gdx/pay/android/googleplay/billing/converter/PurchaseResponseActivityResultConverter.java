@@ -14,12 +14,10 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PRODUCT_ID;
+
 public class PurchaseResponseActivityResultConverter {
 
-
-    public static final String RESPONSE_DATA_PRODUCT_ID = "productId";
-    public static final String RESPONSE_DATA_ORDER_ID = "orderId";
-    public static final String RESPONSE_DATA_PURCHASE_TIME = "purchaseTime";
 
     public static Transaction convertToTransaction(Intent responseData, SkuDetailsFinder skuDetailsFinder) {
         String purchaseDataString = responseData.getStringExtra(GoogleBillingConstants.INAPP_PURCHASE_DATA);
@@ -29,18 +27,18 @@ public class PurchaseResponseActivityResultConverter {
 
             JSONObject jsonObject =  new JSONObject(purchaseDataString);
 
-            String productId = jsonObject.getString(RESPONSE_DATA_PRODUCT_ID);
+            String productId = jsonObject.getString(PRODUCT_ID);
             setSkuDetailsFields(skuDetailsFinder, transaction, productId);
 
             transaction.setIdentifier(productId);
 
-            transaction.setPurchaseTime(new Date(jsonObject.getInt(RESPONSE_DATA_PURCHASE_TIME)));
+            transaction.setPurchaseTime(new Date(jsonObject.getInt(GoogleBillingConstants.PURCHASE_TIME)));
 
-            transaction.setOrderId(jsonObject.getString(RESPONSE_DATA_ORDER_ID));
+            transaction.setOrderId(jsonObject.getString(GoogleBillingConstants.ORDER_ID));
 
             return transaction;
         } catch (JSONException e) {
-            throw new GdxPayException("JSON Exception while parsing: " + purchaseDataString);
+            throw new GdxPayException("JSON Exception while parsing: " + purchaseDataString, e);
         }
     }
 
