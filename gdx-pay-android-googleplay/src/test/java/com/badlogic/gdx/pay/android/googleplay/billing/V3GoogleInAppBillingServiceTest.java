@@ -15,6 +15,7 @@ import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
+import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 import com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseRequestActivityResultObjectMother;
 
 import org.junit.Before;
@@ -39,6 +40,7 @@ import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObject
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.BILLING_API_VERSION;
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.DEFAULT_DEVELOPER_PAYLOAD;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -70,6 +72,9 @@ public class V3GoogleInAppBillingServiceTest {
     @Mock
     private GoogleInAppBillingService.PurchaseRequestListener purchaseRequestCallback;
 
+    @Mock
+    private PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter;
+
     private V3GoogleInAppBillingService v3InAppbillingService;
 
     @Rule
@@ -79,7 +84,7 @@ public class V3GoogleInAppBillingServiceTest {
     public void setUp() throws Exception {
         when(androidApplication.getPackageName()).thenReturn(INSTALLER_PACKAGE_NAME);
 
-        v3InAppbillingService = new V3GoogleInAppBillingService(androidApplication, ACTIVITY_REQUEST_CODE) {
+        v3InAppbillingService = new V3GoogleInAppBillingService(androidApplication, ACTIVITY_REQUEST_CODE, purchaseResponseActivityResultConverter) {
             @Override
             protected IInAppBillingService lookupByStubAsInterface(IBinder binder) {
                 return nativeInAppBillingService;
@@ -137,19 +142,6 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     @Test
-    public void getSkuDetailsShouldRespondSkuDetailsWhenResponseIsOk() throws Exception {
-        whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
-
-        activityBindAndConnect();
-
-        Offer offer = offerFullEditionEntitlement();
-
-        SkuDetails skuDetails = v3InAppbillingService.getSkuDetails(offer.getIdentifier());
-
-        assertNotNull(skuDetails);
-    }
-
-    @Test
     public void shouldThrowExceptionWhenGetSkuDetailsResponseResultIsNetworkError() throws Exception {
         whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultNetworkError());
 
@@ -193,11 +185,12 @@ public class V3GoogleInAppBillingServiceTest {
 
         whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
 
+        when(purchaseResponseActivityResultConverter.convertToTransaction(isA(Intent.class)))
+                .thenReturn(transactionFullEditionEuroGooglePlay());
+
         eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, BILLING_RESPONSE_RESULT_OK.getCode(), PurchaseRequestActivityResultObjectMother.activityResultPurchaseFullEditionSuccess());
 
-
         verify(purchaseRequestCallback).purchaseSuccess(isA(Transaction.class));
-
     }
 
     protected AndroidEventListener captureAndroidEventListener() {

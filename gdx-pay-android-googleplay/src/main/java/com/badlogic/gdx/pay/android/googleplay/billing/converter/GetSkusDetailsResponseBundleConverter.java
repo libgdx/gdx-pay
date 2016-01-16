@@ -5,7 +5,6 @@ import android.os.Bundle;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants;
 import com.badlogic.gdx.pay.android.googleplay.ResponseCode;
-import com.badlogic.gdx.pay.android.googleplay.billing.SkuDetails;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,34 +21,6 @@ import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PRO
 import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_OK;
 
 public class GetSkusDetailsResponseBundleConverter {
-
-
-    public static List<SkuDetails> convertToSkuDetailsList(Bundle skuDetailsResponse) {
-        assertResponseOk(skuDetailsResponse);
-        ArrayList<String> skuDetailsStringList = skuDetailsResponse.getStringArrayList(DETAILS_LIST);
-
-        assertSkuListNotEmpty(skuDetailsStringList);
-
-        List<SkuDetails> skuDetailsList = new ArrayList<>();
-
-        try {
-            for (String thisResponse : skuDetailsStringList) {
-                JSONObject object = new JSONObject(thisResponse);
-
-                skuDetailsList.add(
-                        SkuDetails.newBuilder()
-                                .priceAmountCents(object.getLong(PRICE_AMOUNT_MICROS) / 10_000)
-                                .priceCurrencyCode(object.getString(PRICE_CURRENCY_CODE))
-                                .productId(object.getString(PRODUCT_ID))
-                                .build()
-                );
-            }
-        } catch(JSONException e) {
-            throw new IllegalArgumentException("Failed to parse : " + skuDetailsResponse, e);
-        }
-
-        return skuDetailsList;
-    }
 
     public static Map<String,Information> convertSkuDetailsResponse(Bundle skuDetailsResponse) {
         assertResponseOk(skuDetailsResponse);
@@ -95,7 +66,13 @@ public class GetSkusDetailsResponseBundleConverter {
             String price = object.getString(GoogleBillingConstants.SKU_PRICE);
             String title = object.getString(GoogleBillingConstants.SKU_TITLE);
             String description = object.getString(GoogleBillingConstants.SKU_DESCRIPTION);
-            products.put(sku, new Information(title, description, price));
+            products.put(sku, Information.newBuilder()
+                    .localName(title)
+                    .localDescription(description)
+                    .localPricing(price)
+                    .priceInCents((int) object.getLong(PRICE_AMOUNT_MICROS) / 10_000)
+                    .priceCurrencyCode(object.getString(PRICE_CURRENCY_CODE))
+                    .build());
         }
 
         return products;

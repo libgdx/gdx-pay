@@ -13,14 +13,47 @@ public final class Information {
      */
     public static final Information UNAVAILABLE = new Information(null, null, null);
 
-    private final String localName;
-    private final String localDescription;
-    private final String localPricing;
+    private String localName;
+    private String localDescription;
+    private String localPricing;
+
+    private Integer priceInCents;
+
+    private String priceCurrencyCode;
 
     public Information(String localName, String localDescription, String localPricing) {
         this.localName = localName;
         this.localDescription = localDescription;
         this.localPricing = localPricing;
+    }
+
+    private Information(Builder builder) {
+        localName = builder.localName;
+        localDescription = builder.localDescription;
+        localPricing = builder.localPricing;
+        priceInCents = builder.priceInCents;
+        priceCurrencyCode = builder.priceCurrencyCode;
+    }
+
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    /**
+     * Price in cents.
+     * <p>Caution:Note that not all PurchaseManagers set this field!</p>
+     */
+    public Integer getPriceInCents() {
+        return priceInCents;
+    }
+
+    /**
+     * Price currency code.
+     * <p>Caution:Note that not all PurchaseManagers set this field!</p>
+     * @return
+     */
+    public String getPriceCurrencyCode() {
+        return priceCurrencyCode;
     }
 
     /**
@@ -74,5 +107,45 @@ public final class Information {
                 ", localDescription='" + localDescription + '\'' +
                 ", localPricing='" + localPricing + '\'' +
                 '}';
+    }
+
+    public static final class Builder {
+        private String localName;
+        private String localDescription;
+        private String localPricing;
+        private Integer priceInCents;
+        private String priceCurrencyCode;
+
+        private Builder() {
+        }
+
+        public Builder localName(String val) {
+            localName = val;
+            return this;
+        }
+
+        public Builder localDescription(String val) {
+            localDescription = val;
+            return this;
+        }
+
+        public Builder localPricing(String val) {
+            localPricing = val;
+            return this;
+        }
+
+        public Builder priceInCents(Integer val) {
+            priceInCents = val;
+            return this;
+        }
+
+        public Builder priceCurrencyCode(String val) {
+            priceCurrencyCode = val;
+            return this;
+        }
+
+        public Information build() {
+            return new Information(this);
+        }
     }
 }

@@ -2,12 +2,12 @@ package com.badlogic.gdx.pay.android.googleplay.billing.converter;
 
 import android.content.Intent;
 
+import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants;
-import com.badlogic.gdx.pay.android.googleplay.billing.SkuDetails;
-import com.badlogic.gdx.pay.android.googleplay.billing.SkuDetailsFinder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,8 +18,14 @@ import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PRO
 
 public class PurchaseResponseActivityResultConverter {
 
+    private PurchaseManager purchaseManager;
 
-    public static Transaction convertToTransaction(Intent responseData, SkuDetailsFinder skuDetailsFinder) {
+    public PurchaseResponseActivityResultConverter(PurchaseManager purchaseManager) {
+        this.purchaseManager = purchaseManager;
+    }
+
+
+    public Transaction convertToTransaction(Intent responseData) {
         String purchaseDataString = responseData.getStringExtra(GoogleBillingConstants.INAPP_PURCHASE_DATA);
         try {
             Transaction transaction = new Transaction();
@@ -28,7 +34,7 @@ public class PurchaseResponseActivityResultConverter {
             JSONObject jsonObject =  new JSONObject(purchaseDataString);
 
             String productId = jsonObject.getString(PRODUCT_ID);
-            setSkuDetailsFields(skuDetailsFinder, transaction, productId);
+            setInformationFields(transaction, productId);
 
             transaction.setIdentifier(productId);
 
@@ -42,10 +48,11 @@ public class PurchaseResponseActivityResultConverter {
         }
     }
 
-    protected static void setSkuDetailsFields(SkuDetailsFinder skuDetailsFinder, Transaction transaction, String productId) {
-        SkuDetails skuDetails = skuDetailsFinder.getSkuDetails(productId);
-        transaction.setPurchaseCost((int) skuDetails.getPriceAmountCents());
-        transaction.setPurchaseCostCurrency(skuDetails.getPriceCurrencyCode());
+    protected void setInformationFields(Transaction transaction, String productId) {
+        Information information = purchaseManager.getInformation(productId);
+
+        transaction.setPurchaseCost(information.getPriceInCents());
+        transaction.setPurchaseCostCurrency(information.getPriceCurrencyCode());
     }
 
 }

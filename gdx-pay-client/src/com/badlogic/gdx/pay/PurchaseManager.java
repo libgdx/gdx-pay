@@ -44,7 +44,7 @@ package com.badlogic.gdx.pay;
  *
  * @author noblemaster
  */
-public interface PurchaseManager {
+public interface PurchaseManager extends InformationFinder {
 
     /**
      * Returns the store name.
@@ -92,10 +92,4 @@ public interface PurchaseManager {
      */
     void purchaseRestore();
 
-    /**
-     * Returns information about a product provided by the purchase manager.
-     *
-     * @return the information for given identifier, or {@link Information#UNAVAILABLE} if no product for given <code>identifier</code> is loaded.
-     */
-    Information getInformation(String identifier);
 }

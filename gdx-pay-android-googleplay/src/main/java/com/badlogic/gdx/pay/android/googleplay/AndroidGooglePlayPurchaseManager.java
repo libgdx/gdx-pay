@@ -28,6 +28,7 @@ import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
+import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 import com.badlogic.gdx.utils.Logger;
 
 import java.util.ArrayList;
@@ -62,7 +63,8 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     // requestCode is set by IAP.java which auto-configures IAP.
     // not yet using it though (probably needed when doing purchases and restores).
     public AndroidGooglePlayPurchaseManager(AndroidApplication activity, int activityRequestCode) {
-        googleInAppBillingService = new V3GoogleInAppBillingService(activity, activityRequestCode);
+        PurchaseResponseActivityResultConverter converter = new PurchaseResponseActivityResultConverter(this);
+        googleInAppBillingService = new V3GoogleInAppBillingService(activity, activityRequestCode, converter);
     }
 
     @Override

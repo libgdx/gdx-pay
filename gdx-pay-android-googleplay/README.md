@@ -25,3 +25,11 @@
 * integrate publish.gradle (support android library project).
 * Check for TODO's
 * Move testdata (objectmothers) to a common place (gdx-pay-testdata?)
+
+## Refactorings to be discussed:
+
+* Rename Information to Product (fits its name better)
+* Rename gdx-pay submodule to gdx-pay-api
+* create a -client and -server submodule
+* gdx-pay-client: move classes in this project to com.badlogic.gdx.pay.cient
+* introduce gdx-pay-client-testdata module, put here in all ObjectMother

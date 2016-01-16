@@ -28,10 +28,8 @@ import javax.annotation.Nullable;
 
 import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkuDetailsRequestConverter.convertConfigToItemIdList;
 import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkusDetailsResponseBundleConverter.convertSkuDetailsResponse;
-import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkusDetailsResponseBundleConverter.convertToSkuDetailsList;
-import static java.util.Collections.singletonList;
 
-public class V3GoogleInAppBillingService implements GoogleInAppBillingService, SkuDetailsFinder {
+public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     public static final int BILLING_API_VERSION = 3;
 
@@ -49,6 +47,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService, S
     private final AndroidApplication androidApplication;
 
     private int activityRequestCode;
+    private PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter;
 
     private final String installerPackageName;
     private final V3GoogleInAppBillingServiceAndroidEventListener androidEventListener = new V3GoogleInAppBillingServiceAndroidEventListener();
@@ -56,9 +55,10 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService, S
     private GdxPayAsyncOperationResultListener asyncOperationResultListener;
 
 
-    public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode) {
+    public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode, PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter) {
         this.androidApplication = application;
         this.activityRequestCode = activityRequestCode;
+        this.purchaseResponseActivityResultConverter = purchaseResponseActivityResultConverter;
         installerPackageName = application.getPackageName();
     }
 
@@ -125,9 +125,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService, S
     }
 
     private Transaction convertPurchaseResponseDataToTransaction(Intent responseIntentData) {
-
-
-        return PurchaseResponseActivityResultConverter.convertToTransaction(responseIntentData, this);
+        return purchaseResponseActivityResultConverter.convertToTransaction(responseIntentData);
     }
 
     private void listenForAppBillingActivityEventOnce(GdxPayAsyncOperationResultListener gdxPayAsyncListener) {
@@ -193,20 +191,6 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService, S
 
     protected IInAppBillingService lookupByStubAsInterface(IBinder service) {
         return IInAppBillingService.Stub.asInterface(service);
-    }
-
-    @Override
-    public SkuDetails getSkuDetails(String productId) {
-        Bundle skusRequest = convertConfigToItemIdList(singletonList(productId));
-
-        Bundle bundle = executeGetSkuDetails(skusRequest);
-        List<SkuDetails> skuDetailses = convertToSkuDetailsList(bundle);
-
-        if (skuDetailses.isEmpty()) {
-            throw new GdxPayException("SkuDetails not found for product: " + productId);
-        }
-
-        return skuDetailses.get(0);
     }
 
     private class BillingServiceInitializingServiceConnection implements ServiceConnection {
