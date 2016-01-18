@@ -70,7 +70,7 @@ public class V3GoogleInAppBillingServiceTest {
     ConnectionListener connectionListener;
 
     @Mock
-    private GoogleInAppBillingService.PurchaseRequestListener purchaseRequestCallback;
+    private GoogleInAppBillingService.PurchaseRequestCallback purchaseRequestCallback;
 
     @Mock
     private PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter;
@@ -211,9 +211,8 @@ public class V3GoogleInAppBillingServiceTest {
         verify(purchaseRequestCallback).purchaseError(isA(GdxPayException.class));
     }
 
-
     @Test
-    public void shouldCallPurchaseCancalledOnResultCodeZero() throws Exception {
+    public void shouldCallPurchaseCanceledOnResultCodeZero() throws Exception {
         Offer offer = offerFullEditionEntitlement();
 
         bindConnectAndStartPurchaseRequest(offer);

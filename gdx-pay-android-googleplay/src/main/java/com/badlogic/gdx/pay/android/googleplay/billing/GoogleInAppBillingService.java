@@ -13,11 +13,13 @@ public interface GoogleInAppBillingService {
 
     Map<String, Information> getProductsDetails(List<String> productIds);
 
-    void startPurchaseRequest(String productId, PurchaseRequestListener listener);
+    void startPurchaseRequest(String productId, PurchaseRequestCallback listener);
 
     void disconnect();
 
     boolean isConnected();
+
+    void startPurchaseRestoreRequest(PurchaseRestoreRequestCallback callback);
 
     interface ConnectionListener {
         void connected();
@@ -25,11 +27,18 @@ public interface GoogleInAppBillingService {
         void disconnected(GdxPayException exception);
     }
 
-    interface PurchaseRequestListener {
+    interface PurchaseRequestCallback {
         void purchaseSuccess(Transaction transaction);
 
         void purchaseError(GdxPayException exception);
 
         void purchaseCanceled();
+    }
+
+    interface PurchaseRestoreRequestCallback {
+
+        void restoreSucces(Transaction[] transactions);
+
+        void restoreError(GdxPayException exception);
     }
 }

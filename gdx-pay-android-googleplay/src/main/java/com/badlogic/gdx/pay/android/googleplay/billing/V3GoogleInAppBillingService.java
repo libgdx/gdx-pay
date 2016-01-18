@@ -92,12 +92,12 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     @Override
-    public void startPurchaseRequest(String productId, PurchaseRequestListener listener) {
+    public void startPurchaseRequest(String productId, PurchaseRequestCallback listener) {
         PendingIntent pendingIntent = getBuyIntent(productId);
         startPurchaseIntentSenderForResult(productId, pendingIntent, listener);
     }
 
-    private void startPurchaseIntentSenderForResult(String productId, PendingIntent pendingIntent, final PurchaseRequestListener listener) {
+    private void startPurchaseIntentSenderForResult(String productId, PendingIntent pendingIntent, final PurchaseRequestCallback listener) {
         try {
             androidApplication.startIntentSenderForResult(pendingIntent.getIntentSender(),
                     activityRequestCode, new Intent(), 0, 0, 0);
@@ -176,6 +176,11 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public boolean isConnected() {
         return billingService != null;
+    }
+
+    @Override
+    public void startPurchaseRestoreRequest(PurchaseRestoreRequestCallback callback) {
+        throw new UnsupportedOperationException();
     }
 
     private void disconnectFromActivity() {

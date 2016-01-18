@@ -28,7 +28,7 @@ import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
-import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestListener;
+import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestCallback;
 import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 import com.badlogic.gdx.utils.Logger;
@@ -154,7 +154,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
             return;
         }
 
-        googleInAppBillingService.startPurchaseRequest(identifier, new PurchaseRequestListener() {
+        googleInAppBillingService.startPurchaseRequest(identifier, new PurchaseRequestCallback() {
 
             @Override
             public void purchaseSuccess(Transaction transaction) {
@@ -199,7 +199,22 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     @Override
     public void purchaseRestore() {
-        // FIXME
+
+        googleInAppBillingService.startPurchaseRestoreRequest(new GoogleInAppBillingService.PurchaseRestoreRequestCallback() {
+            @Override
+            public void restoreSucces(Transaction[] transactions) {
+                if (observer != null) {
+                    observer.handleRestore(transactions);
+                }
+            }
+
+            @Override
+            public void restoreError(GdxPayException exception) {
+                if (observer != null) {
+                    observer.handleRestoreError(exception);
+                }
+            }
+        });
     }
 
     @Override
