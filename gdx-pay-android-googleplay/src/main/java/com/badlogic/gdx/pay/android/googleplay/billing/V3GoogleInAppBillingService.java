@@ -94,7 +94,13 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     @Override
     public void startPurchaseRequest(String productId, PurchaseRequestCallback listener) {
-        PendingIntent pendingIntent = getBuyIntent(productId);
+        PendingIntent pendingIntent;
+        try {
+            pendingIntent = getBuyIntent(productId);
+        } catch (RemoteException e) {
+            listener.purchaseError(new GdxPayException("startPurchaseRequest failed at getBuyIntent() for product: "  + productId, e));
+            return;
+        }
         startPurchaseIntentSenderForResult(productId, pendingIntent, listener);
     }
 
@@ -145,14 +151,10 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         asyncOperationResultListener = gdxPayAsyncListener;
     }
 
-    private PendingIntent getBuyIntent(String productId) {
-        try {
+    private PendingIntent getBuyIntent(String productId) throws RemoteException {
             Bundle intent = billingService().getBuyIntent(BILLING_API_VERSION, installerPackageName, productId, PURCHASE_TYPE_IN_APP, DEFAULT_DEVELOPER_PAYLOAD);
 
             return intent.getParcelable(GoogleBillingConstants.BUY_INTENT);
-        } catch (RemoteException e) {
-            throw new GdxPayException("Failed to get buy intent for product: " + productId, e);
-        }
     }
 
     private Map<String, Information> fetchSkuDetails(List<String> productIds) {
