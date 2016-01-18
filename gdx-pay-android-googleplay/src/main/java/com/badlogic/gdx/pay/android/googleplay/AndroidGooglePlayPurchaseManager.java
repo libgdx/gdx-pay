@@ -172,7 +172,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
             }
 
             @Override
-            public void purchaseCancelled() {
+            public void purchaseCanceled() {
                 if (observer != null) {
                     observer.handlePurchaseCanceled();
                 }

@@ -195,8 +195,36 @@ public class AndroidGooglePlayPurchaseManagerTest {
     }
 
     @Test
-    public void purchaseSuccesShouldDelegateResultToObserver() throws Exception {
+    public void purchaseSuccessShouldDelegateResultSuccessToObserver() throws Exception {
+        PurchaseRequestListener listener = connectBindAndRPurchaseRequestForFullEditionEntitlement();
 
+        Transaction transaction = transactionFullEditionEuroGooglePlay();
+
+        listener.purchaseSuccess(transaction);
+
+        verify(purchaseObserver).handlePurchase(transaction);
+    }
+
+    @Test
+    public void purchaseCanceledShouldDelegateResultToObserver() throws Exception {
+        PurchaseRequestListener listener = connectBindAndRPurchaseRequestForFullEditionEntitlement();
+
+        listener.purchaseCanceled();
+
+        verify(purchaseObserver).handlePurchaseCanceled();
+    }
+
+    @Test
+    public void purchaseErrorShouldDelegateResultErrorToObserver() throws Exception {
+        PurchaseRequestListener listener = connectBindAndRPurchaseRequestForFullEditionEntitlement();
+
+        GdxPayException exception = new GdxPayException("Network error");
+        listener.purchaseError(exception);
+
+        verify(purchaseObserver).handlePurchaseError(exception);
+    }
+
+    protected PurchaseRequestListener connectBindAndRPurchaseRequestForFullEditionEntitlement() throws android.os.RemoteException {
         Offer offer = offerFullEditionEntitlement();
         Information information = informationFullEditionEntitlement();
 
@@ -209,12 +237,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
         verify(googleInAppBillingService).startPurchaseRequest(Mockito.eq(productIdentifier), purchaseRequestListenerArgumentCaptor.capture());
 
-        PurchaseRequestListener listener = purchaseRequestListenerArgumentCaptor.getValue();
-
-        Transaction transaction = transactionFullEditionEuroGooglePlay();
-        listener.purchaseSuccess(transaction);
-
-        verify(purchaseObserver).handlePurchase(transaction);
+        return purchaseRequestListenerArgumentCaptor.getValue();
     }
 
     private void whenGetProductsDetailsReturn(String identifier, Information expectedInformation) {

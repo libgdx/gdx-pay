@@ -112,7 +112,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
                     }
 
                     if (resultCode == Activity.RESULT_CANCELED) {
-                        listener.purchaseCancelled();
+                        listener.purchaseCanceled();
                         return;
                     }
 

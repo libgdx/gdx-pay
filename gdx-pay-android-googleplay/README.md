@@ -7,9 +7,9 @@
 * DONE: implement install() and handleInstall()
 * DONE: implement getInformation()
 * DONE: implement dispose()
-* Handle purchase non-consumable product
-* Verify purchase authenticity
 * Handle restore()
+* Verify purchase cancellation.
+* Verify purchase authenticity
 * Refactor and cleanup.
 * Integrate publish.gradle to android project to be able to publish to a maven repo.
 * test SNAPSHOT version
@@ -17,6 +17,7 @@
 
 
 ## Milestone 2
+* Handle purchase non-consumable product
 
 * Hande purchase consumable product
 * Handle purchase subscription
@@ -33,3 +34,7 @@
 * create a -client and -server submodule
 * gdx-pay-client: move classes in this project to com.badlogic.gdx.pay.cient
 * introduce gdx-pay-client-testdata module, put here in all ObjectMother
+
+# Known issues and limitations:
+
+* No support for continuations: we do not yet support INAPP_CONTINUATION_TOKEN	

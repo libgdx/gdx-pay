@@ -30,6 +30,6 @@ public interface GoogleInAppBillingService {
 
         void purchaseError(GdxPayException exception);
 
-        void purchaseCancelled();
+        void purchaseCanceled();
     }
 }

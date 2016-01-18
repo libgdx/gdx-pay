@@ -227,7 +227,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_CANCELED,new Intent());
 
-        verify(purchaseRequestCallback).purchaseCancelled();
+        verify(purchaseRequestCallback).purchaseCanceled();
     }
 
     private AndroidEventListener captureAndroidEventListener() {
