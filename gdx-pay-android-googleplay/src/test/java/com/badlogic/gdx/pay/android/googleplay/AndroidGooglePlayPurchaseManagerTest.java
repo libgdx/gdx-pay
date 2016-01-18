@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 
+import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseObserver;
@@ -24,9 +25,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.lang.reflect.Constructor;
+
 import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PACKAGE_NAME_GOOD;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -42,7 +46,7 @@ import static org.mockito.Mockito.when;
 public class AndroidGooglePlayPurchaseManagerTest {
 
     @Mock
-    Activity activity;
+    AndroidApplication application;
 
     @Mock
     Logger logger;
@@ -90,7 +94,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
         };
         purchaseManager.logger = logger;
 
-        when(activity.getPackageName()).thenReturn("com.gdx.pay.dummy.activity");
+        when(application.getPackageName()).thenReturn(PACKAGE_NAME_GOOD);
     }
 
     @Test
@@ -98,13 +102,13 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
         whenGetInstallerPackageNameReturn("com.amazon.venezia");
 
-        assertFalse(AndroidGooglePlayPurchaseManager.isRunningViaGooglePlay(activity));
+        assertFalse(AndroidGooglePlayPurchaseManager.isRunningViaGooglePlay(application));
     }
 
     @Test
     public void runningOnGooglePlayShouldReturnTrueWhenInstalledViaGooglePlay() throws Exception {
         whenGetInstallerPackageNameReturn("com.android.vending");
-        assertTrue(AndroidGooglePlayPurchaseManager.isRunningViaGooglePlay(activity));
+        assertTrue(AndroidGooglePlayPurchaseManager.isRunningViaGooglePlay(application));
     }
 
     @Test
@@ -112,6 +116,14 @@ public class AndroidGooglePlayPurchaseManagerTest {
         assertFalse(purchaseManager.installed());
     }
 
+    @Test
+    public void shouldSupportConstructingViaIap() throws Exception {
+        Constructor<AndroidGooglePlayPurchaseManager> constructor =
+                AndroidGooglePlayPurchaseManager.class.getConstructor(Activity.class, int.class);
+        AndroidGooglePlayPurchaseManager manager = constructor.newInstance(application, 1002);
+
+        assertFalse(manager.installed());
+    }
 
     @Test
     public void shouldCallObserverInstallErrorOnConnectFailure() throws Exception {
@@ -286,7 +298,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     }
 
     private void whenGetInstallerPackageNameReturn(String installerPackageName) {
-        when(activity.getPackageManager()).thenReturn(packageManager);
+        when(application.getPackageManager()).thenReturn(packageManager);
         when(packageManager.getInstallerPackageName(isA(String.class))).thenReturn(installerPackageName);
     }
 

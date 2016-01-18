@@ -62,13 +62,14 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         this.googleInAppBillingService = googleInAppBillingService;
     }
 
-    // TODO unit test method called by IAP.java
-    @SuppressWarnings({"unused"})
-    // requestCode is set by IAP.java which auto-configures IAP.
-    // not yet using it though (probably needed when doing purchases and restores).
-    public AndroidGooglePlayPurchaseManager(AndroidApplication activity, int activityRequestCode) {
+    @SuppressWarnings("unused") // Unit tested with reflection. (as in IAP.java)
+    public AndroidGooglePlayPurchaseManager(Activity activity, int activityRequestCode) {
+        if (!(activity instanceof  AndroidApplication)) {
+            throw new IllegalArgumentException("Bootstrapping gdx-pay only supported with AndroidApplication activity.");
+        }
+        AndroidApplication application = (AndroidApplication) activity;
         PurchaseResponseActivityResultConverter converter = new PurchaseResponseActivityResultConverter(this);
-        googleInAppBillingService = new V3GoogleInAppBillingService(activity, activityRequestCode, converter);
+        googleInAppBillingService = new V3GoogleInAppBillingService(application, activityRequestCode, converter);
     }
 
     @Override
