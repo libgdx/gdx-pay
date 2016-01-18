@@ -1,0 +1,53 @@
+package com.badlogic.gdx.pay.android.googleplay.testdata;
+
+import android.os.Bundle;
+
+import com.badlogic.gdx.pay.Transaction;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.INAPP_PURCHASE_DATA_LIST;
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.ORDER_ID;
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PACKAGE_NAME;
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PRODUCT_ID;
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PURCHASE_TIME;
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.RESPONSE_CODE;
+import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_OK;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PACKAGE_NAME_GOOD;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
+
+public class GetPurchasesResponseObjectMother {
+
+    public static Bundle purchasesResponseOneTransactionFullEdition() {
+        Bundle bundle = new Bundle();
+
+        bundle.putInt(RESPONSE_CODE, BILLING_RESPONSE_RESULT_OK.getCode());
+
+        bundle.putStringArrayList(INAPP_PURCHASE_DATA_LIST, makeStringArrayListForTransaction(transactionFullEditionEuroGooglePlay()));
+
+        return bundle;
+    }
+
+    private static ArrayList<String> makeStringArrayListForTransaction(Transaction transaction) {
+        ArrayList<String> list = new ArrayList<>();
+
+        JSONObject jsonObject = new JSONObject();
+
+        try {
+            jsonObject.put(ORDER_ID, transaction.getOrderId());
+            jsonObject.put(PACKAGE_NAME, PACKAGE_NAME_GOOD);
+            jsonObject.put(ORDER_ID, transaction.getOrderId());
+            jsonObject.put(PRODUCT_ID, transaction.getIdentifier());
+            jsonObject.put(PURCHASE_TIME, System.currentTimeMillis());
+
+            list.add(jsonObject.toString());
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+
+        return list;
+    }
+}

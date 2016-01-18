@@ -11,7 +11,6 @@ import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestCallback;
-import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRestoreRequestCallback;
 import com.badlogic.gdx.utils.Logger;
 
 import org.junit.Before;
@@ -62,9 +61,6 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
     @Captor
     ArgumentCaptor<PurchaseRequestCallback> purchaseRequestListenerArgumentCaptor;
-
-    @Captor
-    ArgumentCaptor<PurchaseRestoreRequestCallback> purchaseRestoreRequestCallbackArgumentCaptor;
 
     @Mock
     GoogleInAppBillingService googleInAppBillingService;
@@ -229,41 +225,42 @@ public class AndroidGooglePlayPurchaseManagerTest {
     }
 
     @Test
-    public void restoreSuccesShouldDelegateResultToObserver() throws Exception {
-        PurchaseRestoreRequestCallback callback = connectBindAndPurchaseRestoreRequestForFullEditionEntitlement();
+    public void restoreSuccessShouldDelegateResultToObserver() throws Exception {
+        connectBindAndForFullEditionEntitlement();
 
-        Transaction[] transactions = new Transaction[] {transactionFullEditionEuroGooglePlay()};
+        Transaction transaction = transactionFullEditionEuroGooglePlay();
+        Transaction[] transactions = new Transaction[]{transaction};
 
-        callback.restoreSucces(transactions);
+        when(googleInAppBillingService.getPurchases()).thenReturn(singletonList(transaction));
+
+        purchaseManager.purchaseRestore();
 
         verify(purchaseObserver).handleRestore(transactions);
     }
 
     @Test
     public void restoreErrorShouldDelegateResultToObserver() throws Exception {
-        PurchaseRestoreRequestCallback callback = connectBindAndPurchaseRestoreRequestForFullEditionEntitlement();
-
+        connectBindAndForFullEditionEntitlement();
 
         GdxPayException exception = new GdxPayException("Network error");
-        callback.restoreError(exception);
+
+        when(this.googleInAppBillingService.getPurchases()).thenThrow(exception);
+
+        purchaseManager.purchaseRestore();
+
+        verify(googleInAppBillingService).getPurchases();
 
         verify(purchaseObserver).handleRestoreError(exception);
     }
 
 
-    private PurchaseRestoreRequestCallback connectBindAndPurchaseRestoreRequestForFullEditionEntitlement() throws android.os.RemoteException {
+    private void connectBindAndForFullEditionEntitlement() throws android.os.RemoteException {
         Offer offer = offerFullEditionEntitlement();
         Information information = informationFullEditionEntitlement();
 
         whenGetProductsDetailsReturn(offer.getIdentifier(), information);
 
         bindFetchNewConnectionAndInstallPurchaseSystem();
-
-        purchaseManager.purchaseRestore();
-
-        verify(googleInAppBillingService).startPurchaseRestoreRequest(purchaseRestoreRequestCallbackArgumentCaptor.capture());
-
-        return purchaseRestoreRequestCallbackArgumentCaptor.getValue();
     }
 
 

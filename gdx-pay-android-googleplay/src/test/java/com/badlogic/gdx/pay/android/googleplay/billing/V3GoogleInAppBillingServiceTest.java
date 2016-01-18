@@ -7,6 +7,7 @@ import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 
 import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.backends.android.AndroidApplication;
@@ -17,6 +18,7 @@ import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
+import com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother;
 import com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseRequestActivityResultObjectMother;
 
 import org.junit.Before;
@@ -30,17 +32,20 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.PURCHASE_TYPE_IN_APP;
+import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.BILLING_API_VERSION;
+import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.DEFAULT_DEVELOPER_PAYLOAD;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetBuyIntentResponseObjectMother.buyIntentResponseOk;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.GetPurchasesResponseObjectMother.purchasesResponseOneTransactionFullEdition;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkIncompleteDetailList;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultOkProductFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlement;
-import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.BILLING_API_VERSION;
-import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.DEFAULT_DEVELOPER_PAYLOAD;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PACKAGE_NAME_GOOD;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -52,7 +57,6 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class V3GoogleInAppBillingServiceTest {
 
-    public static final String INSTALLER_PACKAGE_NAME = "com.gdx.pay.dummy.activity";
     public static final int ACTIVITY_REQUEST_CODE = 1002;
     @Mock
     AndroidApplication androidApplication;
@@ -82,7 +86,7 @@ public class V3GoogleInAppBillingServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        when(androidApplication.getPackageName()).thenReturn(INSTALLER_PACKAGE_NAME);
+        when(androidApplication.getPackageName()).thenReturn(PACKAGE_NAME_GOOD);
 
         v3InAppbillingService = new V3GoogleInAppBillingService(androidApplication, ACTIVITY_REQUEST_CODE, purchaseResponseActivityResultConverter) {
             @Override
@@ -224,9 +228,32 @@ public class V3GoogleInAppBillingServiceTest {
         when(purchaseResponseActivityResultConverter.convertToTransaction(isA(Intent.class)))
                 .thenReturn(transactionFullEditionEuroGooglePlay());
 
-        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_CANCELED,new Intent());
+        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_CANCELED, new Intent());
 
         verify(purchaseRequestCallback).purchaseCanceled();
+    }
+
+    @Test
+    public void getPurchasesWithResultOkShouldReturnPurchaseTransactions() throws Exception {
+        activityBindAndConnect();
+
+        whenGetPurchasesRequestReturn(purchasesResponseOneTransactionFullEdition());
+
+        List<Transaction> transactions = v3InAppbillingService.getPurchases();
+
+        verify(nativeInAppBillingService).getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, V3GoogleInAppBillingService.PURCHASE_TYPE_IN_APP, null);
+
+        assertEquals(1, transactions.size());
+
+        assertEquals(offerFullEditionEntitlement().getIdentifier(), transactions.get(0).getIdentifier());
+    }
+
+    private void whenGetPurchasesRequestReturn(Bundle response) {
+        try {
+            when(nativeInAppBillingService.getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_IN_APP, null)).thenReturn(response);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private AndroidEventListener captureAndroidEventListener() {
@@ -244,9 +271,7 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     private void whenStartPurchaseRequestForOfferReturn(Offer offer, Bundle buyIntentResponseOk) throws android.os.RemoteException {
-        when(nativeInAppBillingService.getBuyIntent(BILLING_API_VERSION,
-                                INSTALLER_PACKAGE_NAME,
-                                offer.getIdentifier(),
+        when(nativeInAppBillingService.getBuyIntent(BILLING_API_VERSION, PACKAGE_NAME_GOOD, offer.getIdentifier(),
                 V3GoogleInAppBillingService.PURCHASE_TYPE_IN_APP, DEFAULT_DEVELOPER_PAYLOAD))
                 .thenReturn(buyIntentResponseOk);
     }

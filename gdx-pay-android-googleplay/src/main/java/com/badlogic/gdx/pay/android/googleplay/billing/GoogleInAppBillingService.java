@@ -19,7 +19,7 @@ public interface GoogleInAppBillingService {
 
     boolean isConnected();
 
-    void startPurchaseRestoreRequest(PurchaseRestoreRequestCallback callback);
+    List<Transaction> getPurchases();
 
     interface ConnectionListener {
         void connected();
@@ -35,10 +35,4 @@ public interface GoogleInAppBillingService {
         void purchaseCanceled();
     }
 
-    interface PurchaseRestoreRequestCallback {
-
-        void restoreSucces(Transaction[] transactions);
-
-        void restoreError(GdxPayException exception);
-    }
 }

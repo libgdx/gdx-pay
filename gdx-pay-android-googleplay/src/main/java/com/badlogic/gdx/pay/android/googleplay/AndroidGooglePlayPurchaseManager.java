@@ -197,24 +197,21 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         });
     }
 
+    // TODO: call in new thread if called from UI thread (check if this is necessary).
     @Override
     public void purchaseRestore() {
 
-        googleInAppBillingService.startPurchaseRestoreRequest(new GoogleInAppBillingService.PurchaseRestoreRequestCallback() {
-            @Override
-            public void restoreSucces(Transaction[] transactions) {
-                if (observer != null) {
-                    observer.handleRestore(transactions);
-                }
-            }
+        try {
+            List<Transaction> transactions = googleInAppBillingService.getPurchases();
 
-            @Override
-            public void restoreError(GdxPayException exception) {
-                if (observer != null) {
-                    observer.handleRestoreError(exception);
-                }
+            if (observer != null) {
+                observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
             }
-        });
+        } catch(GdxPayException e) {
+            if (observer != null) {
+                observer.handleRestoreError(e);
+            }
+        }
     }
 
     @Override

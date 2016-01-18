@@ -26,6 +26,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetPurchasesResponseConverter.convertPurchasesResponseToTransactions;
 import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkuDetailsRequestConverter.convertConfigToItemIdList;
 import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkusDetailsResponseBundleConverter.convertSkuDetailsResponse;
 
@@ -179,8 +180,15 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     @Override
-    public void startPurchaseRestoreRequest(PurchaseRestoreRequestCallback callback) {
-        throw new UnsupportedOperationException();
+    public List<Transaction> getPurchases() {
+        try {
+            Bundle purchases = billingService().getPurchases(BILLING_API_VERSION, installerPackageName, V3GoogleInAppBillingService.PURCHASE_TYPE_IN_APP, null);
+
+            return convertPurchasesResponseToTransactions(purchases);
+
+        } catch (RemoteException e) {
+            throw new GdxPayException("Unexpected exception in getPurchases()", e);
+        }
     }
 
     private void disconnectFromActivity() {
