@@ -36,7 +36,7 @@
 * Rename com.badlogic.gdx.pay.Transaction.getIdentifier() to com.badlogic.gdx.pay.Transaction.getProductId();
 * Rename gdx-pay submodule to gdx-pay-api
 * create a -client and -server submodule
-* gdx-pay-client: move classes in this project to com.badlogic.gdx.pay.cient
+* gdx-pay-client: move classes in this project to com.badlogic.gdx.pay.client
 * introduce gdx-pay-client-testdata module, put here in all ObjectMother classes.
 
 # Known issues and limitations
