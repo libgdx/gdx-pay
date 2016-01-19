@@ -143,8 +143,6 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         observer = null;
     }
 
-
-
     @Override
     public void purchase(String identifier) {
         assertInstalled();
