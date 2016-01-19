@@ -49,6 +49,7 @@ import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PAC
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doThrow;
@@ -287,6 +288,26 @@ public class V3GoogleInAppBillingServiceTest {
         assertEquals(1, transactions.size());
 
         assertEquals(offerFullEditionEntitlement().getIdentifier(), transactions.get(0).getIdentifier());
+    }
+
+    @Test
+    public void shouldThrowGdxPayExceptionwhenGetPurchasesFails() throws Exception {
+        activityBindAndConnect();
+
+        thrown.expect(GdxPayException.class);
+
+        whenGetPurchasesRequestThrow(new DeadObjectException("Disconnected"));
+
+        v3InAppbillingService.getPurchases();
+    }
+
+    private void whenGetPurchasesRequestThrow(Exception exception) {
+        try {
+            when(nativeInAppBillingService.getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_IN_APP, null))
+                    .thenThrow(exception);
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void whenGetPurchasesRequestReturn(Bundle response) {
