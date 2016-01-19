@@ -49,10 +49,12 @@ import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PAC
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -299,6 +301,44 @@ public class V3GoogleInAppBillingServiceTest {
         whenGetPurchasesRequestThrow(new DeadObjectException("Disconnected"));
 
         v3InAppbillingService.getPurchases();
+    }
+
+    @Test
+    public void onServiceDisconnectedShouldDisconnectService() throws Exception {
+        ServiceConnection connection = bindAndFetchNewConnection();
+
+        connection.onServiceConnected(null, null);
+
+        assertTrue(v3InAppbillingService.isConnected());
+
+        connection.onServiceDisconnected(null);
+
+        assertFalse(v3InAppbillingService.isConnected());
+    }
+
+    @Test
+    public void connectingTwiceInARowShouldBeBlocked() throws Exception {
+        ServiceConnection connection = bindAndFetchNewConnection();
+
+        connection.onServiceConnected(null, null);
+        connection.onServiceConnected(null, null);
+
+        verify(connectionListener, times(1)).connected();
+    }
+
+
+    @Test
+    public void disconnectShouldDisconnectFromActivity() throws Exception {
+        ServiceConnection connection = bindAndFetchNewConnection();
+
+        connection.onServiceConnected(null, null);
+
+        v3InAppbillingService.disconnect();
+
+        verify(androidApplication).removeAndroidEventListener(isA(AndroidEventListener.class));
+        verify(androidApplication).unbindService(connection);
+
+        assertFalse(v3InAppbillingService.isConnected());
     }
 
     private void whenGetPurchasesRequestThrow(Exception exception) {

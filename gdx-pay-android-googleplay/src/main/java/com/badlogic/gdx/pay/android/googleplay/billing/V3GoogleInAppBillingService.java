@@ -230,6 +230,10 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            if (isConnected()) {
+                return;
+            }
+
             billingService = lookupByStubAsInterface(service);
 
             connectionListener.connected();
@@ -239,8 +243,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            disconnectFromActivity();
             billingService = null;
-            androidApplication.removeAndroidEventListener(androidEventListener);
             connectionListener.disconnected(new GdxPayException(ERROR_ON_SERVICE_DISCONNECTED_RECEIVED));
         }
     }
