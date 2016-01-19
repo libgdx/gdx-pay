@@ -7,11 +7,9 @@
 * DONE: implement install() and handleInstall()
 * DONE: implement getInformation()
 * DONE: implement dispose()
-* Handle restore()
+* DONE: handle restore()
 * Fail fast for other product types than ENTTITLEMENT type.
 * priceInCents, priceCurrencyCode in Information: fill for ios as well.
-* Verify purchase cancellation.
-* Verify purchase authenticity
 * Refactor and cleanup.
 * Integrate publish.gradle to android project to be able to publish to a maven repo.
 * test SNAPSHOT version
@@ -19,6 +17,8 @@
 
 
 ## Milestone 2
+* Verify purchase cancellation.
+* Verify purchase authenticity
 * Handle purchase non-consumable product
 * Support working with AndroidFragmentApplication
 * Hande purchase consumable product
@@ -43,3 +43,4 @@
 
 * No support for more than 700 purchases per user per app: we do not yet support INAPP_CONTINUATION_TOKEN	
 * No support for consumables and subscriptions (only supports non-consumable products currently).
+* No support for Libgdx Fragment applications.
