@@ -179,4 +179,24 @@ public final class Transaction {
 	public void setTransactionDataSignature (String transactionDataSignature) {
 		this.transactionDataSignature = transactionDataSignature;
 	}
+
+
+	@Override
+	public String toString() {
+		return "Transaction{" +
+				"identifier='" + identifier + '\'' +
+				", storeName='" + storeName + '\'' +
+				", orderId='" + orderId + '\'' +
+				", requestId='" + requestId + '\'' +
+				", userId='" + userId + '\'' +
+				", purchaseTime=" + purchaseTime +
+				", purchaseText='" + purchaseText + '\'' +
+				", purchaseCost=" + purchaseCost +
+				", purchaseCostCurrency='" + purchaseCostCurrency + '\'' +
+				", reversalTime=" + reversalTime +
+				", reversalText='" + reversalText + '\'' +
+				", transactionData='" + transactionData + '\'' +
+				", transactionDataSignature='" + transactionDataSignature + '\'' +
+				'}';
+	}
 }
