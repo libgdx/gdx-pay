@@ -17,7 +17,8 @@
 package com.badlogic.gdx.pay.android.googleplay;
 
 import android.app.Activity;
-import android.util.Log;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.pay.Information;
@@ -47,7 +48,9 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
     public static final String LOG_TAG = "GdxPay/AndroidPlay";
-    public static final String GOOGLE_PLAY_PACKAGE_INSTALLER = "com.android.vending";
+
+    public static final String GOOGLE_MARKET_NAME = "com.google.market";
+    public static final String GOOGLE_PLAY_STORE_NAME = "com.android.vending";
 
     private final GoogleInAppBillingService googleInAppBillingService;
 
@@ -91,21 +94,23 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     }
 
-    /**
-     * Used by IAP.java with reflection for automatic configuration of gdx-pay.
-     */
+
+
+
     public static boolean isRunningViaGooglePlay(Activity activity) {
-        String packageNameInstaller;
-        try {
-            packageNameInstaller = activity.getPackageManager().getInstallerPackageName(activity.getPackageName());
 
-            return packageNameInstaller.equals(GOOGLE_PLAY_PACKAGE_INSTALLER);
-        } catch (Throwable e) {
-            Log.e(LOG_TAG, "Cannot determine installer package name.", e);
-
-            return false;
+        PackageManager packageManager = activity.getPackageManager();
+        List<PackageInfo> packages = packageManager
+                .getInstalledPackages(PackageManager.GET_UNINSTALLED_PACKAGES);
+        for (PackageInfo packageInfo : packages) {
+            String packageName = packageInfo.packageName;
+            if (packageName.equals(GOOGLE_MARKET_NAME) || packageName.equals(GOOGLE_PLAY_STORE_NAME)) {
+                return true;
+            }
         }
+        return false;
     }
+
 
     protected void runAsync(Runnable runnable) {
         new Thread(runnable).start();

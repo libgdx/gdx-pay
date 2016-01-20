@@ -1,6 +1,7 @@
 apply plugin: 'maven'
 apply plugin: 'signing'
 
+// TODO: eliminate duplication between publish_android.gradle and publish_java.gradle
 def isLocalBuild() {
     return hasProperty("LOCAL")
 }
@@ -55,6 +56,7 @@ afterEvaluate { project ->
                 beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
                 pom.groupId = getGroupId()
+                pom.artifactId =  "${project.name}"
                 pom.version = getVersion()
 
                 if (isLocalBuild()) {
@@ -73,30 +75,34 @@ afterEvaluate { project ->
                 }
 
                 pom.project {
-                    name 'libGDX Payment API'
-                    description 'Payment API for libGDX'
-                    url 'https://github.com/libgdx/gdx-pay'
+                    name POM_NAME
+                    description POM_DESCRIPTION
+                    url POM_URL
 
                     scm {
-                        url 'scm:git@github.com:libgdx/gdx-pay.git'
-                        connection 'scm:git@github.com:libgdx/gdx-pay.git'
-                        developerConnection 'scm:git@github.com:libgdx/gdx-pay.git'
+                        url POM_SCM_URL
+                        connection POM_SCM_CONNECTION
+                        developerConnection POM_SCM_DEV_CONNECTION
                     }
 
                     licenses {
                         license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
+                            name POM_LICENCE_NAME
+                            url POM_LICENCE_URL
+                            distribution POM_LICENCE_DIST
                         }
                     }
-                    
+
                     developers {
                         developer {
-                            id 'noblemaster'
-                            name 'Christoph Aschwanden'
+                            id POM_DEVELOPER_ID_1
+                            name POM_DEVELOPER_NAME_1
                         }
-                    }                
+                        developer {
+                            id POM_DEVELOPER_ID_2
+                            name POM_DEVELOPER_NAME_2
+                        }
+                    }
                 }
             }
         }
@@ -106,7 +112,7 @@ afterEvaluate { project ->
         required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
         sign configurations.archives
     }
-    
+
     task libraryJar(type: Jar, dependsOn:classes) {
         from sourceSets.main.output.classesDir
         if (configurations.findByName('compileAndIncludeClassesInLibraryJar') != null) {
@@ -114,7 +120,7 @@ afterEvaluate { project ->
         }
         classifier = 'library'
     }
-     
+
     task sourcesJar(type: Jar, dependsOn:classes) {
         from sourceSets.main.allSource
         classifier = 'sources'

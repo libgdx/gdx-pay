@@ -1,14 +1,14 @@
 apply plugin: 'com.android.library'
 apply plugin: 'de.mobilej.unmock'
 
-
-// TODO KvD fix publishing, runs in errors due to sourcesets
-//    apply from : '../publish.gradle'
+apply from : '../publish_android.gradle'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 android {
+    defaultPublishConfig "release"
+
     compileSdkVersion androidCompileSdkVersion
     buildToolsVersion androidBuildToolsVersion
 
@@ -35,8 +35,6 @@ dependencies {
     compile "com.badlogicgames.gdx:gdx-backend-android:${gdxVersion}"
     compile project(':gdx-pay-client')
     compile "com.google.code.findbugs:jsr305:${jsr305Version}"
-
-    compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
 }
 
 tasks.withType(Test) {
@@ -76,3 +74,16 @@ unMock {
 
     keepAndRename "java.nio.charset.Charsets" to "xjava.nio.charset.Charsets"
 }
+
+//Execute "gradle clean jarRelease" to create jar manually
+android.libraryVariants.all { variant ->
+    def name = variant.buildType.name
+    if (name.equals(com.android.builder.core.BuilderConstants.DEBUG)) {
+        return; // Skip debug builds.
+    }
+    def task = project.tasks.create "jar${name.capitalize()}", Jar
+    task.dependsOn variant.javaCompile
+    task.from variant.javaCompile.destinationDir
+    artifacts.add('archives', task);
+}
+

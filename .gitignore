@@ -7,7 +7,6 @@
 
 # Gradle
 .gradle
-gradle.properties
 build/
 dist/
 **/robovm-build/

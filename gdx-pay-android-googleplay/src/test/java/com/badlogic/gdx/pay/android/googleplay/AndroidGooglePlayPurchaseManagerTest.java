@@ -2,6 +2,7 @@ package com.badlogic.gdx.pay.android.googleplay;
 
 import android.app.Activity;
 import android.content.ServiceConnection;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
@@ -26,7 +27,10 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.lang.reflect.Constructor;
+import java.util.List;
 
+import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.GOOGLE_MARKET_NAME;
+import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.GOOGLE_PLAY_STORE_NAME;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
@@ -100,14 +104,31 @@ public class AndroidGooglePlayPurchaseManagerTest {
     @Test
     public void runningOnGooglePlayShouldReturnFalseWhenInstalledViaAmazon() throws Exception {
 
-        whenGetInstallerPackageNameReturn("com.amazon.venezia");
+        PackageInfo packageInfo = new PackageInfo();
+        packageInfo.packageName = "com.amazon.venezia";
+
+        whenGetInstallerPackageNameReturn(singletonList(packageInfo));
 
         assertFalse(AndroidGooglePlayPurchaseManager.isRunningViaGooglePlay(application));
     }
 
     @Test
+    public void runningOnGooglePlayShouldReturnTrueWhenInstalledViaGoogleMarket() throws Exception {
+        PackageInfo packageInfo = new PackageInfo();
+        packageInfo.packageName = GOOGLE_PLAY_STORE_NAME;
+
+        whenGetInstallerPackageNameReturn(singletonList(packageInfo));
+
+        assertTrue(AndroidGooglePlayPurchaseManager.isRunningViaGooglePlay(application));
+    }
+
+    @Test
     public void runningOnGooglePlayShouldReturnTrueWhenInstalledViaGooglePlay() throws Exception {
-        whenGetInstallerPackageNameReturn("com.android.vending");
+        PackageInfo packageInfo = new PackageInfo();
+        packageInfo.packageName = GOOGLE_MARKET_NAME;
+
+        whenGetInstallerPackageNameReturn(singletonList(packageInfo));
+
         assertTrue(AndroidGooglePlayPurchaseManager.isRunningViaGooglePlay(application));
     }
 
@@ -297,9 +318,9 @@ public class AndroidGooglePlayPurchaseManagerTest {
                 thenReturn(singletonMap(identifier, expectedInformation));
     }
 
-    private void whenGetInstallerPackageNameReturn(String installerPackageName) {
+    private void whenGetInstallerPackageNameReturn(List<PackageInfo> packages) {
         when(application.getPackageManager()).thenReturn(packageManager);
-        when(packageManager.getInstallerPackageName(isA(String.class))).thenReturn(installerPackageName);
+        when(packageManager.getInstalledPackages(Mockito.anyInt())).thenReturn(packages);
     }
 
     private void bindFetchNewConnectionAndInstallPurchaseSystem() throws android.os.RemoteException {

@@ -8,10 +8,11 @@
 * DONE: implement getInformation()
 * DONE: implement dispose()
 * DONE: handle restore()
+* Check Android app lifecycle, do we need specific code for cornercases?
 * Fail fast for other product types than ENTTITLEMENT type.
 * priceInCents, priceCurrencyCode in Information: fill for ios as well.
 * Refactor and cleanup.
-* Integrate publish.gradle to android project to be able to publish to a maven repo.
+* IN PROGRESSS Integrate publish.gradle to android project to be able to publish to a maven repo.
 * test SNAPSHOT version
 * release new version.
 

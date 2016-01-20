@@ -54,7 +54,7 @@ allprojects {
 
 project(":gdx-pay-client") {
     apply plugin : 'java'
-    apply from : '../publish.gradle'
+    apply from : '../publish_java.gradle'
 
     dependencies {
         compile project(':gdx-pay')
@@ -65,7 +65,7 @@ project(":gdx-pay-client") {
 
 project(":gdx-pay-android") {
     apply plugin : 'java'
-    apply from : '../publish.gradle'
+    apply from : '../publish_java.gradle'
 
     dependencies {
         compile project(':gdx-pay-client')
@@ -78,7 +78,7 @@ project(":gdx-pay-android") {
 
 project(":gdx-pay-android-openiab") {
     apply plugin : 'java'
-    apply from : '../publish.gradle'
+    apply from : '../publish_java.gradle'
 
     configurations {
         compileAndIncludeClassesInLibraryJar
@@ -96,7 +96,7 @@ project(":gdx-pay-android-openiab") {
 
 project(":gdx-pay-android-ouya") {
     apply plugin : 'java'
-    apply from : '../publish.gradle'
+    apply from : '../publish_java.gradle'
 
     configurations {
         compileAndIncludeClassesInLibraryJar
@@ -112,7 +112,7 @@ project(":gdx-pay-android-ouya") {
 
 project(":gdx-pay-android-amazon") {
     apply plugin : 'java'
-    apply from : '../publish.gradle'
+    apply from : '../publish_java.gradle'
 
     configurations {
         compileAndIncludeClassesInLibraryJar
@@ -128,7 +128,7 @@ project(":gdx-pay-android-amazon") {
 
 project(":gdx-pay-desktop-apple") {
     apply plugin : 'java'
-    apply from : '../publish.gradle'
+    apply from : '../publish_java.gradle'
 
     dependencies {
         compile project(':gdx-pay-client')
@@ -137,7 +137,7 @@ project(":gdx-pay-desktop-apple") {
 
 project(":gdx-pay-gwt-googlewallet") {
     apply plugin : 'java'
-    apply from : '../publish.gradle'
+    apply from : '../publish_java.gradle'
 
     dependencies {
         compile project(':gdx-pay-client')
@@ -147,7 +147,7 @@ project(":gdx-pay-gwt-googlewallet") {
 project(":gdx-pay-iosrobovm-apple") {
     apply plugin : 'java'
     apply plugin : 'robovm'
-    apply from : '../publish.gradle'
+    apply from : '../publish_java.gradle'
 
     dependencies {
         compile project(':gdx-pay-client')
@@ -158,7 +158,7 @@ project(":gdx-pay-iosrobovm-apple") {
 
 project(":gdx-pay-server") {
     apply plugin : 'java'
-    apply from : '../publish.gradle'
+    apply from : '../publish_java.gradle'
 
     dependencies {
         compile project(':gdx-pay')
