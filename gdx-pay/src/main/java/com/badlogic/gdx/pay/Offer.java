@@ -74,4 +74,13 @@ public class Offer {
 		// and return this for chaining
 		return this;
 	}
+
+	@Override
+	public String toString() {
+		return "Offer{" +
+				"type=" + type +
+				", identifier='" + identifier + '\'' +
+				", identifierForStores=" + identifierForStores +
+				'}';
+	}
 }
