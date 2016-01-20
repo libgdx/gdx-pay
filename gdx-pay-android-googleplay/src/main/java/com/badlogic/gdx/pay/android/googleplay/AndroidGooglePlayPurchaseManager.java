@@ -23,6 +23,7 @@ import android.content.pm.PackageManager;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
+import com.badlogic.gdx.pay.OfferType;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
@@ -77,13 +78,14 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     @Override
     public void install(final PurchaseObserver observer, final PurchaseManagerConfig purchaseManagerConfig, final boolean autoFetchInformation) {
+        assertConfigSupported(purchaseManagerConfig);
         this.observer = observer;
         this.purchaseManagerConfig = purchaseManagerConfig;
 
         googleInAppBillingService.requestConnect(new ConnectionListener() {
             @Override
             public void connected() {
-                onServiceConnected(observer);
+                onServiceConnected(observer, autoFetchInformation);
             }
 
             @Override
@@ -94,9 +96,22 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     }
 
+    private void assertConfigSupported(PurchaseManagerConfig purchaseManagerConfig) {
+        for(int i=0; i < purchaseManagerConfig.getOfferCount(); i++) {
+            Offer offer = purchaseManagerConfig.getOffer(i);
+            if (offer.getType() != OfferType.ENTITLEMENT) {
+                throw new IllegalArgumentException("Unsupported offer: " + offer + ", only " + OfferType.ENTITLEMENT +  " is supported");
+            }
+        }
+    }
 
-
-
+    /**
+     * Detect if running on Phone which has Google Play installed.
+     *
+     * <p>Used when purchase system is installed via IAP class.</p>
+     * <p>If Google changes the package identifier of Google Play, this method will not return the
+     * new name.</p>
+     */
     public static boolean isRunningViaGooglePlay(Activity activity) {
 
         PackageManager packageManager = activity.getPackageManager();
@@ -252,13 +267,15 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         informationMap.clear();
     }
 
-    private void onServiceConnected(final PurchaseObserver observer) {
+    private void onServiceConnected(final PurchaseObserver observer, final boolean autofetchInformation) {
         runAsync(new Runnable() {
             @Override
             public void run() {
 
                 try {
-                    loadSkusAndFillPurchaseInformation();
+                    if (autofetchInformation) {
+                        loadSkusAndFillPurchaseInformation();
+                    }
                 } catch (Exception e) {
                     // TODO: this situation not yet unit-tested.
                     logger.error("Failed to load skus in onServiceConnected()", e);

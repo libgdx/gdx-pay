@@ -34,10 +34,12 @@ import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseM
 import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferConsumbableProduct;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PACKAGE_NAME_GOOD;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -78,7 +80,6 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
     private AndroidGooglePlayPurchaseManager purchaseManager;
 
-
     boolean runAsyncCalled;
 
     @Mock
@@ -86,7 +87,6 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
     @Before
     public void setUp() throws Exception {
-
         runAsyncCalled = false;
 
         purchaseManager = new AndroidGooglePlayPurchaseManager(this.googleInAppBillingService) {
@@ -144,6 +144,13 @@ public class AndroidGooglePlayPurchaseManagerTest {
         AndroidGooglePlayPurchaseManager manager = constructor.newInstance(application, 1002);
 
         assertFalse(manager.installed());
+    }
+
+    @Test
+    public void installShouldFailFastWhenRegisteringWithNonEntitlementProduct() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage(containsString("Unsupported offer:"));
+        purchaseManager.install(purchaseObserver, managerConfigGooglePlayOneOfferConsumbableProduct(), true);
     }
 
     @Test
