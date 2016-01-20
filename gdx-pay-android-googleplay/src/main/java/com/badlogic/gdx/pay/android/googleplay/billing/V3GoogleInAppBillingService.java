@@ -188,7 +188,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
             return convertPurchasesResponseToTransactions(purchases);
 
-        } catch (RemoteException e) {
+        } catch (RemoteException|RuntimeException e) { // TODO: unit test RuntimeException scenario, e.g. :  java.lang.IllegalArgumentException: Unexpected response code: ResponseCode{code=3, message='Billing API version is not supported for the type requested'}, response: Bundle[{RESPONSE_CODE=3}]
+
             throw new GdxPayException("Unexpected exception in getPurchases()", e);
         }
     }

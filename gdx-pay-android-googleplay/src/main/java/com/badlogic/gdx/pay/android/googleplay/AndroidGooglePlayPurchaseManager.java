@@ -192,10 +192,23 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         runAsync(new Runnable() {
             @Override
             public void run() {
-                loadSkusAndFillPurchaseInformation();
 
-                if (productsLoaded()) {
-                    purchase(identifier);
+                try {
+                    loadSkusAndFillPurchaseInformation();
+
+                    if (productsLoaded()) {
+                        purchase(identifier);
+                        return;
+                    }
+                    //TODO: unit test this.
+                    if (observer != null) {
+                        observer.handlePurchaseError(new GdxPayException("Purchase failed for identifier: " + identifier + "(failed to retrieve products"));
+                    }
+                } catch(GdxPayException e) {
+                    // TODO: unit test this!
+                    if (observer != null) {
+                        observer.handlePurchaseError(e);
+                    }
                 }
             }
         });
