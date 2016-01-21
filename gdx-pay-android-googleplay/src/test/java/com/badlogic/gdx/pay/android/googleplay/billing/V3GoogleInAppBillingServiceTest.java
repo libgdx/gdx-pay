@@ -341,6 +341,13 @@ public class V3GoogleInAppBillingServiceTest {
         assertFalse(v3InAppbillingService.isConnected());
     }
 
+    @Test
+    public void calculatesDeltaCorrectly() throws Exception {
+        int actualDelta= v3InAppbillingService.deltaInSeconds(10_001, 5_000);
+
+        assertEquals(5, actualDelta);
+    }
+
     private void whenGetPurchasesRequestThrow(Exception exception) {
         try {
             when(nativeInAppBillingService.getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_IN_APP, null))

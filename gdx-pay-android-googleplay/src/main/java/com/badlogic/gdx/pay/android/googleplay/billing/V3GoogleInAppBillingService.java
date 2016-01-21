@@ -72,10 +72,13 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
             billingServiceConnection = new BillingServiceInitializingServiceConnection(callback);
 
             if (!androidApplication.bindService(createBindBillingServiceIntent(), billingServiceConnection, Context.BIND_AUTO_CREATE)) {
-                callback.disconnected(new GdxPayException("Failed to bind to service"));
+                callback.disconnected(new GdxPayException("bindService() returns false."));
             }
-        } catch (Exception e) {
-            callback.disconnected(new GdxPayException("Failed to connect", e));
+        } catch(GdxPayException e) {
+            throw e;
+        }
+        catch (RuntimeException e) {
+            callback.disconnected(new GdxPayException("requestConnect() failed.", e));
         }
     }
 
@@ -87,10 +90,11 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     @Override
     public Map<String, Information> getProductsDetails(List<String> productIds) {
+        long startTimeInMs = System.currentTimeMillis();
         try {
             return fetchSkuDetails(productIds);
         } catch (RuntimeException e) {
-            throw new GdxPayException("getProductsDetails(" + productIds + " failed)", e);
+            throw new GdxPayException("getProductsDetails(" + productIds + " failed) after " + deltaInSeconds(startTimeInMs) + " seconds", e);
         }
     }
 
@@ -290,5 +294,13 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     private interface GdxPayAsyncOperationResultListener {
         void onEvent(int resultCode, Intent data);
+    }
+
+    private long deltaInSeconds(long startTimeInMs) {
+        return startTimeInMs - System.currentTimeMillis() / 1000l;
+    }
+
+    int deltaInSeconds(long endTimeMillis, long startTimeMillis) {
+        return (int) ((endTimeMillis - startTimeMillis) / 1000l);
     }
 }
