@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
 
@@ -46,7 +47,6 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Nullable
     private IInAppBillingService billingService;
 
-
     private final AndroidApplication androidApplication;
 
     private int activityRequestCode;
@@ -56,7 +56,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     private final V3GoogleInAppBillingServiceAndroidEventListener androidEventListener = new V3GoogleInAppBillingServiceAndroidEventListener();
 
     private GdxPayAsyncOperationResultListener asyncOperationResultListener;
-
+    private ConnectionListener connectionListener;
 
     public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode, PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter) {
         this.androidApplication = application;
@@ -67,18 +67,27 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     // TODO: implement handling of reconnects.
     @Override
-    public void requestConnect(ConnectionListener callback) {
-        try {
-            billingServiceConnection = new BillingServiceInitializingServiceConnection(callback);
+    public void requestConnect(ConnectionListener connectionListener) {
+        if (this.connectionListener != null) {
+            throw new IllegalStateException("Already listening for connections.");
+        }
 
+        this.connectionListener = connectionListener;
+        billingServiceConnection = new BillingServiceInitializingServiceConnection();
+
+        bindBillingServiceConnectionToActivity();
+    }
+
+    protected void bindBillingServiceConnectionToActivity() {
+        try {
             if (!androidApplication.bindService(createBindBillingServiceIntent(), billingServiceConnection, Context.BIND_AUTO_CREATE)) {
-                callback.disconnected(new GdxPayException("bindService() returns false."));
+                this.connectionListener.disconnected(new GdxPayException("bindService() returns false."));
             }
         } catch(GdxPayException e) {
             throw e;
         }
         catch (RuntimeException e) {
-            callback.disconnected(new GdxPayException("requestConnect() failed.", e));
+            this.connectionListener.disconnected(new GdxPayException("requestConnect() failed.", e));
         }
     }
 
@@ -104,10 +113,19 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         try {
             pendingIntent = getBuyIntent(productId);
         } catch (RemoteException|RuntimeException e) {
+
+            if (e instanceof DeadObjectException) {
+                reconnectBecauseOfDeadStoreException();
+            }
             listener.purchaseError(new GdxPayException("startPurchaseRequest failed at getBuyIntent() for product: " + productId, e));
             return;
         }
         startPurchaseIntentSenderForResult(productId, pendingIntent, listener);
+    }
+
+    private void reconnectBecauseOfDeadStoreException() {
+        unbindBillingServiceAndRemoveAndroidEvenetListener();
+        bindBillingServiceConnectionToActivity();
     }
 
     private void startPurchaseIntentSenderForResult(String productId, PendingIntent pendingIntent, final PurchaseRequestCallback listener) {
@@ -198,7 +216,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public void disconnect() {
         billingService = null;
-        disconnectFromActivity();
+        unbindBillingServiceAndRemoveAndroidEvenetListener();
+        connectionListener = null;
     }
 
     @Override
@@ -219,7 +238,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         }
     }
 
-    private void disconnectFromActivity() {
+    private void unbindBillingServiceAndRemoveAndroidEvenetListener() {
         if (billingServiceConnection != null) {
             androidApplication.unbindService(billingServiceConnection);
         }
@@ -247,12 +266,6 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     private class BillingServiceInitializingServiceConnection implements ServiceConnection {
-        private ConnectionListener connectionListener;
-
-        public BillingServiceInitializingServiceConnection(ConnectionListener connectionListener) {
-
-            this.connectionListener = connectionListener;
-        }
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -269,7 +282,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            disconnectFromActivity();
+            unbindBillingServiceAndRemoveAndroidEvenetListener();
             billingService = null;
             connectionListener.disconnected(new GdxPayException(ERROR_ON_SERVICE_DISCONNECTED_RECEIVED));
         }

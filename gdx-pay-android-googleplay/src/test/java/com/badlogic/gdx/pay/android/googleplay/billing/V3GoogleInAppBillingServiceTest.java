@@ -183,7 +183,7 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     @Test
-    public void shouldCallGdxPurchaseCallbackErrorWhenGetBuyIntentFailsWithRemoteException() throws Exception {
+    public void shouldCallGdxPurchaseCallbackErrorAndReconnectWhenGetBuyIntentFailsWithDeadObjectException() throws Exception {
         activityBindAndConnect();
 
         Offer offer = offerFullEditionEntitlement();
@@ -193,6 +193,10 @@ public class V3GoogleInAppBillingServiceTest {
         v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
 
         verify(purchaseRequestCallback).purchaseError(isA(GdxPayException.class));
+
+        verify(androidApplication).unbindService(isA(ServiceConnection.class));
+
+        verifyAndroidApplicationBindService(2);
     }
 
     @Test
@@ -246,6 +250,7 @@ public class V3GoogleInAppBillingServiceTest {
         verify(purchaseRequestCallback).purchaseError(isA(GdxPayException.class));
     }
 
+
     @Test
     public void shouldCallPurchaseErrorIfResultIsError() throws Exception {
         bindConnectAndStartPurchaseRequest(offerFullEditionEntitlement());
@@ -293,7 +298,7 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     @Test
-    public void shouldThrowGdxPayExceptionwhenGetPurchasesFails() throws Exception {
+    public void shouldThrowGdxPayExceptionWhenGetPurchasesFails() throws Exception {
         activityBindAndConnect();
 
         thrown.expect(GdxPayException.class);
@@ -411,9 +416,13 @@ public class V3GoogleInAppBillingServiceTest {
 
         requestConnect();
 
-        verify(androidApplication).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
+        verifyAndroidApplicationBindService(1);
 
         return serviceConnectionArgumentCaptor.getValue();
+    }
+
+    private void verifyAndroidApplicationBindService(int times) {
+        verify(androidApplication, times(times)).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
     }
 
     private void whenActivityBindThrow(SecurityException exception) {
