@@ -178,7 +178,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     }
 
     @Test
-    public void shouldInstallEvenIfPreloadingInformationFails() throws Exception {
+    public void shouldInstallEvenIfPreloadInformationFails() throws Exception {
 
         connectToBillingService();
 
@@ -357,7 +357,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     }
 
     private void requestPurchaseMangerInstallWithFullEditionOffer() {
-        purchaseManager.install(purchaseObserver, managerConfigGooglePlayOneOfferBuyFullEditionProduct(), false);
+        purchaseManager.install(purchaseObserver, managerConfigGooglePlayOneOfferBuyFullEditionProduct(), true);
     }
 
     private void assertRunAsyncCalledAndReset() {
