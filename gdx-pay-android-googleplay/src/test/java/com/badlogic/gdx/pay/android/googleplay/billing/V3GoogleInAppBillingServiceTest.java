@@ -353,6 +353,17 @@ public class V3GoogleInAppBillingServiceTest {
         assertEquals(5, actualDelta);
     }
 
+    @Test
+    public void disconnectShouldNotCrashWhenUnBindThrowsException() throws Exception {
+        ServiceConnection serviceConnection = bindAndFetchNewConnection();
+
+        doThrow(new IllegalArgumentException("Service not registered")).when(androidApplication).unbindService(serviceConnection);
+
+        v3InAppbillingService.disconnect();
+
+        verify(androidApplication).unbindService(serviceConnection);
+    }
+
     private void whenGetPurchasesRequestThrow(Exception exception) {
         try {
             when(nativeInAppBillingService.getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_IN_APP, null))

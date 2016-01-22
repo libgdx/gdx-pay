@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.backends.android.AndroidApplication;
@@ -41,6 +42,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     public static final String ERROR_NOT_CONNECTED_TO_GOOGLE_IAB = "Not connected to Google In-app Billing service";
     public static final String ERROR_ON_SERVICE_DISCONNECTED_RECEIVED = "onServiceDisconnected() received.";
     public static final String DEFAULT_DEVELOPER_PAYLOAD = "JustRandomStringTooHardToRememberTralala";
+
+    static final String LOG_TAG = "GdxPay/V3GoogleIABS";
 
     private ServiceConnection billingServiceConnection;
 
@@ -240,7 +243,14 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     private void unbindBillingServiceAndRemoveAndroidEvenetListener() {
         if (billingServiceConnection != null) {
-            androidApplication.unbindService(billingServiceConnection);
+            try {
+                androidApplication.unbindService(billingServiceConnection);
+            } catch(Exception e) {
+                // Gdx-Pay uses statics. Android reuses JVM instances sometimes.
+                // When com.badlogic.gdx.pay.PurchaseSystem.onAppRestarted() unbinds, with
+                // an old activity instance from a previous launch, it will run into this Exception.
+                Log.e(LOG_TAG, "Unexpected exception in unbindService()", e);
+            }
         }
         androidApplication.removeAndroidEventListener(androidEventListener);
     }
