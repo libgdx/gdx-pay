@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -117,16 +116,14 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
             pendingIntent = getBuyIntent(productId);
         } catch (RemoteException|RuntimeException e) {
 
-            if (e instanceof DeadObjectException) {
-                reconnectBecauseOfDeadStoreException();
-            }
+            reconnectToHandleDeadObjectExceptions();
             listener.purchaseError(new GdxPayException("startPurchaseRequest failed at getBuyIntent() for product: " + productId, e));
             return;
         }
         startPurchaseIntentSenderForResult(productId, pendingIntent, listener);
     }
 
-    private void reconnectBecauseOfDeadStoreException() {
+    private void reconnectToHandleDeadObjectExceptions() {
         unbindBillingServiceAndRemoveAndroidEvenetListener();
         bindBillingServiceConnectionToActivity();
     }
@@ -283,6 +280,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(LOG_TAG, "start onServiceConnected(), isConnected() is: " + isConnected());
             if (isConnected()) {
                 return;
             }
