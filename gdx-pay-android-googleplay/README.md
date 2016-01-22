@@ -29,6 +29,8 @@
 * integrate publish.gradle (support android library project).
 * Check for TODO's
 * Move testdata (objectmothers) to a common place (gdx-pay-testdata?)
+* Describe com.badlogic.gdx.pay.PurchaseSystem#onAppRestarted on gdx-pay README
+
 
 ## Refactorings to be discussed:
 

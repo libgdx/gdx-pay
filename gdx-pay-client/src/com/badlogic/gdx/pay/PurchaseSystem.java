@@ -136,7 +136,7 @@ public final class PurchaseSystem {
 
     /** Disposes the purchase manager if there was one. */
     public static void dispose () {
-        if (hasManager()) {
+        if (manager != null) {
             manager.dispose();
             manager = null;
         }
@@ -157,6 +157,15 @@ public final class PurchaseSystem {
             manager.purchaseRestore();
         } else {
             throw new RuntimeException("No purchase manager was found.");
+        }
+    }
+
+    /**
+     * Disposes static instances in case JVM is re-used on restarts.
+     */
+    public static void onAppRestarted() {
+        if (manager != null) {
+            dispose();
         }
     }
     
