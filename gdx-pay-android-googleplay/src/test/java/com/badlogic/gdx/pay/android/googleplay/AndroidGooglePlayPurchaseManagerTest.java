@@ -199,7 +199,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
         verify(googleInAppBillingService).disconnect();
 
-        when(googleInAppBillingService.isConnected()).thenReturn(false);
+        when(googleInAppBillingService.isListeningForConnections()).thenReturn(false);
 
         assertFalse(purchaseManager.installed());
     }
@@ -349,7 +349,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
         connectResultListenerArgumentCaptor.getValue().connected();
 
-        when(googleInAppBillingService.isConnected()).thenReturn(true);
+        when(googleInAppBillingService.isListeningForConnections()).thenReturn(true);
     }
 
     private void verifyBillingGetSkuDetailsCalled() throws android.os.RemoteException {

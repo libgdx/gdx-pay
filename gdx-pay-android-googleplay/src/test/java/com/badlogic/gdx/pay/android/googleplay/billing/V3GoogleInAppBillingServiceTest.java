@@ -314,7 +314,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         connection.onServiceConnected(null, null);
 
-        assertTrue(v3InAppbillingService.isConnected());
+        assertTrue(v3InAppbillingService.isListeningForConnections());
 
         connection.onServiceDisconnected(null);
 
@@ -343,6 +343,7 @@ public class V3GoogleInAppBillingServiceTest {
         verify(androidApplication).removeAndroidEventListener(isA(AndroidEventListener.class));
         verify(androidApplication).unbindService(connection);
 
+        assertFalse(v3InAppbillingService.isListeningForConnections());
         assertFalse(v3InAppbillingService.isConnected());
     }
 

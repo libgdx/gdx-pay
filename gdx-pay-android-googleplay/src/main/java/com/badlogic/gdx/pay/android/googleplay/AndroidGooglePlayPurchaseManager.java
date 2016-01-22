@@ -82,6 +82,11 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         this.observer = observer;
         this.purchaseManagerConfig = purchaseManagerConfig;
 
+        if (googleInAppBillingService.isListeningForConnections()) {
+            // TODO: scenario not unit tested, test this!
+            googleInAppBillingService.disconnect();
+        }
+
         googleInAppBillingService.requestConnect(new ConnectionListener() {
             @Override
             public void connected() {
@@ -153,7 +158,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     @Override
     public boolean installed() {
-        return googleInAppBillingService.isConnected();
+        return googleInAppBillingService.isListeningForConnections();
     }
 
     @Override

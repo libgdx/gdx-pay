@@ -17,7 +17,7 @@ public interface GoogleInAppBillingService {
 
     void disconnect();
 
-    boolean isConnected();
+    boolean isListeningForConnections();
 
     List<Transaction> getPurchases();
 

@@ -223,9 +223,13 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         connectionListener = null;
     }
 
-    @Override
-    public boolean isConnected() {
+    boolean isConnected() {
         return billingService != null;
+    }
+
+    @Override
+    public boolean isListeningForConnections() {
+        return connectionListener != null;
     }
 
     @Override
