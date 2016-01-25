@@ -43,6 +43,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     public static final String DEFAULT_DEVELOPER_PAYLOAD = "JustRandomStringTooHardToRememberTralala";
 
     static final String LOG_TAG = "GdxPay/V3GoogleIABS";
+    public static final long RETRY_PURCHASE_DELAY_IN_MS = 1000L;
 
     private ServiceConnection billingServiceConnection;
 
@@ -141,7 +142,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
             }
         };
 
-        asyncExecutor.executeAsync(runnable, 500L);
+        asyncExecutor.executeAsync(runnable, RETRY_PURCHASE_DELAY_IN_MS);
     }
 
     private void reconnectToHandleDeadObjectExceptions() {

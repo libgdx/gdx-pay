@@ -38,6 +38,7 @@ import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseM
 import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE;
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.BILLING_API_VERSION;
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.DEFAULT_DEVELOPER_PAYLOAD;
+import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.RETRY_PURCHASE_DELAY_IN_MS;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetBuyIntentResponseObjectMother.buyIntentResponseOk;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetPurchasesResponseObjectMother.purchasesResponseOneTransactionFullEdition;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
@@ -203,7 +204,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         verifyAndroidApplicationBindService(2);
 
-        verify(asyncExecutor).executeAsync(isA(Runnable.class), eq(500l));
+        verify(asyncExecutor).executeAsync(isA(Runnable.class), eq(RETRY_PURCHASE_DELAY_IN_MS));
     }
 
     @Test
