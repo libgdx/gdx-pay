@@ -79,12 +79,19 @@ public class V3GoogleInAppBillingServiceTest {
     ConnectionListener connectionListener;
 
     @Mock
-    private GoogleInAppBillingService.PurchaseRequestCallback purchaseRequestCallback;
+    GoogleInAppBillingService.PurchaseRequestCallback purchaseRequestCallback;
 
     @Mock
-    private PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter;
+    PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter;
+
+    @Mock
+    AsyncExecutor asyncExecutor;
+
+    @Captor
+    ArgumentCaptor<Runnable> runnableArgumentCaptor;
 
     private V3GoogleInAppBillingService v3InAppbillingService;
+
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -93,7 +100,7 @@ public class V3GoogleInAppBillingServiceTest {
     public void setUp() throws Exception {
         when(androidApplication.getPackageName()).thenReturn(PACKAGE_NAME_GOOD);
 
-        v3InAppbillingService = new V3GoogleInAppBillingService(androidApplication, ACTIVITY_REQUEST_CODE, purchaseResponseActivityResultConverter) {
+        v3InAppbillingService = new V3GoogleInAppBillingService(androidApplication, ACTIVITY_REQUEST_CODE, purchaseResponseActivityResultConverter, asyncExecutor) {
             @Override
             protected IInAppBillingService lookupByStubAsInterface(IBinder binder) {
                 return nativeInAppBillingService;
@@ -183,6 +190,23 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     @Test
+    public void shoulReconnectAndRetryWhenGetBuyIntentFailsWithDeadObjectException() throws Exception {
+        activityBindAndConnect();
+
+        Offer offer = offerFullEditionEntitlement();
+
+        whenGetBuyIntentForIdentifierThrow(offer.getIdentifier(), new DeadObjectException("Purchase service died."));
+
+        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
+
+        verify(androidApplication).unbindService(isA(ServiceConnection.class));
+
+        verifyAndroidApplicationBindService(2);
+
+        verify(asyncExecutor).executeAsync(isA(Runnable.class), eq(500l));
+    }
+
+    @Test
     public void shouldCallGdxPurchaseCallbackErrorAndReconnectWhenGetBuyIntentFailsWithDeadObjectException() throws Exception {
         activityBindAndConnect();
 
@@ -192,11 +216,18 @@ public class V3GoogleInAppBillingServiceTest {
 
         v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
 
+        verifyAsyncExecutorWasCalledForRetryAndRetryRun();
+
         verify(purchaseRequestCallback).purchaseError(isA(GdxPayException.class));
 
         verify(androidApplication).unbindService(isA(ServiceConnection.class));
 
         verifyAndroidApplicationBindService(2);
+    }
+
+    protected void verifyAsyncExecutorWasCalledForRetryAndRetryRun() {
+        verify(asyncExecutor).executeAsync(runnableArgumentCaptor.capture(), isA(Long.class));
+        runnableArgumentCaptor.getValue().run();
     }
 
     @Test

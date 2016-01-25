@@ -28,9 +28,11 @@ import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
+import com.badlogic.gdx.pay.android.googleplay.billing.AsyncExecutor;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestCallback;
+import com.badlogic.gdx.pay.android.googleplay.billing.NewThreadSleepAsyncExecutor;
 import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 import com.badlogic.gdx.utils.Logger;
@@ -73,7 +75,8 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         }
         AndroidApplication application = (AndroidApplication) activity;
         PurchaseResponseActivityResultConverter converter = new PurchaseResponseActivityResultConverter(this);
-        googleInAppBillingService = new V3GoogleInAppBillingService(application, activityRequestCode, converter);
+        AsyncExecutor executor = new NewThreadSleepAsyncExecutor();
+        googleInAppBillingService = new V3GoogleInAppBillingService(application, activityRequestCode, converter, executor);
     }
 
     @Override

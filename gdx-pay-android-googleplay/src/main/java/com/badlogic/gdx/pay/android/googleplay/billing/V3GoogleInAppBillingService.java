@@ -53,6 +53,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     private int activityRequestCode;
     private PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter;
+    private AsyncExecutor asyncExecutor;
 
     private final String installerPackageName;
     private final V3GoogleInAppBillingServiceAndroidEventListener androidEventListener = new V3GoogleInAppBillingServiceAndroidEventListener();
@@ -60,14 +61,14 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     private GdxPayAsyncOperationResultListener asyncOperationResultListener;
     private ConnectionListener connectionListener;
 
-    public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode, PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter) {
+    public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode, PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter, AsyncExecutor asyncExecutor) {
         this.androidApplication = application;
         this.activityRequestCode = activityRequestCode;
         this.purchaseResponseActivityResultConverter = purchaseResponseActivityResultConverter;
+        this.asyncExecutor = asyncExecutor;
         installerPackageName = application.getPackageName();
     }
 
-    // TODO: implement handling of reconnects.
     @Override
     public void requestConnect(ConnectionListener connectionListener) {
         if (this.connectionListener != null) {
@@ -111,16 +112,36 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     @Override
     public void startPurchaseRequest(String productId, PurchaseRequestCallback listener) {
+        internalStartPurchaseRequest(productId, listener, true);
+    }
+
+    private void internalStartPurchaseRequest(String productId, PurchaseRequestCallback listener, boolean retryOnError) {
         PendingIntent pendingIntent;
         try {
             pendingIntent = getBuyIntent(productId);
-        } catch (RemoteException|RuntimeException e) {
+        } catch (RemoteException |RuntimeException e) {
+            if (retryOnError) {
+                reconnectToHandleDeadObjectExceptions();
+                schedulePurchaseRetry(productId, listener);
+                return;
+            }
 
-            reconnectToHandleDeadObjectExceptions();
             listener.purchaseError(new GdxPayException("startPurchaseRequest failed at getBuyIntent() for product: " + productId, e));
             return;
         }
         startPurchaseIntentSenderForResult(productId, pendingIntent, listener);
+    }
+
+    private void schedulePurchaseRetry(final String productId, final PurchaseRequestCallback listener) {
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                internalStartPurchaseRequest(productId, listener, false);
+            }
+        };
+
+        asyncExecutor.executeAsync(runnable, 500L);
     }
 
     private void reconnectToHandleDeadObjectExceptions() {
