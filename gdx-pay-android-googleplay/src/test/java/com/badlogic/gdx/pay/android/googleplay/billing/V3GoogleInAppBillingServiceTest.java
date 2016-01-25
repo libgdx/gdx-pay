@@ -355,6 +355,13 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     @Test
+    public void calculatesDeltaCorrectlyTwoTimestamps() throws Exception {
+        int actualDelta= v3InAppbillingService.deltaInSeconds(System.currentTimeMillis() - 5_001);
+
+        assertEquals(5, actualDelta);
+    }
+
+    @Test
     public void disconnectShouldNotCrashWhenUnBindThrowsException() throws Exception {
         ServiceConnection serviceConnection = bindAndFetchNewConnection();
 

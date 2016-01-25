@@ -321,8 +321,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         void onEvent(int resultCode, Intent data);
     }
 
-    private long deltaInSeconds(long startTimeInMs) {
-        return startTimeInMs - System.currentTimeMillis() / 1000l;
+    int deltaInSeconds(long startTimeInMs) {
+        return deltaInSeconds(System.currentTimeMillis(), startTimeInMs);
     }
 
     int deltaInSeconds(long endTimeMillis, long startTimeMillis) {
