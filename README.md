@@ -20,7 +20,7 @@ that case you won't need to add the jars listed below.
 To setup the purchasing API, you will need to add the corresponding jar files to your project. In 
 your **core project** you have:
 * [gdx-pay.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay/0.8.0/gdx-pay-0.8.0-library.jar)
-* [gdx-pay-client.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-client/0.8.0/gdx-pay-clientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclientclient-0.8.0-library.jar) 
+* [gdx-pay-client.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-client/0.8.0/gdx-pay-client-0.8.0-library.jar) 
 
 In your **Android project** you use. Please note if you use the jars, all dependencies such as the ouya-sdk.jar are already wired in:
 * [gdx-pay-android.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android/0.8.0/gdx-pay-android-0.8.0-library.jar)
