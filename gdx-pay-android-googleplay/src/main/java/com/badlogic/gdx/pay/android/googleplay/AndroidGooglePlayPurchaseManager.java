@@ -175,12 +175,6 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     public void purchase(String identifier) {
         assertInstalled();
 
-        if (!productsLoaded()) {
-            loadProductsAndPurchaseAsynchronously(identifier);
-
-            return;
-        }
-
         googleInAppBillingService.startPurchaseRequest(identifier, new PurchaseRequestCallback() {
 
             @Override
