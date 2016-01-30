@@ -39,7 +39,8 @@ public class PurchaseResponseActivityResultConverter {
     protected void setInformationFields(Transaction transaction, String productId) {
         Information information = purchaseManager.getInformation(productId);
 
-        transaction.setPurchaseCost(information.getPriceInCents());
+        Integer priceInCents = information.getPriceInCents();
+        transaction.setPurchaseCost(priceInCents == null ? null : priceInCents);
         transaction.setPurchaseCostCurrency(information.getPriceCurrencyCode());
     }
 

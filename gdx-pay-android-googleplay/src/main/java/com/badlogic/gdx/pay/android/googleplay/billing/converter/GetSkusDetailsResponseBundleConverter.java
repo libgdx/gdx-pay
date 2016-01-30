@@ -42,7 +42,6 @@ public class GetSkusDetailsResponseBundleConverter {
         }
     }
 
-
     private static Map<String, Information> convertSkuDetailsToInformationMap(List<String> skuDetailsStringList) throws JSONException {
         Map<String, Information> products = new HashMap<>();
 
@@ -56,11 +55,18 @@ public class GetSkusDetailsResponseBundleConverter {
                     .localName(title)
                     .localDescription(description)
                     .localPricing(price)
-                    .priceInCents((int) object.getLong(PRICE_AMOUNT_MICROS) / 10_000)
+                    .priceInCents(priceInCents(object))
                     .priceCurrencyCode(object.getString(PRICE_CURRENCY_CODE))
                     .build());
         }
 
         return products;
+    }
+
+    private static Integer priceInCents(JSONObject object) throws JSONException {
+        if (object.has(PRICE_AMOUNT_MICROS)) {
+            return (int) object.getLong(PRICE_AMOUNT_MICROS) / 10_000;
+        }
+        return null;
     }
 }
