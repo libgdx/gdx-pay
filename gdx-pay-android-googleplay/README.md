@@ -1,4 +1,4 @@
-# Incomplete, not yet ready for production, work in progress!
+# Almost complete, already used in production, work in progress!
 
 ## TODO list
 
@@ -10,14 +10,14 @@
 * DONE: handle restore()
 * DONE: Check Android app lifecycle, do we need specific code for cornercases?
 * DONE: Fail fast for other product types than ENTTITLEMENT type.
-* Refactor and cleanup.
+* DONE: Refactor and cleanup.
 * DONE: IN PROGRESSS Integrate publish.gradle to android project to be able to publish to a maven repo.
-* TODO: test SNAPSHOT version
+* DONE: test SNAPSHOT version
 * TODO:Describe com.badlogic.gdx.pay.PurchaseSystem#onAppRestarted on gdx-pay README
 * release new version.
 
-
 ## Milestone 2
+* Do agreed naming refactorings
 * Verify purchase cancellation.
 * Verify purchase authenticity
 * Handle purchase non-consumable product
