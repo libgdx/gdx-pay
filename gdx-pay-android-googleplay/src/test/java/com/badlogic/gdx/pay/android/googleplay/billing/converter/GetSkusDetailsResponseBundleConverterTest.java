@@ -20,20 +20,20 @@ public class GetSkusDetailsResponseBundleConverterTest {
     @Test
     public void shouldConvertIfPriceAmountInMicrosIsMissing() throws Exception {
         Bundle skuDetailsResponse = skuDetailsResponseResultOkNoPriceAmountMicrosInDetailList();
-        Map<String, Information> informations = convertSkuDetailsResponse(skuDetailsResponse);
+        Map<String, Information> informationMap = convertSkuDetailsResponse(skuDetailsResponse);
 
-        assertFalse(informations.isEmpty());
+        assertFalse(informationMap.isEmpty());
 
-        assertNull(informations.values().iterator().next().getPriceInCents());
+        assertNull(informationMap.values().iterator().next().getPriceInCents());
     }
 
     @Test
     public void shouldSetPriceAmountInMicrosWhenConvertingOne() throws Exception {
         Bundle skuDetailsResponse = skuDetailsResponseResultOkProductFullEditionEntitlement();
-        Map<String, Information> informations = convertSkuDetailsResponse(skuDetailsResponse);
-        assertFalse(informations.isEmpty());
+        Map<String, Information> informationMap = convertSkuDetailsResponse(skuDetailsResponse);
+        assertFalse(informationMap.isEmpty());
 
-        Information information = informations.values().iterator().next();
+        Information information = informationMap.values().iterator().next();
 
         assertEquals(new Integer(100), information.getPriceInCents());
     }
