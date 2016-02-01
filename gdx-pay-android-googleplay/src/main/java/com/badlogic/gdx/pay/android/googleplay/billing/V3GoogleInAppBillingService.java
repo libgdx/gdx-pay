@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.BUY_INTENT;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.RESPONSE_CODE;
 import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetPurchasesResponseConverter.convertPurchasesResponseToTransactions;
-import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkuDetailsRequestConverter.convertConfigToItemIdList;
+import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkuDetailsRequestConverter.convertProductIdsToItemIdList;
 import static com.badlogic.gdx.pay.android.googleplay.billing.converter.GetSkusDetailsResponseBundleConverter.convertSkuDetailsResponse;
 
 public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
@@ -200,36 +200,34 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     private PendingIntent getBuyIntent(String productId) throws RemoteException {
         Bundle intent = billingService().getBuyIntent(BILLING_API_VERSION, installerPackageName, productId, PURCHASE_TYPE_IN_APP, DEFAULT_DEVELOPER_PAYLOAD);
 
-        // TODO unit test this.
         return fetchPendingIntentFromGetBuyIntentResponse(intent);
     }
 
     private PendingIntent fetchPendingIntentFromGetBuyIntentResponse(Bundle responseData) {
-        // TODO: unit test this.
         int code = responseData.getInt(RESPONSE_CODE);
 
         ResponseCode responseCode = ResponseCode.findByCode(code);
 
         if (responseCode != ResponseCode.BILLING_RESPONSE_RESULT_OK) {
+            // TODO: unit test this.
             throw new GdxPayException("Unexpected getBuyIntent() responseCode: " + responseCode + " with response data: " + responseData);
         }
 
         PendingIntent pendingIntent = responseData.getParcelable(BUY_INTENT);
 
         if (pendingIntent == null) {
-            throw new GdxPayException("Missing key (or has object) " + BUY_INTENT + "in getBuyIntent() response: "  + responseData);
+            throw new GdxPayException("Missing value for key: " + BUY_INTENT + "in getBuyIntent() response: "  + responseData);
         }
         return pendingIntent;
     }
 
     private Map<String, Information> fetchSkuDetails(List<String> productIds) {
-        Bundle skusRequest = convertConfigToItemIdList(productIds);
+        Bundle skusRequest = convertProductIdsToItemIdList(productIds);
 
         Bundle skuDetailsResponse = executeGetSkuDetails(skusRequest);
 
         Map<String, Information> informationMap = new HashMap<>();
 
-        informationMap.clear();
         informationMap.putAll(convertSkuDetailsResponse(skuDetailsResponse));
 
         return informationMap;
@@ -283,6 +281,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
             return billingService().getSkuDetails(BILLING_API_VERSION, installerPackageName,
                     PURCHASE_TYPE_IN_APP, skusRequest);
         } catch (RemoteException e) {
+            // TODO: unit test this.
             throw new GdxPayException("getProductsDetails failed for bundle:" + skusRequest, e);
         }
     }
