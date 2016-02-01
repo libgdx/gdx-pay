@@ -8,12 +8,12 @@
 * DONE: implement getInformation()
 * DONE: implement dispose()
 * DONE: handle restore()
-* Check Android app lifecycle, do we need specific code for cornercases?
-* Fail fast for other product types than ENTTITLEMENT type.
-* priceInCents, priceCurrencyCode in Information: fill for ios as well.
+* DONE: Check Android app lifecycle, do we need specific code for cornercases?
+* DONE: Fail fast for other product types than ENTTITLEMENT type.
 * Refactor and cleanup.
-* IN PROGRESSS Integrate publish.gradle to android project to be able to publish to a maven repo.
-* test SNAPSHOT version
+* DONE: IN PROGRESSS Integrate publish.gradle to android project to be able to publish to a maven repo.
+* TODO: test SNAPSHOT version
+* TODO:Describe com.badlogic.gdx.pay.PurchaseSystem#onAppRestarted on gdx-pay README
 * release new version.
 
 
@@ -29,7 +29,6 @@
 * integrate publish.gradle (support android library project).
 * Check for TODO's
 * Move testdata (objectmothers) to a common place (gdx-pay-testdata?)
-* Describe com.badlogic.gdx.pay.PurchaseSystem#onAppRestarted on gdx-pay README
 
 
 ## Refactorings to be discussed:
