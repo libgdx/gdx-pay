@@ -153,6 +153,7 @@ method in that fail if you want to run/test it :)
 ### Release History
 
 Release history for major milestones (available via Maven):
+* Version 0.9.0: New [Google Play Store implementation](gdx-pay-android-googleplay/README.md), no longer using OpenIAB (2016-02-03)
 * Version 0.8.0: bugfix release (2015-12-16)
 * Version 0.7.0: lastest updates/bugfixes integrated (2015-12-10)
 * Version 0.6.0: iOS 9 support, bug fixes
