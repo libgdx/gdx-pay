@@ -8,9 +8,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.mockito.Mockito.verify;
 
+// TODO: fix unit testing in gdx-pay-client, move class to there
 @RunWith(MockitoJUnitRunner.class)
 public class PurchaseSystemTest {
-
 
     @Mock
     PurchaseManager purchaseManager;
