@@ -201,36 +201,6 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         });
     }
 
-    private boolean productsLoaded() {
-        return !informationMap.isEmpty();
-    }
-
-    private void loadProductsAndPurchaseAsynchronously(final String identifier) {
-        runAsync(new Runnable() {
-            @Override
-            public void run() {
-
-                try {
-                    loadSkusAndFillPurchaseInformation();
-
-                    if (productsLoaded()) {
-                        purchase(identifier);
-                        return;
-                    }
-                    //TODO: unit test this.
-                    if (observer != null) {
-                        observer.handlePurchaseError(new GdxPayException("Purchase failed for identifier: " + identifier + "(failed to retrieve products"));
-                    }
-                } catch(GdxPayException e) {
-                    // TODO: unit test this!
-                    if (observer != null) {
-                        observer.handlePurchaseError(e);
-                    }
-                }
-            }
-        });
-    }
-
     // TODO: call in new thread if called from UI thread (check if this is necessary).
     @Override
     public void purchaseRestore() {
