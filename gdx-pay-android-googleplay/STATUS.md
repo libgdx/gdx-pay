@@ -11,8 +11,8 @@
 * DONE: Refactor and cleanup.
 * DONE: IN PROGRESSS Integrate publish.gradle to android project to be able to publish to a maven repo.
 * DONE: test SNAPSHOT version
+* TODO: release new version.
 * TODO:Describe com.badlogic.gdx.pay.PurchaseSystem#onAppRestarted on gdx-pay README
-* release new version.
 
 ## Milestone 2
 * Do agreed naming refactorings

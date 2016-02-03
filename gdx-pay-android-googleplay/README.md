@@ -1,6 +1,6 @@
-# Gdx-pay implementation for Android applications on Google Play
+# InApp purchasing implementation for Google Play
 
-Supports non-consumable products only currently.
+Handles purchases and restores for non-consumable products.
 
 ## Unique selling points
 
@@ -15,6 +15,9 @@ It implements only features the users have needed so far. The following features
 * No support for more than 700 purchases per user per app: we do not yet support INAPP_CONTINUATION_TOKEN	
 * No support for consumables and subscriptions (only supports non-consumable products currently).
 * No support for Libgdx applications that use AndroidFragmentApplication (only activity AndroidApplication is supported yet).
+
+More details on [Status page](STATUS.md) 
+
 
 ## Contributing
 
