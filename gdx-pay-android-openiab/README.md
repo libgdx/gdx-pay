@@ -1,4 +1,4 @@
-# OpenIAB based Payment implementation.
+# OpenIAB based Payment implementation (deprecated)
 
 
 Note that the backing library [OpenIAB](https://github.com/onepf/OpenIAB) is currently unmaintained, and has many open issues.
