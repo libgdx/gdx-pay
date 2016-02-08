@@ -67,7 +67,12 @@ core project as follows without bothering making any code changes.
 
 ```
 ...
+// Disposes static instances in case JVM is re-used on restarts
+PurchaseSystem.onAppRestarted();
+
 if (PurchaseSystem.hasManager()) {
+    
+
   // purchase system is ready to start. Let's initialize our product list etc...
   PurchaseManagerConfig config = new PurchaseManagerConfig();
   config.addOffer(...)
