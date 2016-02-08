@@ -18,7 +18,6 @@ It implements only features the users have needed so far. The following features
 
 More details on [Status page](STATUS.md) 
 
-
 ## Contributing
 
 We welcome contributions (bugfixes and new features).

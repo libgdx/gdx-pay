@@ -11,20 +11,20 @@
 * DONE: Refactor and cleanup.
 * DONE: IN PROGRESSS Integrate publish.gradle to android project to be able to publish to a maven repo.
 * DONE: test SNAPSHOT version
+* DONE: integrate publish.gradle (support android library project).
 * DONE: release new version.
 * DONE: Describe com.badlogic.gdx.pay.PurchaseSystem#onAppRestarted on gdx-pay README
 
 ## Milestone 2
 * Do agreed naming refactorings
-* Verify purchase cancellation.
-* Verify purchase authenticity
+* Verify purchase cancellation (is handled by Google Play, it no longer returns cancelled transactions?)
+* Verify purchase authenticity (using the Google license Key)
 * Handle purchase non-consumable product
 * Support working with AndroidFragmentApplication
-* Hande purchase consumable product
+* Handle purchase consumable product
 * Handle purchase subscription
 * Set up CI (e.g. travis ci)
 * update root README.md (update versions)
-* integrate publish.gradle (support android library project).
 * Check for TODO's
 * Move testdata (objectmothers) to a common place (gdx-pay-testdata?)
 
