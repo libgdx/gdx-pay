@@ -27,7 +27,7 @@
 * update root README.md (update versions)
 * Check for TODO's
 * Move testdata (objectmothers) to a common place (gdx-pay-testdata?)
-
+* Make ObjectMothers return Builder instances (if applicable).
 
 ## Refactorings to be discussed:
 
