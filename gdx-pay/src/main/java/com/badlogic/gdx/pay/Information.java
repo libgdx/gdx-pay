@@ -1,5 +1,7 @@
 package com.badlogic.gdx.pay;
 
+import javax.annotation.Nullable;
+
 /**
  * Information about a product that can be purchased provided by a purchase manager. Some methods
  * will return 'null' if requested information is not available.
@@ -41,8 +43,9 @@ public final class Information {
 
     /**
      * Price in cents.
-     * <p>Caution:Note that not all PurchaseManagers set this field!</p>
+     * <p>Caution: this field could be null, information is not always available! </p>
      */
+    @Nullable
     public Integer getPriceInCents() {
         return priceInCents;
     }

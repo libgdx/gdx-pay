@@ -124,8 +124,10 @@ public final class Transaction {
 		this.purchaseText = purchaseText;
 	}
 
-	/** How much was originally charged in the lowest denomination (or null for unknown). E.g. if the cost was USD 4.99, then this
-	 * field contains 499. */
+	/** How much was originally charged in the lowest denomination (or 0 for unknown). E.g. if the cost was USD 4.99, then this
+	 * field contains 499.
+	 * @return price in cents, or zero if unknown
+	 */
 	public int getPurchaseCost () {
 		return purchaseCost;
 	}

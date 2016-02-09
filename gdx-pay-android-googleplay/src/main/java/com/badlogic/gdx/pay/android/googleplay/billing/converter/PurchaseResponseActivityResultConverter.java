@@ -40,7 +40,7 @@ public class PurchaseResponseActivityResultConverter {
         Information information = purchaseManager.getInformation(productId);
 
         Integer priceInCents = information.getPriceInCents();
-        transaction.setPurchaseCost(priceInCents == null ? null : priceInCents);
+        transaction.setPurchaseCost(priceInCents == null ? 0 : priceInCents);
         transaction.setPurchaseCostCurrency(information.getPriceCurrencyCode());
     }
 

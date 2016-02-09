@@ -7,6 +7,8 @@ apply plugin : 'java'
 apply from : '../publish_java.gradle'
 
 dependencies {
+    compile "com.google.code.findbugs:jsr305:${jsr305Version}"
+
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.assertj:assertj-core:${assertJVersion}"
 }
