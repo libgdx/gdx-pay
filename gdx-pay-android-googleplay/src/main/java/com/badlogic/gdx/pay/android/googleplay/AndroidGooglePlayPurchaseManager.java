@@ -19,15 +19,9 @@ package com.badlogic.gdx.pay.android.googleplay;
 import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
-import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.Offer;
-import com.badlogic.gdx.pay.OfferType;
-import com.badlogic.gdx.pay.PurchaseManager;
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.Transaction;
+import com.badlogic.gdx.pay.*;
 import com.badlogic.gdx.pay.android.googleplay.billing.AsyncExecutor;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
@@ -107,8 +101,8 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     private void assertConfigSupported(PurchaseManagerConfig purchaseManagerConfig) {
         for(int i=0; i < purchaseManagerConfig.getOfferCount(); i++) {
             Offer offer = purchaseManagerConfig.getOffer(i);
-            if (offer.getType() != OfferType.ENTITLEMENT) {
-                throw new IllegalArgumentException("Unsupported offer: " + offer + ", only " + OfferType.ENTITLEMENT +  " is supported");
+            if (offer.getType() == OfferType.SUBSCRIPTION) {
+                throw new IllegalArgumentException("Unsupported offer: " + offer);
             }
         }
     }
@@ -172,7 +166,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     }
 
     @Override
-    public void purchase(String identifier) {
+    public void purchase(final String identifier) {
         assertInstalled();
 
         googleInAppBillingService.startPurchaseRequest(identifier, new PurchaseRequestCallback() {
@@ -180,6 +174,14 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
             @Override
             public void purchaseSuccess(Transaction transaction) {
                 if (observer != null) {
+                    Offer offer = purchaseManagerConfig.getOffer(identifier);
+                    if (offer.getType() != null) {
+                        googleInAppBillingService.
+                    } else {
+                        // not sure whether we need to check for null here, but
+                        // the OpenIAB implementation does it...
+                        Gdx.app.error(LOG_TAG, "No Offer with identifier=" + identifier);;
+                    }
                     observer.handlePurchase(transaction);
                 }
             }
