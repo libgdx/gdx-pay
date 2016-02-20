@@ -8,9 +8,7 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
-import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.ORDER_ID;
-import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PRODUCT_ID;
-import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PURCHASE_TIME;
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.*;
 
 public class InAppPurchaseDataToTransactionConverter {
 
@@ -20,6 +18,10 @@ public class InAppPurchaseDataToTransactionConverter {
 
         Transaction transaction = new Transaction();
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE);
+
+        if (object.has(PURCHASE_TOKEN)) {
+            transaction.setTransactionDataSignature(object.getString(PURCHASE_TOKEN));
+        }
 
         if (object.has(ORDER_ID)) {
             transaction.setOrderId(object.getString(ORDER_ID));

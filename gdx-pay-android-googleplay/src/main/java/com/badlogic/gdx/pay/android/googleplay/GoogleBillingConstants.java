@@ -15,6 +15,7 @@ public class GoogleBillingConstants {
     public static final String PRICE_CURRENCY_CODE = "price_currency_code";
     public static final String PURCHASE_TIME = "purchaseTime";
     public static final String ORDER_ID = "orderId";
+    public static final String PURCHASE_TOKEN = "purchaseToken";
     public static final String INAPP_PURCHASE_DATA_LIST = "INAPP_PURCHASE_DATA_LIST";
     public static final String PACKAGE_NAME = "packageName";
 }

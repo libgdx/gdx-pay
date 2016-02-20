@@ -13,10 +13,13 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidEventListener;
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
+import com.badlogic.gdx.pay.android.googleplay.ConsumeException;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.ResponseCode;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
@@ -114,6 +117,37 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public void startPurchaseRequest(String productId, PurchaseRequestCallback listener) {
         internalStartPurchaseRequest(productId, listener, true);
+    }
+
+    @Override
+    public void consumePurchase(final String productId,
+                                final Transaction transaction,
+                                final PurchaseObserver observer) {
+
+        androidApplication.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                String token = transaction.getTransactionDataSignature();
+                try {
+                    final int result = billingService.consumePurchase(BILLING_API_VERSION, installerPackageName, token);
+                    Gdx.app.postRunnable(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (result == 0) {
+                                observer.handlePurchase(transaction);
+                            } else {
+                                ResponseCode responseCode = ResponseCode.findByCode(result);
+                                String error = "Consuming " + productId + " failed, " + responseCode;
+                                observer.handlePurchaseError(new ConsumeException(error, transaction));
+                            }
+                        }
+                    });
+                } catch (RemoteException e) {
+                    String message = "Failed consuming product: " + productId;
+                    observer.handlePurchaseError(new ConsumeException(message, transaction, e));
+                }
+            }
+        });
     }
 
     private void internalStartPurchaseRequest(String productId, PurchaseRequestCallback listener, boolean retryOnError) {

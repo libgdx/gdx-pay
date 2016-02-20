@@ -1,6 +1,7 @@
 package com.badlogic.gdx.pay.android.googleplay.billing;
 
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 
@@ -14,6 +15,7 @@ public interface GoogleInAppBillingService {
     Map<String, Information> getProductsDetails(List<String> productIds);
 
     void startPurchaseRequest(String productId, PurchaseRequestCallback listener);
+    void consumePurchase(String productId, Transaction transaction, PurchaseObserver observer);
 
     void disconnect();
 

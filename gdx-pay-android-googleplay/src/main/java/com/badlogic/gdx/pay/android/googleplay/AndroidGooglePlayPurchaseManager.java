@@ -170,20 +170,35 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         assertInstalled();
 
         googleInAppBillingService.startPurchaseRequest(identifier, new PurchaseRequestCallback() {
-
             @Override
             public void purchaseSuccess(Transaction transaction) {
                 if (observer != null) {
-                    Offer offer = purchaseManagerConfig.getOffer(identifier);
-                    if (offer.getType() != null) {
-                        googleInAppBillingService.
-                    } else {
-                        // not sure whether we need to check for null here, but
-                        // the OpenIAB implementation does it...
-                        Gdx.app.error(LOG_TAG, "No Offer with identifier=" + identifier);;
+                    switch (getOfferType(identifier)) {
+                        case CONSUMABLE:
+                            googleInAppBillingService.consumePurchase(identifier, transaction, observer);
+                            break;
+                        case ENTITLEMENT:
+                            observer.handlePurchase(transaction);
+                            break;
+                        default:
+                            String error = "Unsupported OfferType=" + getOfferType(identifier)
+                                   + " for identiifer=" + identifier;
+                            throw new GdxPayException(error);
                     }
-                    observer.handlePurchase(transaction);
                 }
+            }
+
+            private OfferType getOfferType(String identifier) {
+                Offer offer = purchaseManagerConfig.getOffer(identifier);
+                if (offer == null) {
+                    Gdx.app.error(LOG_TAG, "No Offer with identifier=" + identifier);
+                    return OfferType.ENTITLEMENT;
+                } else if (offer.getType() == null) {
+                    Gdx.app.error(LOG_TAG, "Offer with identifier=" + identifier + " has no OfferType");
+                    return OfferType.ENTITLEMENT;
+                }
+
+                return offer.getType();
             }
 
             @Override
