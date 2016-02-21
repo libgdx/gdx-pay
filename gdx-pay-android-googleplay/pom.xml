@@ -69,11 +69,11 @@
 			<version>6.0.0_r1-robolectric-0</version>
 			<scope>provided</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.onepf</groupId>
 			<artifactId>openiab</artifactId>
 			<version>0.9.8.7</version>
-			<scope>provided</scope>
 		</dependency>
 
 	</dependencies>
