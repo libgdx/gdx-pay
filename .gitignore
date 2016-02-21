@@ -11,6 +11,9 @@ build/
 dist/
 **/robovm-build/
 
+# maven
+target/
+
 # Intellij
 .idea/
 *.ipr
