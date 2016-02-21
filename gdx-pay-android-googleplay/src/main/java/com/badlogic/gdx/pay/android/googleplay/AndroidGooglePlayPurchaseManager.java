@@ -29,6 +29,7 @@ import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService
 import com.badlogic.gdx.pay.android.googleplay.billing.NewThreadSleepAsyncExecutor;
 import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Logger;
 
 import java.util.ArrayList;
@@ -175,30 +176,17 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
                 if (observer != null) {
                     switch (getOfferType(identifier)) {
                         case CONSUMABLE:
-                            googleInAppBillingService.consumePurchase(identifier, transaction, observer);
+                            googleInAppBillingService.consumePurchase(transaction, observer);
                             break;
                         case ENTITLEMENT:
                             observer.handlePurchase(transaction);
                             break;
                         default:
                             String error = "Unsupported OfferType=" + getOfferType(identifier)
-                                   + " for identiifer=" + identifier;
+                                   + " for identifier=" + identifier;
                             throw new GdxPayException(error);
                     }
                 }
-            }
-
-            private OfferType getOfferType(String identifier) {
-                Offer offer = purchaseManagerConfig.getOffer(identifier);
-                if (offer == null) {
-                    Gdx.app.error(LOG_TAG, "No Offer with identifier=" + identifier);
-                    return OfferType.ENTITLEMENT;
-                } else if (offer.getType() == null) {
-                    Gdx.app.error(LOG_TAG, "Offer with identifier=" + identifier + " has no OfferType");
-                    return OfferType.ENTITLEMENT;
-                }
-
-                return offer.getType();
             }
 
             @Override
@@ -218,15 +206,38 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         });
     }
 
+    private OfferType getOfferType(String identifier) {
+        Offer offer = purchaseManagerConfig.getOffer(identifier);
+        if (offer == null) {
+            Gdx.app.error(LOG_TAG, "No Offer with identifier=" + identifier);
+            return OfferType.ENTITLEMENT;
+        } else if (offer.getType() == null) {
+            Gdx.app.error(LOG_TAG, "Offer with identifier=" + identifier + " has no OfferType");
+            return OfferType.ENTITLEMENT;
+        }
+
+        return offer.getType();
+    }
+
     // TODO: call in new thread if called from UI thread (check if this is necessary).
     @Override
     public void purchaseRestore() {
 
         try {
             List<Transaction> transactions = googleInAppBillingService.getPurchases();
+	        Array<Transaction> entitlements = new Array<>(Transaction.class);
+            for (int i = 0; i < transactions.size(); i++) {
+                Transaction transaction = transactions.get(i);
+                if (OfferType.CONSUMABLE == getOfferType(transaction.getIdentifier())) {
+                    googleInAppBillingService.consumePurchase(transaction, observer);
+                } else {
+	                entitlements.add(transaction);
+                }
+            }
+
 
             if (observer != null) {
-                observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
+                observer.handleRestore(entitlements.toArray());
             }
         } catch(GdxPayException e) {
             if (observer != null) {

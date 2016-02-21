@@ -15,7 +15,7 @@ public interface GoogleInAppBillingService {
     Map<String, Information> getProductsDetails(List<String> productIds);
 
     void startPurchaseRequest(String productId, PurchaseRequestCallback listener);
-    void consumePurchase(String productId, Transaction transaction, PurchaseObserver observer);
+    void consumePurchase(Transaction transaction, PurchaseObserver observer);
 
     void disconnect();
 

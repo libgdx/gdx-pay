@@ -120,34 +120,10 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     @Override
-    public void consumePurchase(final String productId,
-                                final Transaction transaction,
+    public void consumePurchase(final Transaction transaction,
                                 final PurchaseObserver observer) {
 
-        androidApplication.handler.post(new Runnable() {
-            @Override
-            public void run() {
-                String token = transaction.getTransactionData();
-                try {
-                    final int result = billingService.consumePurchase(BILLING_API_VERSION, installerPackageName, token);
-                    Gdx.app.postRunnable(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (result == 0) {
-                                observer.handlePurchase(transaction);
-                            } else {
-                                ResponseCode responseCode = ResponseCode.findByCode(result);
-                                String error = "Consuming " + productId + " failed, " + responseCode;
-                                observer.handlePurchaseError(new ConsumeException(error, transaction));
-                            }
-                        }
-                    });
-                } catch (RemoteException e) {
-                    String message = "Failed consuming product: " + productId;
-                    observer.handlePurchaseError(new ConsumeException(message, transaction, e));
-                }
-            }
-        });
+        new Thread(new PurchaseConsumer(transaction, observer)).start();
     }
 
     private void internalStartPurchaseRequest(String productId, PurchaseRequestCallback listener, boolean retryOnError) {
@@ -382,5 +358,47 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     int deltaInSeconds(long endTimeMillis, long startTimeMillis) {
         return (int) ((endTimeMillis - startTimeMillis) / 1000l);
+    }
+
+    private class PurchaseConsumer implements Runnable {
+        private final Transaction transaction;
+        private final PurchaseObserver observer;
+
+        public PurchaseConsumer(Transaction transaction, PurchaseObserver observer) {
+            this.transaction = transaction;
+            this.observer = observer;
+        }
+
+        @Override
+        public void run() {
+            try {
+                final int result = consume(transaction.getTransactionData());
+                Gdx.app.postRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (result == 0) {
+                            observer.handlePurchase(transaction);
+                        } else {
+                            ResponseCode responseCode = ResponseCode.findByCode(result);
+                            String productId = transaction.getIdentifier();
+                            String error = "Consuming " + productId + " failed, " + responseCode;
+                            observer.handlePurchaseError(new ConsumeException(error, transaction));
+                        }
+                    }
+                });
+            } catch (final RemoteException e) {
+                Gdx.app.postRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        String message = "Failed consuming product: " + transaction.getIdentifier();
+                        observer.handlePurchaseError(new ConsumeException(message, transaction, e));
+                    }
+                });
+            }
+        }
+
+        private int consume(String token) throws RemoteException {
+            return billingService.consumePurchase(BILLING_API_VERSION, installerPackageName, token);
+        }
     }
 }
