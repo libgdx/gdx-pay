@@ -127,7 +127,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         androidApplication.handler.post(new Runnable() {
             @Override
             public void run() {
-                String token = transaction.getTransactionDataSignature();
+                String token = transaction.getTransactionData();
                 try {
                     final int result = billingService.consumePurchase(BILLING_API_VERSION, installerPackageName, token);
                     Gdx.app.postRunnable(new Runnable() {

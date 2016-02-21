@@ -20,7 +20,7 @@ public class InAppPurchaseDataToTransactionConverter {
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE);
 
         if (object.has(PURCHASE_TOKEN)) {
-            transaction.setTransactionDataSignature(object.getString(PURCHASE_TOKEN));
+            transaction.setTransactionData(object.getString(PURCHASE_TOKEN));
         }
 
         if (object.has(ORDER_ID)) {
