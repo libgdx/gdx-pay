@@ -1,0 +1,104 @@
+ext {
+    isLocalBuild = {
+        return project.hasProperty("LOCAL")
+    }
+
+    isReleaseBuild = {
+        return project.hasProperty("RELEASE")
+    }
+
+    getLocalRepositoryUrl = {
+        return project.hasProperty('LOCAL_REPOSITORY_URL') ? LOCAL_REPOSITORY_URL
+                : 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+    }
+
+    getReleaseRepositoryUrl = {
+        return project.hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
+                : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+    }
+
+    getSnapshotRepositoryUrl = {
+        return project.hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
+                : "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+
+    getRepositoryUsername = {
+        return project.hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
+    }
+
+    getRepositoryPassword = {
+        return project.hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
+    }
+}
+
+def isSnapshotBuild() {
+    return project.hasProperty("SNAPSHOT")
+}
+
+afterEvaluate { project ->
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                pom.groupId = GROUPID
+                pom.artifactId = "${project.name}"
+                pom.version = mavenDeploymentVersion
+
+                if (isLocalBuild()) {
+                    repository(url: getLocalRepositoryUrl())
+                } else {
+                    if (isReleaseBuild()) {
+                        repository(url: getReleaseRepositoryUrl()) {
+                            authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                        }
+                    }
+                    if (isSnapshotBuild()) {
+                        snapshotRepository(url: getSnapshotRepositoryUrl()) {
+                            authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                        }
+                    }
+                }
+
+                pom.project {
+                    name POM_NAME
+                    if (project.hasProperty('POM_PACKAGING')) {
+                        packaging POM_PACKAGING
+                    }
+                    description POM_DESCRIPTION
+                    url POM_URL
+
+                    scm {
+                        url POM_SCM_URL
+                        connection POM_SCM_CONNECTION
+                        developerConnection POM_SCM_DEV_CONNECTION
+                    }
+
+                    licenses {
+                        license {
+                            name POM_LICENCE_NAME
+                            url POM_LICENCE_URL
+                            distribution POM_LICENCE_DIST
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id POM_DEVELOPER_ID_1
+                            name POM_DEVELOPER_NAME_1
+                        }
+                        developer {
+                            id POM_DEVELOPER_ID_2
+                            name POM_DEVELOPER_NAME_2
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    signing {
+        required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
+        sign configurations.archives
+    }
+}
