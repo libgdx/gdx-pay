@@ -3,6 +3,11 @@ task wrapper(type: Wrapper) {
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
+class Developer {
+    String id
+    String name
+}
+
 ext {
     GROUPID = 'com.badlogicgames.gdxpay'
     VERSION = '0.10.0-SNAPSHOT'
@@ -18,6 +23,10 @@ ext {
     junitVersion = '4.12'
     mockitoVersion = '1.10.19'
     jsr305Version = '3.0.1'
+    developers = [
+            new Developer(id: 'noblemaster', name: 'Christoph Aschwanden'),
+            new Developer(id: 'keesvandieren', name: 'Kees van Dieren')
+    ]
 }
 
 buildscript {

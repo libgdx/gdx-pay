@@ -83,13 +83,11 @@ afterEvaluate { project ->
                     }
 
                     developers {
-                        developer {
-                            id POM_DEVELOPER_ID_1
-                            name POM_DEVELOPER_NAME_1
-                        }
-                        developer {
-                            id POM_DEVELOPER_ID_2
-                            name POM_DEVELOPER_NAME_2
+                        rootProject.developers.each { dev ->
+                            developer {
+                                id dev.id
+                                name dev.name
+                            }
                         }
                     }
                 }
