@@ -41,8 +41,8 @@ afterEvaluate { project ->
             mavenDeployer {
                 beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-                pom.groupId = GROUPID
-                pom.artifactId = "${project.name}"
+                pom.groupId = project.group
+                pom.artifactId = project.name
                 pom.version = mavenDeploymentVersion
 
                 if (isLocalBuild()) {

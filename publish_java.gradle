@@ -2,7 +2,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 apply from: rootProject.file('publish_to_maven_repo.gradle')
 
-ext.mavenDeploymentVersion = isReleaseBuild() ? VERSION.replace("-SNAPSHOT", "") : VERSION
+ext.mavenDeploymentVersion = isReleaseBuild() ? version.replace("-SNAPSHOT", "") : version
 
 afterEvaluate { project ->
     task libraryJar(type: Jar, dependsOn:classes) {

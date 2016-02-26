@@ -3,15 +3,17 @@ task wrapper(type: Wrapper) {
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
+allprojects {
+    group = 'com.badlogicgames.gdxpay'
+    version = '0.10.0-SNAPSHOT'
+}
+
 class Developer {
     String id
     String name
 }
 
 ext {
-    GROUPID = 'com.badlogicgames.gdxpay'
-    VERSION = '0.10.0-SNAPSHOT'
-
     androidBuildToolsVersion = '20.0.0'
     androidCompileSdkVersion = 23
     androidMinimalSdkVersion = 8
@@ -56,9 +58,6 @@ allprojects {
             url "https://oss.sonatype.org/content/repositories/snapshots/"
         }
     }
-    
-    group = GROUPID
-    version = VERSION
 }
 
 project(":gdx-pay-client") {
