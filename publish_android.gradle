@@ -32,7 +32,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 apply from: rootProject.file('publish_to_maven_repo.gradle')
 
-ext.mavenDeploymentVersion = VERSION
+ext.mavenDeploymentVersion = version
 
 afterEvaluate { project ->
     task androidJavadocs(type: Javadoc) {
@@ -72,9 +72,9 @@ publishing {
     publications {
         maven(MavenPublication) {
             artifact "${project.buildDir}/outputs/aar/${project.name}-release.aar"
-            artifactId = "${project.name}"
-            groupId = "${rootProject.ext.GROUPID}"
-            version = "${rootProject.ext.VERSION}"
+            artifactId = project.name
+            groupId = project.group
+            version = project.version
 
             //The publication doesn't know about our dependencies, so we have to manually add them to the pom
             // See also: http://stackoverflow.com/questions/28827593/android-library-dependencies-missing-from-pom-with-gradle
