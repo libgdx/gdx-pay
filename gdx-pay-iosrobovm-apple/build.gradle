@@ -1,4 +1,6 @@
-apply plugin: 'java'
+apply plugin : 'java'
+apply plugin : 'robovm'
+apply from : '../publish_java.gradle'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -13,4 +15,10 @@ sourceSets {
             srcDir 'resources'
         }
     }
+}
+
+dependencies {
+    compile project(':gdx-pay-client')
+    compile "org.robovm:robovm-rt:$roboVMVersion"
+    compile "org.robovm:robovm-cocoatouch:$roboVMVersion"
 }

@@ -1,7 +1,26 @@
+apply plugin: 'java'
+apply plugin: 'robovm'
+
 sourceSets.main.java.srcDirs = [ "src/" ]
 
 sourceCompatibility = '1.7'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+configurations {
+  natives
+}
+
+dependencies {
+  compile project(':gdx-pay-client')
+  compile project(':gdx-pay-tests')
+
+  compile project(':gdx-pay-iosrobovm-apple')
+
+  compile "org.robovm:robovm-rt:${roboVMVersion}"
+  compile "org.robovm:robovm-cocoatouch:${roboVMVersion}"
+  compile "com.badlogicgames.gdx:gdx-backend-robovm:${gdxVersion}"
+  natives "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-ios"
+}
 
 // Extracts native libs (*.a) from the native-ios.jar and places them
 // under build/libs/ios/.
