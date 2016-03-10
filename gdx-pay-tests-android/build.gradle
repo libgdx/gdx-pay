@@ -33,6 +33,30 @@ android {
     }
 }
 
+configurations {
+    natives
+}
+
+dependencies {
+    compile project(':gdx-pay-client')
+    compile project(':gdx-pay-tests')
+
+    compile project(':gdx-pay-android')
+
+    compile project(':gdx-pay-android-openiab')
+
+
+    compile "org.onepf:openiab:${openIabVersion}"
+
+    compile project(':gdx-pay-android-ouya')
+    compile fileTree(dir: '../gdx-pay-android-ouya/lib', include: ['*.jar'])
+
+    compile "com.badlogicgames.gdx:gdx-backend-android:${gdxVersion}"
+    natives "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-armeabi"
+    natives "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-armeabi-v7a"
+    natives "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-x86"
+}
+
 // called every time gradle gets executed, takes the native dependencies of
 // the natives configuration, and extracts them to the proper libs/ folders
 // so they get packed with the APK.
