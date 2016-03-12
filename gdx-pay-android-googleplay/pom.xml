@@ -76,6 +76,12 @@
 			<version>0.9.8.7</version>
 		</dependency>
 
+		<dependency>
+			<groupId>android.support</groupId>
+			<artifactId>compatibility-v13</artifactId>
+			<version>22.2.1</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

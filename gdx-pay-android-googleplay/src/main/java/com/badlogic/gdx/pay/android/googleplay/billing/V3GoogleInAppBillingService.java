@@ -16,6 +16,7 @@ import com.android.vending.billing.IInAppBillingService;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidEventListener;
+import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
@@ -53,7 +54,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Nullable
     private IInAppBillingService billingService;
 
-    private final AndroidApplication androidApplication;
+    private final ApplicationProxy androidApplication;
 
     private int activityRequestCode;
     private PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter;
@@ -65,12 +66,31 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     private GdxPayAsyncOperationResultListener asyncOperationResultListener;
     private ConnectionListener connectionListener;
 
-    public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode, PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter, AsyncExecutor asyncExecutor) {
-        this.androidApplication = application;
+    public V3GoogleInAppBillingService(ApplicationProxy proxy,
+                                       int activityRequestCode,
+                                       PurchaseResponseActivityResultConverter resultConverter,
+                                       AsyncExecutor asyncExecutor) {
+
+        this.androidApplication = proxy;
         this.activityRequestCode = activityRequestCode;
-        this.purchaseResponseActivityResultConverter = purchaseResponseActivityResultConverter;
+        this.purchaseResponseActivityResultConverter = resultConverter;
         this.asyncExecutor = asyncExecutor;
-        installerPackageName = application.getPackageName();
+        this.installerPackageName = proxy.getPackageName();
+    }
+
+    public V3GoogleInAppBillingService(Activity activity,
+                                       AndroidFragmentApplication application,
+                                       int activityRequestCode,
+                                       PurchaseResponseActivityResultConverter resultConverter,
+                                       AsyncExecutor asyncExecutor) {
+
+        this(new ApplicationProxy.FragmentProxy(activity, application),
+            activityRequestCode, resultConverter, asyncExecutor);
+    }
+
+    public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode, PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter, AsyncExecutor asyncExecutor) {
+        this(new ApplicationProxy.ActivityProxy(application),
+            activityRequestCode, purchaseResponseActivityResultConverter, asyncExecutor);
     }
 
     @Override

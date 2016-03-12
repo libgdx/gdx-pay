@@ -21,13 +21,12 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
+import com.badlogic.gdx.backends.android.AndroidApplicationBase;
+import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
 import com.badlogic.gdx.pay.*;
-import com.badlogic.gdx.pay.android.googleplay.billing.AsyncExecutor;
-import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
+import com.badlogic.gdx.pay.android.googleplay.billing.*;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestCallback;
-import com.badlogic.gdx.pay.android.googleplay.billing.NewThreadSleepAsyncExecutor;
-import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Logger;
@@ -72,6 +71,19 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         PurchaseResponseActivityResultConverter converter = new PurchaseResponseActivityResultConverter(this);
         AsyncExecutor executor = new NewThreadSleepAsyncExecutor();
         googleInAppBillingService = new V3GoogleInAppBillingService(application, activityRequestCode, converter, executor);
+    }
+
+    @SuppressWarnings("unused") // Unit tested with reflection. (as in IAP.java)
+    public AndroidGooglePlayPurchaseManager(Activity activity,
+                                            AndroidFragmentApplication application,
+                                            int activityRequestCode) {
+
+        PurchaseResponseActivityResultConverter converter = new PurchaseResponseActivityResultConverter(this);
+        AsyncExecutor executor = new NewThreadSleepAsyncExecutor();
+        ApplicationProxy.FragmentProxy proxy = new ApplicationProxy.FragmentProxy(activity, application);
+        googleInAppBillingService = new V3GoogleInAppBillingService(proxy, activityRequestCode, converter, executor);
+
+        PurchaseSystem.setManager(this);
     }
 
     @Override
@@ -225,13 +237,13 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
         try {
             List<Transaction> transactions = googleInAppBillingService.getPurchases();
-	        Array<Transaction> entitlements = new Array<>(Transaction.class);
+            Array<Transaction> entitlements = new Array<>(Transaction.class);
             for (int i = 0; i < transactions.size(); i++) {
                 Transaction transaction = transactions.get(i);
                 if (OfferType.CONSUMABLE == getOfferType(transaction.getIdentifier())) {
                     googleInAppBillingService.consumePurchase(transaction, observer);
                 } else {
-	                entitlements.add(transaction);
+                    entitlements.add(transaction);
                 }
             }
 
