@@ -76,10 +76,19 @@
 			<version>0.9.8.7</version>
 		</dependency>
 
+		<!-- but why.... missing v4.Fragment, no type jar avail
 		<dependency>
-			<groupId>android.support</groupId>
-			<artifactId>compatibility-v13</artifactId>
+			<groupId>com.android.support</groupId>
+			<artifactId>support-v13</artifactId>
 			<version>22.2.1</version>
+			<type>aar</type>
+		</dependency>
+		-->
+
+		<dependency>
+			<groupId>com.android.support</groupId>
+			<artifactId>support-v13</artifactId>
+			<version>19.1.0</version>
 		</dependency>
 
 	</dependencies>
