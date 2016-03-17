@@ -188,9 +188,11 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
                 if (observer != null) {
                     switch (getOfferType(identifier)) {
                         case CONSUMABLE:
+	                        Gdx.app.error("FEO", "Manager:purchaseSuccess: consumable" + transaction);
                             googleInAppBillingService.consumePurchase(transaction, observer);
                             break;
                         case ENTITLEMENT:
+	                        Gdx.app.error("FEO", "Manager:purchaseSuccess: entitlement" + transaction);
                             observer.handlePurchase(transaction);
                             break;
                         default:
