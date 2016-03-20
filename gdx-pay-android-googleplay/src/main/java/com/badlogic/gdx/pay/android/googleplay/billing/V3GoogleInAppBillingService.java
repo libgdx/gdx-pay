@@ -154,7 +154,6 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         try {
             pendingIntent = getBuyIntent(productId);
         } catch (RemoteException | RuntimeException e) {
-	        Gdx.app.error("FEO", e.getMessage(), e);
             if (retryOnError) {
                 reconnectToHandleDeadObjectExceptions();
                 schedulePurchaseRetry(productId, listener);
