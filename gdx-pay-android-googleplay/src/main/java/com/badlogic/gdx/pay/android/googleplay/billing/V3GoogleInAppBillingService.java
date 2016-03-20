@@ -143,14 +143,18 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     public void consumePurchase(final Transaction transaction,
                                 final PurchaseObserver observer) {
 
-        new Thread(new PurchaseConsumer(transaction, observer)).start();
+	    Gdx.app.log("FEO", "consumePurchase: " + transaction);
+        new Thread(
+            new PurchaseConsumer(transaction, observer))
+        .start();
     }
 
     private void internalStartPurchaseRequest(String productId, PurchaseRequestCallback listener, boolean retryOnError) {
         PendingIntent pendingIntent;
         try {
             pendingIntent = getBuyIntent(productId);
-        } catch (RemoteException |RuntimeException e) {
+        } catch (RemoteException | RuntimeException e) {
+	        Gdx.app.error("FEO", e.getMessage(), e);
             if (retryOnError) {
                 reconnectToHandleDeadObjectExceptions();
                 schedulePurchaseRetry(productId, listener);
@@ -392,10 +396,11 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         @Override
         public void run() {
             try {
+	            Gdx.app.log("FEO", "purchase consumer starting");
                 final int result = consume(transaction.getTransactionData());
-                Gdx.app.postRunnable(new Runnable() {
-                    @Override
-                    public void run() {
+//                Gdx.app.postRunnable(new Runnable() {
+//                    @Override
+//                    public void run() {
                         if (result == 0) {
                             observer.handlePurchase(transaction);
                         } else {
@@ -404,8 +409,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
                             String error = "Consuming " + productId + " failed, " + responseCode;
                             observer.handlePurchaseError(new ConsumeException(error, transaction));
                         }
-                    }
-                });
+//                    }
+//                });
             } catch (final RemoteException e) {
                 Gdx.app.postRunnable(new Runnable() {
                     @Override
