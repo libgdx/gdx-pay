@@ -77,9 +77,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>android.support</groupId>
-			<artifactId>compatibility-v13</artifactId>
-			<version>22.2.1</version>
+			<groupId>com.android.support</groupId>
+			<artifactId>support-v13</artifactId>
+			<version>19.1.0</version>
 			<scope>provided</scope>
 		</dependency>
 
