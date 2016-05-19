@@ -57,7 +57,7 @@ public interface ApplicationProxy {
         public boolean bindService(Intent bindBillingServiceIntent,
                                    ServiceConnection billingServiceConnection,
                                    int bindAutoCreate) {
-            return bindService(bindBillingServiceIntent, billingServiceConnection, bindAutoCreate);
+            return application.bindService(bindBillingServiceIntent, billingServiceConnection, bindAutoCreate);
         }
 
         @Override
