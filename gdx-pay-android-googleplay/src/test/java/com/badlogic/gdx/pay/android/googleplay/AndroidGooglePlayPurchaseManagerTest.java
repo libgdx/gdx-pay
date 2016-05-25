@@ -35,6 +35,7 @@ import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObject
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferConsumbableProduct;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferSubscriptionProduct;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PACKAGE_NAME_GOOD;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
 import static java.util.Collections.singletonList;
@@ -150,7 +151,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     public void installShouldFailFastWhenRegisteringWithNonEntitlementProduct() throws Exception {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage(containsString("Unsupported offer:"));
-        purchaseManager.install(purchaseObserver, managerConfigGooglePlayOneOfferConsumbableProduct(), true);
+        purchaseManager.install(purchaseObserver, managerConfigGooglePlayOneOfferSubscriptionProduct(), true);
     }
 
     @Test

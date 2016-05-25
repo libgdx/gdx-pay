@@ -14,6 +14,13 @@ public class OfferObjectMother {
         return offer;
     }
 
+    public static Offer offerSubscription() {
+        Offer offer = new Offer();
+        offer.setIdentifier("com.appname.subscription");
+        offer.setType(OfferType.SUBSCRIPTION);
+        return offer;
+    }
+
     public static Offer offerConsumable() {
         Offer offer = new Offer();
         offer.setIdentifier("com.appname.consumable.100.coins");

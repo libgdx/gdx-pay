@@ -19,22 +19,16 @@ package com.badlogic.gdx.pay.android.googleplay;
 import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
-import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.Offer;
-import com.badlogic.gdx.pay.OfferType;
-import com.badlogic.gdx.pay.PurchaseManager;
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.Transaction;
-import com.badlogic.gdx.pay.android.googleplay.billing.AsyncExecutor;
-import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
+import com.badlogic.gdx.backends.android.AndroidApplicationBase;
+import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
+import com.badlogic.gdx.pay.*;
+import com.badlogic.gdx.pay.android.googleplay.billing.*;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestCallback;
-import com.badlogic.gdx.pay.android.googleplay.billing.NewThreadSleepAsyncExecutor;
-import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Logger;
 
 import java.util.ArrayList;
@@ -79,6 +73,19 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         googleInAppBillingService = new V3GoogleInAppBillingService(application, activityRequestCode, converter, executor);
     }
 
+    @SuppressWarnings("unused") // Unit tested with reflection. (as in IAP.java)
+    public AndroidGooglePlayPurchaseManager(Activity activity,
+                                            AndroidFragmentApplication application,
+                                            int activityRequestCode) {
+
+        PurchaseResponseActivityResultConverter converter = new PurchaseResponseActivityResultConverter(this);
+        AsyncExecutor executor = new NewThreadSleepAsyncExecutor();
+        ApplicationProxy.FragmentProxy proxy = new ApplicationProxy.FragmentProxy(activity, application);
+        googleInAppBillingService = new V3GoogleInAppBillingService(proxy, activityRequestCode, converter, executor);
+
+        PurchaseSystem.setManager(this);
+    }
+
     @Override
     public void install(final PurchaseObserver observer, final PurchaseManagerConfig purchaseManagerConfig, final boolean autoFetchInformation) {
         assertConfigSupported(purchaseManagerConfig);
@@ -107,8 +114,8 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     private void assertConfigSupported(PurchaseManagerConfig purchaseManagerConfig) {
         for(int i=0; i < purchaseManagerConfig.getOfferCount(); i++) {
             Offer offer = purchaseManagerConfig.getOffer(i);
-            if (offer.getType() != OfferType.ENTITLEMENT) {
-                throw new IllegalArgumentException("Unsupported offer: " + offer + ", only " + OfferType.ENTITLEMENT +  " is supported");
+            if (offer.getType() == OfferType.SUBSCRIPTION) {
+                throw new IllegalArgumentException("Unsupported offer: " + offer);
             }
         }
     }
@@ -172,15 +179,27 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     }
 
     @Override
-    public void purchase(String identifier) {
+    public void purchase(final String identifier) {
         assertInstalled();
 
         googleInAppBillingService.startPurchaseRequest(identifier, new PurchaseRequestCallback() {
-
             @Override
             public void purchaseSuccess(Transaction transaction) {
                 if (observer != null) {
-                    observer.handlePurchase(transaction);
+                    switch (getOfferType(identifier)) {
+                        case CONSUMABLE:
+	                        Gdx.app.error("FEO", "Manager:purchaseSuccess: consumable" + transaction);
+                            googleInAppBillingService.consumePurchase(transaction, observer);
+                            break;
+                        case ENTITLEMENT:
+	                        Gdx.app.error("FEO", "Manager:purchaseSuccess: entitlement" + transaction);
+                            observer.handlePurchase(transaction);
+                            break;
+                        default:
+                            String error = "Unsupported OfferType=" + getOfferType(identifier)
+                                   + " for identifier=" + identifier;
+                            throw new GdxPayException(error);
+                    }
                 }
             }
 
@@ -201,15 +220,38 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         });
     }
 
+    private OfferType getOfferType(String identifier) {
+        Offer offer = purchaseManagerConfig.getOffer(identifier);
+        if (offer == null) {
+            Gdx.app.error(LOG_TAG, "No Offer with identifier=" + identifier);
+            return OfferType.ENTITLEMENT;
+        } else if (offer.getType() == null) {
+            Gdx.app.error(LOG_TAG, "Offer with identifier=" + identifier + " has no OfferType");
+            return OfferType.ENTITLEMENT;
+        }
+
+        return offer.getType();
+    }
+
     // TODO: call in new thread if called from UI thread (check if this is necessary).
     @Override
     public void purchaseRestore() {
 
         try {
             List<Transaction> transactions = googleInAppBillingService.getPurchases();
+            Array<Transaction> entitlements = new Array<>(Transaction.class);
+            for (int i = 0; i < transactions.size(); i++) {
+                Transaction transaction = transactions.get(i);
+                if (OfferType.CONSUMABLE == getOfferType(transaction.getIdentifier())) {
+                    googleInAppBillingService.consumePurchase(transaction, observer);
+                } else {
+                    entitlements.add(transaction);
+                }
+            }
+
 
             if (observer != null) {
-                observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
+                observer.handleRestore(entitlements.toArray());
             }
         } catch(GdxPayException e) {
             if (observer != null) {

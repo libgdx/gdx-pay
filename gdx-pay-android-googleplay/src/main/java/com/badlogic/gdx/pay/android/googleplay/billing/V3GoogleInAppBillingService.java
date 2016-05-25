@@ -13,10 +13,14 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidEventListener;
+import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
+import com.badlogic.gdx.pay.android.googleplay.ConsumeException;
 import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.ResponseCode;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
@@ -50,7 +54,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Nullable
     private IInAppBillingService billingService;
 
-    private final AndroidApplication androidApplication;
+    private final ApplicationProxy androidApplication;
 
     private int activityRequestCode;
     private PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter;
@@ -62,12 +66,31 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     private GdxPayAsyncOperationResultListener asyncOperationResultListener;
     private ConnectionListener connectionListener;
 
-    public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode, PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter, AsyncExecutor asyncExecutor) {
-        this.androidApplication = application;
+    public V3GoogleInAppBillingService(ApplicationProxy proxy,
+                                       int activityRequestCode,
+                                       PurchaseResponseActivityResultConverter resultConverter,
+                                       AsyncExecutor asyncExecutor) {
+
+        this.androidApplication = proxy;
         this.activityRequestCode = activityRequestCode;
-        this.purchaseResponseActivityResultConverter = purchaseResponseActivityResultConverter;
+        this.purchaseResponseActivityResultConverter = resultConverter;
         this.asyncExecutor = asyncExecutor;
-        installerPackageName = application.getPackageName();
+        this.installerPackageName = proxy.getPackageName();
+    }
+
+    public V3GoogleInAppBillingService(Activity activity,
+                                       AndroidFragmentApplication application,
+                                       int activityRequestCode,
+                                       PurchaseResponseActivityResultConverter resultConverter,
+                                       AsyncExecutor asyncExecutor) {
+
+        this(new ApplicationProxy.FragmentProxy(activity, application),
+            activityRequestCode, resultConverter, asyncExecutor);
+    }
+
+    public V3GoogleInAppBillingService(AndroidApplication application, int activityRequestCode, PurchaseResponseActivityResultConverter purchaseResponseActivityResultConverter, AsyncExecutor asyncExecutor) {
+        this(new ApplicationProxy.ActivityProxy(application),
+            activityRequestCode, purchaseResponseActivityResultConverter, asyncExecutor);
     }
 
     @Override
@@ -116,11 +139,21 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         internalStartPurchaseRequest(productId, listener, true);
     }
 
+    @Override
+    public void consumePurchase(final Transaction transaction,
+                                final PurchaseObserver observer) {
+
+	    Gdx.app.log("FEO", "consumePurchase: " + transaction);
+        new Thread(
+            new PurchaseConsumer(transaction, observer))
+        .start();
+    }
+
     private void internalStartPurchaseRequest(String productId, PurchaseRequestCallback listener, boolean retryOnError) {
         PendingIntent pendingIntent;
         try {
             pendingIntent = getBuyIntent(productId);
-        } catch (RemoteException |RuntimeException e) {
+        } catch (RemoteException | RuntimeException e) {
             if (retryOnError) {
                 reconnectToHandleDeadObjectExceptions();
                 schedulePurchaseRetry(productId, listener);
@@ -348,5 +381,48 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     int deltaInSeconds(long endTimeMillis, long startTimeMillis) {
         return (int) ((endTimeMillis - startTimeMillis) / 1000l);
+    }
+
+    private class PurchaseConsumer implements Runnable {
+        private final Transaction transaction;
+        private final PurchaseObserver observer;
+
+        public PurchaseConsumer(Transaction transaction, PurchaseObserver observer) {
+            this.transaction = transaction;
+            this.observer = observer;
+        }
+
+        @Override
+        public void run() {
+            try {
+	            Gdx.app.log("FEO", "purchase consumer starting");
+                final int result = consume(transaction.getTransactionData());
+//                Gdx.app.postRunnable(new Runnable() {
+//                    @Override
+//                    public void run() {
+                        if (result == 0) {
+                            observer.handlePurchase(transaction);
+                        } else {
+                            ResponseCode responseCode = ResponseCode.findByCode(result);
+                            String productId = transaction.getIdentifier();
+                            String error = "Consuming " + productId + " failed, " + responseCode;
+                            observer.handlePurchaseError(new ConsumeException(error, transaction));
+                        }
+//                    }
+//                });
+            } catch (final RemoteException e) {
+                Gdx.app.postRunnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        String message = "Failed consuming product: " + transaction.getIdentifier();
+                        observer.handlePurchaseError(new ConsumeException(message, transaction, e));
+                    }
+                });
+            }
+        }
+
+        private int consume(String token) throws RemoteException {
+            return billingService.consumePurchase(BILLING_API_VERSION, installerPackageName, token);
+        }
     }
 }
