@@ -195,28 +195,54 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         return null;
     }
 
+    /** Returns the original and unique transaction ID of a purchase. */
+    private String getOriginalTxID(SKPaymentTransaction transaction) {
+        if (transaction != null) {
+            if (transaction.getOriginalTransaction() != null) {
+                // the "original" transaction ID is 'null' for first time purchases but non-'null' for restores (it's unique!)
+                return transaction.getOriginalTransaction().getTransactionIdentifier();
+            } else {
+                // the regular transaction idetifier. This one changes every time if a product is restored!!
+                return transaction.getTransactionIdentifier();
+            }
+        }
+        else {
+            // transaction object was 'null': we shouldn't generally get here
+            return null;
+        }
+    }
+
     /** Converts a purchase to our transaction object. */
     Transaction transaction (SKPaymentTransaction t) {
         SKPayment payment = t.getPayment();
         String productIdentifier = payment.getProductIdentifier();
         SKProduct product = getProductByStoreIdentifier(productIdentifier);
         if (product == null) {
-            System.err.println("gdx-pay: Ignoring unknown product: " + productIdentifier);
-            return null;
+            // if we didn't request product information -OR- it's not in iTunes, it will be null
+            System.err.println("gdx-pay: product not registered/loaded: " + productIdentifier);
         }
 
         // Build the transaction from the payment transaction object.
         Transaction transaction = new Transaction();
-        transaction.setIdentifier(config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE, payment.getProductIdentifier()).getIdentifier());
+        transaction.setIdentifier(config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE, productIdentifier).getIdentifier());
 
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
-        transaction.setOrderId(t.getTransactionIdentifier());
+        transaction.setOrderId(getOriginalTxID(t));
         
         transaction.setPurchaseTime(t.getTransactionDate().toDate());
-        transaction.setPurchaseText("Purchased: " + product.getLocalizedTitle());
-        transaction.setPurchaseCost((int) Math.round(product.getPrice().doubleValue() * 100));
-        transaction.setPurchaseCostCurrency(product.getPriceLocale().getCurrencyCode());
-        
+        if (product != null) {
+            // if we didn't load product information, product will be 'null' (we only set if available)
+            transaction.setPurchaseText("Purchased: " + product.getLocalizedTitle());
+            transaction.setPurchaseCost((int) Math.round(product.getPrice().doubleValue() * 100));
+            transaction.setPurchaseCostCurrency(product.getPriceLocale().getCurrencyCode());
+        }
+        else {
+            // product information was empty (not loaded or product didn't exist)
+            transaction.setPurchaseText("Purchased: " + productIdentifier);
+            transaction.setPurchaseCost(0);
+            transaction.setPurchaseCostCurrency(null);
+        }
+
         transaction.setReversalTime(null);  // no refunds for iOS!
         transaction.setReversalText(null);
         
@@ -355,7 +381,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                                         log(LOGTYPEERROR, "Receipt fetching failed: Request doesn't equal initial request!");
                                     }
 
-                                    log(LOGTYPELOG, "Transaction was completed: " + transaction.getTransactionIdentifier());
+                                    log(LOGTYPELOG, "Transaction was completed: " + getOriginalTxID(transaction));
                                     observer.handlePurchase(t);
 
                                     // Finish transaction.
@@ -366,7 +392,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                                 public void didFail (SKRequest request, NSError error) {
                                     // Receipt refresh request failed. Let's just continue.
                                     log(LOGTYPEERROR, "Receipt fetching failed: " + error.toString());
-                                    log(LOGTYPELOG, "Transaction was completed: " + transaction.getTransactionIdentifier());
+                                    log(LOGTYPELOG, "Transaction was completed: " + getOriginalTxID(transaction));
                                     observer.handlePurchase(t);
 
                                     // Finish transaction.
@@ -378,7 +404,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                             String encodedReceipt = receipt.toBase64EncodedString(NSDataBase64EncodingOptions.None);
 // FIXME: parse out actual receipt for this IAP purchase:        t.setTransactionDataSignature(encodedReceipt);
 
-                            log(LOGTYPELOG, "Transaction was completed: " + transaction.getTransactionIdentifier());
+                            log(LOGTYPELOG, "Transaction was completed: " + getOriginalTxID(transaction));
                             observer.handlePurchase(t);
 
                             // Finish transaction.
@@ -387,7 +413,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                     }
                     else {
                         // we are done: let's report!
-                        log(LOGTYPELOG, "Transaction was completed: " + transaction.getTransactionIdentifier());
+                        log(LOGTYPELOG, "Transaction was completed: " + getOriginalTxID(transaction));
                         observer.handlePurchase(t);
     
                         // Finish transaction.
@@ -427,7 +453,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                     // Finish transaction.
                     SKPaymentQueue.getDefaultQueue().finishTransaction(transaction);
 
-                    log(LOGTYPELOG, "Transaction has been restored: " + transaction.getTransactionIdentifier());
+                    log(LOGTYPELOG, "Transaction has been restored: " + getOriginalTxID(transaction));
                     break;
                 default:
                     break;
