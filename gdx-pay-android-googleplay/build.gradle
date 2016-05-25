@@ -35,6 +35,7 @@ dependencies {
     compile "com.badlogicgames.gdx:gdx-backend-android:${gdxVersion}"
     compile project(':gdx-pay-client')
     compile "com.google.code.findbugs:jsr305:${jsr305Version}"
+    compile 'com.android.support:support-v4:19.0.0'
 }
 
 tasks.withType(Test) {
