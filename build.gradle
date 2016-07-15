@@ -18,7 +18,7 @@ ext {
     androidCompileSdkVersion = 23
     androidMinimalSdkVersion = 8
     androidTargetSdkVersion = 23
-    assertJVersion = '2.3.0'
+    assertJVersion = '1.7.1'
     gdxVersion = '1.8.0'
     openIabVersion = '0.9.8.7'
     robolectricVersion = '4.3_r2-robolectric-0'
