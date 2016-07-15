@@ -14,7 +14,7 @@ class Developer {
 }
 
 ext {
-    androidBuildToolsVersion = '20.0.0'
+    androidBuildToolsVersion = '24'
     androidCompileSdkVersion = 23
     androidMinimalSdkVersion = 8
     androidTargetSdkVersion = 23
