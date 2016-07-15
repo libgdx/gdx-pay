@@ -33,7 +33,7 @@ ext {
 
 buildscript {
     ext {
-        androidToolsVersion = '1.5.0'
+        androidToolsVersion = '2.1.2'
         roboVMVersion = '1.12.0'
         unmockVersion = "0.3.6"
     }
