@@ -41,6 +41,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.badlogic.gdx.pay.Transaction.REVERSAL_TEXT_CANCELLED;
+import static com.badlogic.gdx.pay.Transaction.REVERSAL_TEXT_REFUNDED;
+
 /** The purchase manager implementation for Android via <a href="http://www.onepf.org/openiab">OpenIAB</a>. Supported stores
  * include:
  * <ul>
@@ -459,7 +462,7 @@ public class PurchaseManagerAndroidOpenIAB implements PurchaseManager {
 		if (purchase.getPurchaseState() != 0) {
 			// order has been refunded or cancelled
 			transaction.setReversalTime(new Date()); // TODO: Amazon IAP 2.0 has "cancelDate" which can be obtained via original Json
-			transaction.setReversalText(purchase.getPurchaseState() == 1 ? "Cancelled" : "Refunded");
+			transaction.setReversalText(purchase.getPurchaseState() == 1 ? REVERSAL_TEXT_CANCELLED : REVERSAL_TEXT_REFUNDED);
 		} else {
 			// still valid!
 			transaction.setReversalTime(null);

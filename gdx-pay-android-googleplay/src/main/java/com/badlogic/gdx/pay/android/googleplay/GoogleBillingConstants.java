@@ -18,4 +18,5 @@ public class GoogleBillingConstants {
     public static final String PURCHASE_TOKEN = "purchaseToken";
     public static final String INAPP_PURCHASE_DATA_LIST = "INAPP_PURCHASE_DATA_LIST";
     public static final String PACKAGE_NAME = "packageName";
+    public static final String PURCHASE_STATE = "purchaseState";
 }

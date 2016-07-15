@@ -23,6 +23,9 @@ import java.util.Date;
  * @author noblemaster */
 public final class Transaction {
 
+	public static final String REVERSAL_TEXT_CANCELLED = "Cancelled";
+	public static final String REVERSAL_TEXT_REFUNDED = "Refunded";
+
 	/** Item identifier/SKU number. */
 	private String identifier;
 
