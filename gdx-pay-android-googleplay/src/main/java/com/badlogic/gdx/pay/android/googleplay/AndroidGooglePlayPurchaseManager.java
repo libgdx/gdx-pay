@@ -19,14 +19,25 @@ package com.badlogic.gdx.pay.android.googleplay;
 import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
-import com.badlogic.gdx.backends.android.AndroidApplicationBase;
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
-import com.badlogic.gdx.pay.*;
-import com.badlogic.gdx.pay.android.googleplay.billing.*;
+import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.Offer;
+import com.badlogic.gdx.pay.OfferType;
+import com.badlogic.gdx.pay.PurchaseManager;
+import com.badlogic.gdx.pay.PurchaseManagerConfig;
+import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.PurchaseSystem;
+import com.badlogic.gdx.pay.Transaction;
+import com.badlogic.gdx.pay.android.googleplay.billing.ApplicationProxy;
+import com.badlogic.gdx.pay.android.googleplay.billing.AsyncExecutor;
+import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestCallback;
+import com.badlogic.gdx.pay.android.googleplay.billing.NewThreadSleepAsyncExecutor;
+import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Logger;
@@ -131,7 +142,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
         PackageManager packageManager = activity.getPackageManager();
         List<PackageInfo> packages = packageManager
-                .getInstalledPackages(PackageManager.GET_UNINSTALLED_PACKAGES);
+                .getInstalledPackages(0);
         for (PackageInfo packageInfo : packages) {
             String packageName = packageInfo.packageName;
             if (packageName.equals(GOOGLE_MARKET_NAME) || packageName.equals(GOOGLE_PLAY_STORE_NAME)) {
@@ -188,11 +199,12 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
                 if (observer != null) {
                     switch (getOfferType(identifier)) {
                         case CONSUMABLE:
-	                        Gdx.app.error("FEO", "Manager:purchaseSuccess: consumable" + transaction);
+                            // Warning: observer.handlePurchase is called in googleInAppBillingService.consumePurchase.
+                            // That is not clean, I would prefer to keep it on one place.
+                            // Should be refactored later.
                             googleInAppBillingService.consumePurchase(transaction, observer);
                             break;
                         case ENTITLEMENT:
-	                        Gdx.app.error("FEO", "Manager:purchaseSuccess: entitlement" + transaction);
                             observer.handlePurchase(transaction);
                             break;
                         default:
