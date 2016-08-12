@@ -15,9 +15,8 @@ class Developer {
 
 ext {
 
-    // version also referenced in .travis.yml.
-    androidBuildToolsVersion = '24.0.0'
-    androidCompileSdkVersion = 23
+    androidBuildToolsVersion = '24.0.0' // version also referenced in .travis.yml.
+    androidCompileSdkVersion = 23 // version also referenced in .travis.yml.
     androidMinimalSdkVersion = 8
     androidTargetSdkVersion = 23
     assertJVersion = '1.7.1'
