@@ -16,12 +16,12 @@
 
 package com.badlogic.gdx.pay.ios.apple;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import libcore.io.Base64;
+import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.Offer;
+import com.badlogic.gdx.pay.PurchaseManager;
+import com.badlogic.gdx.pay.PurchaseManagerConfig;
+import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.Transaction;
 
 import org.robovm.apple.foundation.Foundation;
 import org.robovm.apple.foundation.NSArray;
@@ -32,7 +32,6 @@ import org.robovm.apple.foundation.NSError;
 import org.robovm.apple.foundation.NSNumberFormatter;
 import org.robovm.apple.foundation.NSNumberFormatterBehavior;
 import org.robovm.apple.foundation.NSNumberFormatterStyle;
-import org.robovm.apple.foundation.NSString;
 import org.robovm.apple.foundation.NSURL;
 import org.robovm.apple.storekit.SKErrorCode;
 import org.robovm.apple.storekit.SKPayment;
@@ -47,16 +46,15 @@ import org.robovm.apple.storekit.SKProductsResponse;
 import org.robovm.apple.storekit.SKReceiptRefreshRequest;
 import org.robovm.apple.storekit.SKRequest;
 import org.robovm.apple.storekit.SKRequestDelegateAdapter;
-import org.robovm.objc.ObjCClassNotFoundException;
-import org.robovm.objc.ObjCObject;
-import org.robovm.objc.ObjCRuntime;
-import org.robovm.objc.Selector;
 
-import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.PurchaseManager;
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.Transaction;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import libcore.io.Base64;
 
 /** The purchase manager implementation for Apple's iOS IAP system.
  * 
@@ -122,7 +120,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             // Request configured offers/products.
             log(LOGTYPELOG, "Requesting products...");
             productsRequest = new SKProductsRequest(productIdentifiers);
-            productsRequest.setDelegate(new AppleProductsDelegate());
+            productsRequest.setDelegate(new IosFetchProductsAndInstallDelegate());
             productsRequest.start();
         } else {
             log(LOGTYPEERROR, "Error setting up in-app-billing: Device not configured for purchases!");
@@ -213,6 +211,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     }
 
     /** Converts a purchase to our transaction object. */
+    @Nullable
     Transaction transaction (SKPaymentTransaction t) {
         SKPayment payment = t.getPayment();
         String productIdentifier = payment.getProductIdentifier();
@@ -224,7 +223,14 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
         // Build the transaction from the payment transaction object.
         Transaction transaction = new Transaction();
-        transaction.setIdentifier(config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE, productIdentifier).getIdentifier());
+
+        Offer offerForStore = config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE, productIdentifier);
+        if (offerForStore == null) {
+            System.err.println("Product not configured in PurchaseManagerConfig: " + productIdentifier + ", skipping transaction.");
+            return null;
+        }
+
+        transaction.setIdentifier(offerForStore.getIdentifier());
 
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
         transaction.setOrderId(getOriginalTxID(t));
@@ -302,7 +308,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
       }
   }
 
-    private class AppleProductsDelegate extends SKProductsRequestDelegateAdapter {
+    private class IosFetchProductsAndInstallDelegate extends SKProductsRequestDelegateAdapter {
         @Override
         public void didReceiveResponse (SKProductsRequest request, SKProductsResponse response) {
             // Received the registered products from AppStore.
@@ -508,9 +514,8 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                         numberFormatter.setNumberStyle(NSNumberFormatterStyle.Currency);
                     }
                     numberFormatter.setLocale(p.getPriceLocale());
-                    Information i = new Information(p.getLocalizedTitle(), p.getLocalizedDescription(),
-                        numberFormatter.format(p.getPrice()));
-                    return i;
+                    return new Information(p.getLocalizedTitle(), p.getLocalizedDescription(),
+                numberFormatter.format(p.getPrice()));
                 }
             }
         }
