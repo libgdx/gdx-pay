@@ -15,7 +15,6 @@ class Developer {
 
 ext {
 
-
     // version also referenced in .travis.yml.
     androidBuildToolsVersion = '23.0.3'
     androidCompileSdkVersion = 23
