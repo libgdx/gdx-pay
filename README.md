@@ -26,7 +26,7 @@ your **core project** you have:
 In your **Android project** you use. Please note if you use the jars, all dependencies such as the ouya-sdk.jar are already wired in:
 * [gdx-pay-android.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android/0.10.1/gdx-pay-android/0.10.1/library.jar)
 * [gdx-pay-android-googleplay.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-googleplay/0.10.1/gdx-pay-android-googleplay-0.10.1.jar) ( for Google Play with non-consumable products only, exclude this artifact when using other product types. [See status](gdx-pay-android-googleplay/README.md))
-* [gdx-pay-android-openiab.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-openiab/0.10.1/gdx-pay-android-openiab/0.10.1/library.jar) (to support GooglePlay, Amazon etc. [This component is deprecated!](gdx-pay-android-openiab/README.md))
+* [gdx-pay-android-openiab.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-openiab/0.10.1/gdx-pay-android-openiab/0.10.1/library.jar) (to support GooglePlay, Amazon etc. [This component is deprecated!](gdx-pay-android-openiab/README.md)  Do not use if you are using gdx-pay-android-googleplay.jar, they are mutually exclusive.)
 * [gdx-pay-android-ouya.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-ouya/0.10.1/gdx-pay-android-ouya/0.10.1/library.jar) (to support OUYA)
 * AndroidManifest.xml: 
 ```
