@@ -120,19 +120,6 @@ public class IAP implements LifecycleListener, AndroidEventListener {
 	 * @param activity The AndroidApplication activity.
 	 * @param requestCode The request code to use in case they are needed (not all stores need them). */
 	public IAP (Activity activity, int requestCode) {
-		// are we on OUYA-hardware?
-		try {
-			Class<?> ouyaClazz = Class.forName("com.badlogic.gdx.pay.android.ouya.PurchaseManagerAndroidOUYA");
-		   Method method = ouyaClazz.getMethod("isRunningOnOUYAHardware");
-		   if ((Boolean)method.invoke(ouyaClazz)) {	
-		   	// we are running on OUYA: let's set the purchase manager and be done with it!
-		   	PurchaseSystem.setManager((PurchaseManager)ouyaClazz.getConstructor(Activity.class, int.class).newInstance(activity, requestCode));
-		   	return;
-		   }
-		} catch (Exception e) {
-			Log.d(TAG, "Failed to locate purchase manager for OUYA-IAP (gdx-pay-android-ouya.jar file not installed)", e);
-		}
-
 		// are we on GooglePlay?
 		try {
 			Class<?> googlePlayClazz = Class.forName("com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager");
@@ -154,6 +141,20 @@ public class IAP implements LifecycleListener, AndroidEventListener {
 		} catch (Exception e) {
 			Log.d(TAG, "Failed to locate purchase manager for OpenIAB-IAP (gdx-pay-android-openiab.jar file not installed)", e);
 		}
+
+		// are we on OUYA-hardware?
+		try {
+			Class<?> ouyaClazz = Class.forName("com.badlogic.gdx.pay.android.ouya.PurchaseManagerAndroidOUYA");
+			Method method = ouyaClazz.getMethod("isRunningOnOUYAHardware");
+			if ((Boolean)method.invoke(ouyaClazz)) {
+				// we are running on OUYA: let's set the purchase manager and be done with it!
+				PurchaseSystem.setManager((PurchaseManager)ouyaClazz.getConstructor(Activity.class, int.class).newInstance(activity, requestCode));
+				return;
+			}
+		} catch (Exception e) {
+			Log.d(TAG, "Failed to locate purchase manager for OUYA-IAP (gdx-pay-android-ouya.jar file not installed)", e);
+		}
+
 	}
 
 	@Override
