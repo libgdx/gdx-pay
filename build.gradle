@@ -5,7 +5,7 @@ task wrapper(type: Wrapper) {
 
 allprojects {
     group = 'com.badlogicgames.gdxpay'
-    version = '0.10.2-SNAPSHOT'
+    version = '0.10.2'
 }
 
 class Developer {
