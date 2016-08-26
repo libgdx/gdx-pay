@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
 import com.badlogic.gdx.pay.Information;
@@ -192,12 +191,13 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     @Override
     public void purchase(final String identifier) {
         assertInstalled();
+        final OfferType offerType = getOfferType(identifier);
 
         googleInAppBillingService.startPurchaseRequest(identifier, new PurchaseRequestCallback() {
             @Override
             public void purchaseSuccess(Transaction transaction) {
                 if (observer != null) {
-                    switch (getOfferType(identifier)) {
+                    switch (offerType) {
                         case CONSUMABLE:
                             // Warning: observer.handlePurchase is called in googleInAppBillingService.consumePurchase.
                             // That is not clean, I would prefer to keep it on one place.
@@ -234,12 +234,8 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     private OfferType getOfferType(String identifier) {
         Offer offer = purchaseManagerConfig.getOffer(identifier);
-        if (offer == null) {
-            Gdx.app.error(LOG_TAG, "No Offer with identifier=" + identifier);
-            return OfferType.ENTITLEMENT;
-        } else if (offer.getType() == null) {
-            Gdx.app.error(LOG_TAG, "Offer with identifier=" + identifier + " has no OfferType");
-            return OfferType.ENTITLEMENT;
+        if (offer == null || offer.getType() == null) {
+            throw new IllegalStateException("No offer or offerType configured for identifier: " + identifier + ", offer: " + offer);
         }
 
         return offer.getType();

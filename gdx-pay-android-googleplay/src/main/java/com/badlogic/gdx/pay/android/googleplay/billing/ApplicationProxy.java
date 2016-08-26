@@ -4,15 +4,19 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
+
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidEventListener;
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
 
 public interface ApplicationProxy {
+
     String getPackageName();
 
     void addAndroidEventListener(AndroidEventListener listener);
     void removeAndroidEventListener(AndroidEventListener listener);
+
+    void log(String tag, String message);
 
     void unbindService(ServiceConnection conn);
     boolean bindService(Intent bindBillingServiceIntent,
@@ -25,6 +29,8 @@ public interface ApplicationProxy {
                                     int flagsMask,
                                     int flagsValues,
                                     int extraFlags) throws IntentSender.SendIntentException;
+
+    void postRunnable(Runnable runnable);
 
     class ActivityProxy implements ApplicationProxy {
         private final AndroidApplication application;
@@ -49,15 +55,21 @@ public interface ApplicationProxy {
         }
 
         @Override
+        public void log(String tag, String message) {
+            application.log(tag, message);
+        }
+
+
+        @Override
         public void unbindService(ServiceConnection conn) {
-            application.unbindService(conn);
+            application.getContext().getApplicationContext().unbindService(conn);
         }
 
         @Override
         public boolean bindService(Intent bindBillingServiceIntent,
                                    ServiceConnection billingServiceConnection,
                                    int bindAutoCreate) {
-            return application.bindService(bindBillingServiceIntent, billingServiceConnection, bindAutoCreate);
+            return application.getApplicationContext().bindService(bindBillingServiceIntent, billingServiceConnection, bindAutoCreate);
         }
 
         @Override
@@ -68,8 +80,13 @@ public interface ApplicationProxy {
                                                int flagsValues,
                                                int extraFlags) throws IntentSender.SendIntentException {
 
-            application. startIntentSenderForResult(intentSender, activityRequestCode, intent,
+            application.startIntentSenderForResult(intentSender, activityRequestCode, intent,
                 flagsMask, flagsValues, extraFlags);
+        }
+
+        @Override
+        public void postRunnable(Runnable runnable) {
+            application.postRunnable(runnable);
         }
     }
 
@@ -98,8 +115,13 @@ public interface ApplicationProxy {
         }
 
         @Override
+        public void log(String tag, String message) {
+            application.log(tag, message);
+        }
+
+        @Override
         public void unbindService(ServiceConnection conn) {
-            application.getContext().unbindService(conn);
+            application.getContext().getApplicationContext().unbindService(conn);
         }
 
         @Override
@@ -107,7 +129,7 @@ public interface ApplicationProxy {
                                    ServiceConnection billingServiceConnection,
                                    int bindAutoCreate) {
 
-            return activity.bindService(bindBillingServiceIntent, billingServiceConnection, bindAutoCreate);
+            return activity.getApplicationContext().bindService(bindBillingServiceIntent, billingServiceConnection, bindAutoCreate);
         }
 
         @Override
@@ -120,6 +142,11 @@ public interface ApplicationProxy {
 
             activity.startIntentSenderForResult(intentSender, activityRequestCode, intent,
                 flagsMask, flagsValues, extraFlags);
+        }
+
+        @Override
+        public void postRunnable(Runnable runnable) {
+            application.postRunnable(runnable);
         }
     }
 }

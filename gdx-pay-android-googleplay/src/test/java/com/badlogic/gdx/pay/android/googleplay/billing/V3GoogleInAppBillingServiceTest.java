@@ -11,7 +11,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 
 import com.android.vending.billing.IInAppBillingService;
-import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidEventListener;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
@@ -65,7 +64,7 @@ public class V3GoogleInAppBillingServiceTest {
 
     public static final int ACTIVITY_REQUEST_CODE = 1002;
     @Mock
-    AndroidApplication androidApplication;
+    ApplicationProxy applicationProxy;
 
     @Captor
     ArgumentCaptor<ServiceConnection> serviceConnectionArgumentCaptor;
@@ -99,9 +98,9 @@ public class V3GoogleInAppBillingServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        when(androidApplication.getPackageName()).thenReturn(PACKAGE_NAME_GOOD);
+        when(applicationProxy.getPackageName()).thenReturn(PACKAGE_NAME_GOOD);
 
-        v3InAppbillingService = new V3GoogleInAppBillingService(androidApplication, ACTIVITY_REQUEST_CODE, purchaseResponseActivityResultConverter, asyncExecutor) {
+        v3InAppbillingService = new V3GoogleInAppBillingService(applicationProxy, ACTIVITY_REQUEST_CODE, purchaseResponseActivityResultConverter, asyncExecutor) {
             @Override
             protected IInAppBillingService lookupByStubAsInterface(IBinder binder) {
                 return nativeInAppBillingService;
@@ -116,7 +115,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         requestConnect();
 
-        verify(androidApplication).bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE));
+        verify(applicationProxy).bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE));
     }
 
     @Test
@@ -186,7 +185,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
 
-        verify(androidApplication).startIntentSenderForResult(isA(IntentSender.class),
+        verify(applicationProxy).startIntentSenderForResult(isA(IntentSender.class),
                 eq(ACTIVITY_REQUEST_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
     }
 
@@ -200,7 +199,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
 
-        verify(androidApplication).unbindService(isA(ServiceConnection.class));
+        verify(applicationProxy).unbindService(isA(ServiceConnection.class));
 
         verifyAndroidApplicationBindService(2);
 
@@ -221,7 +220,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         verify(purchaseRequestCallback).purchaseError(isA(GdxPayException.class));
 
-        verify(androidApplication).unbindService(isA(ServiceConnection.class));
+        verify(applicationProxy).unbindService(isA(ServiceConnection.class));
 
         verifyAndroidApplicationBindService(2);
     }
@@ -239,12 +238,12 @@ public class V3GoogleInAppBillingServiceTest {
 
         whenGetBuyIntentForIdentifierReturn(offer.getIdentifier(), buyIntentResponseOk());
 
-        doThrow(new IntentSender.SendIntentException("Intent cancelled")).when(androidApplication)
+        doThrow(new IntentSender.SendIntentException("Intent cancelled")).when(applicationProxy)
                 .startIntentSenderForResult(isA(IntentSender.class),
                         eq(ACTIVITY_REQUEST_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
         v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
 
-        verify(androidApplication).startIntentSenderForResult(isA(IntentSender.class),
+        verify(applicationProxy).startIntentSenderForResult(isA(IntentSender.class),
                 eq(ACTIVITY_REQUEST_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
 
         verify(purchaseRequestCallback).purchaseError(isA(GdxPayException.class));
@@ -372,8 +371,8 @@ public class V3GoogleInAppBillingServiceTest {
 
         v3InAppbillingService.disconnect();
 
-        verify(androidApplication).removeAndroidEventListener(isA(AndroidEventListener.class));
-        verify(androidApplication).unbindService(connection);
+        verify(applicationProxy).removeAndroidEventListener(isA(AndroidEventListener.class));
+        verify(applicationProxy).unbindService(connection);
 
         assertFalse(v3InAppbillingService.isListeningForConnections());
         assertFalse(v3InAppbillingService.isConnected());
@@ -397,11 +396,11 @@ public class V3GoogleInAppBillingServiceTest {
     public void disconnectShouldNotCrashWhenUnBindThrowsException() throws Exception {
         ServiceConnection serviceConnection = bindAndFetchNewConnection();
 
-        doThrow(new IllegalArgumentException("Service not registered")).when(androidApplication).unbindService(serviceConnection);
+        doThrow(new IllegalArgumentException("Service not registered")).when(applicationProxy).unbindService(serviceConnection);
 
         v3InAppbillingService.disconnect();
 
-        verify(androidApplication).unbindService(serviceConnection);
+        verify(applicationProxy).unbindService(serviceConnection);
     }
 
     private void whenGetPurchasesRequestThrow(Exception exception) {
@@ -422,7 +421,7 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     private AndroidEventListener captureAndroidEventListener() {
-        verify(androidApplication).addAndroidEventListener(androidEventListenerArgumentCaptor.capture());
+        verify(applicationProxy).addAndroidEventListener(androidEventListenerArgumentCaptor.capture());
         return androidEventListenerArgumentCaptor.getValue();
     }
 
@@ -473,18 +472,18 @@ public class V3GoogleInAppBillingServiceTest {
     }
 
     private void verifyAndroidApplicationBindService(int times) {
-        verify(androidApplication, times(times)).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
+        verify(applicationProxy, times(times)).bindService(isA(Intent.class), serviceConnectionArgumentCaptor.capture(), eq(Context.BIND_AUTO_CREATE));
     }
 
     private void whenActivityBindThrow(SecurityException exception) {
-        when(androidApplication.bindService(isA(Intent.class), isA(ServiceConnection.class),
+        when(applicationProxy.bindService(isA(Intent.class), isA(ServiceConnection.class),
                 eq(Context.BIND_AUTO_CREATE)))
                 .thenThrow(exception);
     }
 
 
     private void whenActivityBindReturn(boolean returnValue) {
-        when(androidApplication.bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE))).thenReturn(returnValue);
+        when(applicationProxy.bindService(isA(Intent.class), isA(ServiceConnection.class), eq(Context.BIND_AUTO_CREATE))).thenReturn(returnValue);
     }
 
     private void requestConnect() {
