@@ -71,6 +71,7 @@ core project as follows.
 // Disposes static instances in case JVM is re-used on restarts
 PurchaseSystem.onAppRestarted();
 
+//If gdx-pay is called too early, a manager may not be registered which would be ONE of the reasons for hasManager to return false
 if (PurchaseSystem.hasManager()) {
     
 
