@@ -83,7 +83,7 @@ if (PurchaseSystem.hasManager()) {
   ...
   //add any stores you are planning on using (Note, IOS_APPLE doesn't actually have an encoded key so pass any string as the second parameter)
   config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE, "<Google key>");
-  ...
+  
   config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, new Object[] { 
     OUYA_DEVELOPER_ID, 
     KEYPATH 
