@@ -63,7 +63,7 @@ In your **GWT project** you use:
 * [gdx-pay-gwt-googlewallet.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-gwt-googlewallet/0.10.1/gdx-pay-gwt-googlewallet/0.10.1/library.jar) (to support Google Wallet): *needs implementation/volunteers wanted!*
 
 In any case, if the correct jar files are place, all you need is to initialize the purchase system in your 
-core project as follows without bothering making any code changes. 
+core project as follows.
 
 
 ```
@@ -76,9 +76,11 @@ if (PurchaseSystem.hasManager()) {
 
   // purchase system is ready to start. Let's initialize our product list etc...
   PurchaseManagerConfig config = new PurchaseManagerConfig();
-  config.addOffer(...)
-  config.addOffer(...)
+  //add items that can be purchased in the store, they must be listed before being purchased.
+  config.addOffer(new Offer().setType(OfferType.ENTITLEMENT).setIdentifier("ExamplePurchase"));
+  config.addOffer(new Offer().setType(OfferType.CONSUMABLE).setIdentifier("ExampleConsumablePurchase"));
   ...
+  //add any stores you are planning on using (Note, IOS_APPLE doesn't actually have an encoded key so pass any string as the second parameter)
   config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE, "<Google key>");
   ...
   config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, new Object[] { 
@@ -90,7 +92,8 @@ if (PurchaseSystem.hasManager()) {
   // let's start the purchase system...
   PurchaseSystem.install(new PurchaseObserver() {         
    ...
-  }
+   //implement all needed methods.  Check for purchases in handleRestore and handlePurchase using the transactions argument. // e.g:  if(transactions[i].getIdentifier().equals("ExamplePurchase"))
+  }, config);
   ...
   
   // to make a purchase (results are reported to the observer)
@@ -108,10 +111,12 @@ if (PurchaseSystem.hasManager()) {
 ...
 ```
 
-`(*)` IMPORTANT: `PurchaseSystem.restore()` should *not be called directly* by your application. Restoring purchases shall only be 
+`(*)` IMPORTANT: `PurchaseSystem.restore()' should *not be called directly* by your application. Restoring purchases shall only be 
 called when a user explicitly requests it. In your application add a [Restore Purchases] button which in turn will call this method.
 This is a requirement by Apple iOS. If you don't provide a button for purchase restores your application will be rejected! You have
 been warned :)
+
+Please note: Gdx-Pay does not work on android emulators at all and will run on apple emulators but they will not be able to complete any purchases.
 
 For keys you have to pass in have a look at [OpenIAB's Sample Configuration](https://github.com/onepf/OpenIAB/blob/dev/samples/trivialdrive/src/main/java/org/onepf/sample/trivialdrive/InAppConfig.java).
 Please note you will not need to pass in any keys for Amazon as it doesn't require them.
