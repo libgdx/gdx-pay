@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -51,7 +52,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     private ServiceConnection billingServiceConnection;
 
     @Nullable
-    private IInAppBillingService billingService;
+    private IInAppBillingService iInAppBillingService;
 
     private final ApplicationProxy applicationProxy;
 
@@ -60,10 +61,11 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     private AsyncExecutor asyncExecutor;
 
     private final String installerPackageName;
-    private final V3GoogleInAppBillingServiceAndroidEventListener androidEventListener = new V3GoogleInAppBillingServiceAndroidEventListener();
 
     private GdxPayAsyncOperationResultListener asyncOperationResultListener;
     private ConnectionListener connectionListener;
+
+    private AndroidEventListenerManager androidEventListenerManager;
 
     public V3GoogleInAppBillingService(ApplicationProxy applicationProxy,
                                        int activityRequestCode,
@@ -75,8 +77,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         this.purchaseResponseActivityResultConverter = resultConverter;
         this.asyncExecutor = asyncExecutor;
         this.installerPackageName = applicationProxy.getPackageName();
+        androidEventListenerManager = new AndroidEventListenerManager(applicationProxy, new V3GoogleInAppBillingServiceAndroidEventListener());
     }
-
 
     @SuppressWarnings("unused") // Used by Fragment applications, but should be tested.
     public V3GoogleInAppBillingService(Activity activity,
@@ -178,7 +180,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     private void reconnectToHandleDeadObjectExceptions() {
-        unbindBillingServiceAndRemoveAndroidEvenetListener();
+        unbindBillingServiceAndRemoveAndroidEventListener();
         bindBillingServiceConnectionToActivity();
     }
 
@@ -267,13 +269,13 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     @Override
     public void disconnect() {
-        billingService = null;
-        unbindBillingServiceAndRemoveAndroidEvenetListener();
+        iInAppBillingService = null;
+        unbindBillingServiceAndRemoveAndroidEventListener();
         connectionListener = null;
     }
 
     boolean isConnected() {
-        return billingService != null;
+        return iInAppBillingService != null;
     }
 
     @Override
@@ -294,10 +296,11 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         }
     }
 
-    private void unbindBillingServiceAndRemoveAndroidEvenetListener() {
+    private void unbindBillingServiceAndRemoveAndroidEventListener() {
         if (billingServiceConnection != null) {
             try {
                 applicationProxy.unbindService(billingServiceConnection);
+                iInAppBillingService = null;
             } catch (Exception e) {
                 // Gdx-Pay uses statics. Android reuses JVM instances sometimes.
                 // When com.badlogic.gdx.pay.PurchaseSystem.onAppRestarted() unbinds, with
@@ -305,7 +308,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
                 Log.e(LOG_TAG, "Unexpected exception in unbindService()", e);
             }
         }
-        applicationProxy.removeAndroidEventListener(androidEventListener);
+        androidEventListenerManager.removeListenerOnce();
     }
 
     private Bundle executeGetSkuDetails(Bundle skusRequest) {
@@ -322,7 +325,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         if (!isConnected()) {
             throw new GdxPayException(ERROR_NOT_CONNECTED_TO_GOOGLE_IAB);
         }
-        return billingService;
+        return iInAppBillingService;
     }
 
     protected IInAppBillingService lookupByStubAsInterface(IBinder service) {
@@ -334,21 +337,21 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.d(LOG_TAG, "start onServiceConnected(), isConnected() is: " + isConnected());
+            androidEventListenerManager.addListenerOnce();
+
             if (isConnected()) {
                 return;
             }
 
-            billingService = lookupByStubAsInterface(service);
+            iInAppBillingService = lookupByStubAsInterface(service);
 
             connectionListener.connected();
-
-            applicationProxy.addAndroidEventListener(androidEventListener);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            unbindBillingServiceAndRemoveAndroidEvenetListener();
-            billingService = null;
+            unbindBillingServiceAndRemoveAndroidEventListener();
+            iInAppBillingService = null;
             connectionListener.disconnected(new GdxPayException(ERROR_ON_SERVICE_DISCONNECTED_RECEIVED));
         }
     }
@@ -416,7 +419,15 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         }
 
         private int consume(String token) throws RemoteException {
-            return billingService.consumePurchase(BILLING_API_VERSION, installerPackageName, token);
+            // TODO: unit-test this
+            if (iInAppBillingService == null) {
+                String message = "Failed to consume purchase token:" + token + "; iInAppBillingService disconnected.";
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+                    throw new RemoteException(message);
+                }
+                throw new RuntimeException(message);
+            }
+            return iInAppBillingService.consumePurchase(BILLING_API_VERSION, installerPackageName, token);
         }
     }
 }
