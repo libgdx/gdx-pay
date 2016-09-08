@@ -1,11 +1,11 @@
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.14'
+    gradleVersion = '2.14.1'
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
 allprojects {
     group = 'com.badlogicgames.gdxpay'
-    version = '0.10.3'
+    version = '0.10.4-SNAPSHOT'
 }
 
 class Developer {
