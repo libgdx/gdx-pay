@@ -16,8 +16,6 @@ public interface ApplicationProxy {
     void addAndroidEventListener(AndroidEventListener listener);
     void removeAndroidEventListener(AndroidEventListener listener);
 
-    void log(String tag, String message);
-
     void unbindService(ServiceConnection conn);
     boolean bindService(Intent bindBillingServiceIntent,
                         ServiceConnection billingServiceConnection,
@@ -53,12 +51,6 @@ public interface ApplicationProxy {
         public void removeAndroidEventListener(AndroidEventListener listener) {
             application.removeAndroidEventListener(listener);
         }
-
-        @Override
-        public void log(String tag, String message) {
-            application.log(tag, message);
-        }
-
 
         @Override
         public void unbindService(ServiceConnection conn) {
@@ -112,11 +104,6 @@ public interface ApplicationProxy {
         @Override
         public void removeAndroidEventListener(AndroidEventListener listener) {
             application.removeAndroidEventListener(listener);
-        }
-
-        @Override
-        public void log(String tag, String message) {
-            application.log(tag, message);
         }
 
         @Override

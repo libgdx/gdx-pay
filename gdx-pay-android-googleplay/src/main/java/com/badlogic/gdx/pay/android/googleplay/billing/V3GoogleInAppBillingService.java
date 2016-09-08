@@ -144,7 +144,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public void consumePurchase(final Transaction transaction,
                                 final PurchaseObserver observer) {
-        applicationProxy.log("FEO", "consumePurchase: " + transaction);
+        Log.i(LOG_TAG, "consumePurchase: " + transaction);
         new Thread(
                 new PurchaseConsumer(transaction, observer))
                 .start();
@@ -401,7 +401,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         @Override
         public void run() {
             try {
-                applicationProxy.log("FEO", "purchase consumer starting");
+                Log.d(LOG_TAG, "Purchase consumer starting");
                 final int result = consume(transaction.getTransactionData());
                 if (result == 0) {
                     observer.handlePurchase(transaction);
