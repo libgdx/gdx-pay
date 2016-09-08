@@ -9,7 +9,7 @@ import static com.badlogic.gdx.pay.android.googleplay.testdata.ProductIdentifier
 
 public class TransactionObjectMother {
 
-    public static Transaction transactionFullEditionEuroGooglePlay() {
+    public static Transaction transactionFullEditionEuroGooglePlaySandbox() {
         Transaction transaction = new Transaction();
 
         transaction.setPurchaseCostCurrency("EUR");
@@ -17,6 +17,11 @@ public class TransactionObjectMother {
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE);
         transaction.setPurchaseTime(new Date());
         transaction.setIdentifier(PRODUCT_IDENTIFIER_FULL_EDITION);
+        return transaction;
+    }
+
+    public static Transaction transactionFullEditionEuroGooglePlay() {
+        Transaction transaction = transactionFullEditionEuroGooglePlaySandbox();
         transaction.setOrderId("GPA.1234-5678-9012-34567");
         return transaction;
     }

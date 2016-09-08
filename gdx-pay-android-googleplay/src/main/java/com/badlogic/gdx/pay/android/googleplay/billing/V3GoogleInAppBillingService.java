@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -144,10 +143,39 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public void consumePurchase(final Transaction transaction,
                                 final PurchaseObserver observer) {
+        // TODO: unit-test this method.
         Log.i(LOG_TAG, "consumePurchase: " + transaction);
         new Thread(
                 new PurchaseConsumer(transaction, observer))
                 .start();
+    }
+
+    @Override
+    public void cancelTestPurchases() {
+        List<Transaction> purchases = getPurchases();
+
+
+        for(Transaction transaction : purchases) {
+            cancelIfTestPurchase(transaction);
+        }
+    }
+
+    private void cancelIfTestPurchase(Transaction transaction) {
+
+        if (isTestPurchase(transaction)) {
+            try {
+                int result = consumePurchaseToken(transaction.getTransactionData());
+
+                Log.d(LOG_TAG, "cancelTestPurchase " + transaction + " response code: " + result);
+
+            } catch (RemoteException e) {
+                Log.e(LOG_TAG, "Failed to cancel transaction: " + transaction, e);
+            }
+        }
+    }
+
+    private boolean isTestPurchase(Transaction transaction) {
+        return  transaction.getOrderId() == null || transaction.getOrderId().length() == 0;
     }
 
     private void internalStartPurchaseRequest(String productId, PurchaseRequestCallback listener, boolean retryOnError) {
@@ -286,7 +314,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public List<Transaction> getPurchases() {
         try {
-            Bundle purchases = billingService().getPurchases(BILLING_API_VERSION, installerPackageName, V3GoogleInAppBillingService.PURCHASE_TYPE_IN_APP, null);
+            Bundle purchases = billingService().getPurchases(BILLING_API_VERSION, installerPackageName, PURCHASE_TYPE_IN_APP, null);
 
             return convertPurchasesResponseToTransactions(purchases);
 
@@ -402,7 +430,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         public void run() {
             try {
                 Log.d(LOG_TAG, "Purchase consumer starting");
-                final int result = consume(transaction.getTransactionData());
+                final int result = consumePurchaseToken(transaction.getTransactionData());
                 if (result == 0) {
                     observer.handlePurchase(transaction);
                 } else {
@@ -421,17 +449,9 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
                 });
             }
         }
+    }
 
-        private int consume(String token) throws RemoteException {
-            // TODO: unit-test this
-            if (iInAppBillingService == null) {
-                String message = "Failed to consume purchase token: " + token + "; iInAppBillingService disconnected.";
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
-                    throw new RemoteException(message);
-                }
-                throw new RuntimeException(message);
-            }
-            return iInAppBillingService.consumePurchase(BILLING_API_VERSION, installerPackageName, token);
-        }
+    private int consumePurchaseToken(String token) throws RemoteException {
+        return billingService().consumePurchase(BILLING_API_VERSION, installerPackageName, token);
     }
 }

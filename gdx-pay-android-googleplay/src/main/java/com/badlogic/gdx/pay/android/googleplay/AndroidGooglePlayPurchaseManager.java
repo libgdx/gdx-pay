@@ -28,6 +28,7 @@ import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.OfferType;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
+import com.badlogic.gdx.pay.PurchaseManagerTestSupport;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.PurchaseSystem;
 import com.badlogic.gdx.pay.Transaction;
@@ -51,9 +52,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author noblemaster
  */
-public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
+public class AndroidGooglePlayPurchaseManager implements PurchaseManager, PurchaseManagerTestSupport {
 
-    public static final String PURCHASE_TYPE_IN_APP = "inapp";
     public static final String LOG_TAG = "GdxPay/AndroidPlay";
 
     public static final String GOOGLE_MARKET_NAME = "com.google.market";
@@ -312,5 +312,8 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         }
     }
 
-
+    @Override
+    public void cancelTestPurchases() {
+        googleInAppBillingService.cancelTestPurchases();
+    }
 }

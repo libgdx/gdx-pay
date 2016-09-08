@@ -33,7 +33,6 @@ import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseM
 import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
-import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferConsumbableProduct;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferSubscriptionProduct;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PACKAGE_NAME_GOOD;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
@@ -94,6 +93,14 @@ public class AndroidGooglePlayPurchaseManagerTest {
             }
         };
         when(application.getPackageName()).thenReturn(PACKAGE_NAME_GOOD);
+    }
+
+    @Test
+    public void cancelTestPurchasesDelegatesToBillingService() throws Exception {
+
+        purchaseManager.cancelTestPurchases();
+
+        verify(googleInAppBillingService).cancelTestPurchases();
     }
 
     @Test

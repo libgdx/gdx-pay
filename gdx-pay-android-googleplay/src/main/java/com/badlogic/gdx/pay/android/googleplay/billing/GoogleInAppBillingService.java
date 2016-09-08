@@ -17,6 +17,8 @@ public interface GoogleInAppBillingService {
     void startPurchaseRequest(String productId, PurchaseRequestCallback listener);
     void consumePurchase(Transaction transaction, PurchaseObserver observer);
 
+    void cancelTestPurchases();
+
     void disconnect();
 
     boolean isListeningForConnections();

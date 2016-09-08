@@ -18,6 +18,7 @@ import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.RES
 import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_OK;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PACKAGE_NAME_GOOD;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlay;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.TransactionObjectMother.transactionFullEditionEuroGooglePlaySandbox;
 
 public class GetPurchasesResponseObjectMother {
 
@@ -27,6 +28,16 @@ public class GetPurchasesResponseObjectMother {
         bundle.putInt(RESPONSE_CODE, BILLING_RESPONSE_RESULT_OK.getCode());
 
         bundle.putStringArrayList(INAPP_PURCHASE_DATA_LIST, makeStringArrayListForTransaction(transactionFullEditionEuroGooglePlay()));
+
+        return bundle;
+    }
+
+    public static Bundle purchasesResponseOneTransactionFullEditionSandboxOrder() {
+        Bundle bundle = new Bundle();
+
+        bundle.putInt(RESPONSE_CODE, BILLING_RESPONSE_RESULT_OK.getCode());
+
+        bundle.putStringArrayList(INAPP_PURCHASE_DATA_LIST, makeStringArrayListForTransaction(transactionFullEditionEuroGooglePlaySandbox()));
 
         return bundle;
     }

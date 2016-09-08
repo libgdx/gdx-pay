@@ -123,6 +123,12 @@ Please note you will not need to pass in any keys for Amazon as it doesn't requi
 Here is a user-guide in the wiki on how to implement gdx-pay in your libgdx project with using platform resolvers: 
  [Integration-example-with-resolvers](https://github.com/libgdx/gdx-pay/wiki/Integration-example-with-resolvers)
 
+The gdx-pay-android-googleplay implementation supports cancellation of test purchases:
+
+    PurchaseManager mananager = PurchaseSystem.getManager();
+    if (manager instanceof PurchaseManagerTestSupport) {
+        ((PurchaseManagerTestSupport) manager).cancelTestPurchases();
+    }
 
 #### Server-Side API (Optional)
 
