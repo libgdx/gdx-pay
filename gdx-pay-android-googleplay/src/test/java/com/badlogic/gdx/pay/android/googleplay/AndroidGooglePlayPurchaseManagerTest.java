@@ -13,7 +13,6 @@ import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestCallback;
-import com.badlogic.gdx.utils.Logger;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,9 +55,6 @@ public class AndroidGooglePlayPurchaseManagerTest {
     AndroidApplication application;
 
     @Mock
-    Logger logger;
-
-    @Mock
     PurchaseObserver purchaseObserver;
 
     @Captor
@@ -97,8 +93,6 @@ public class AndroidGooglePlayPurchaseManagerTest {
                 runAsyncCalled = true;
             }
         };
-        purchaseManager.logger = logger;
-
         when(application.getPackageName()).thenReturn(PACKAGE_NAME_GOOD);
     }
 

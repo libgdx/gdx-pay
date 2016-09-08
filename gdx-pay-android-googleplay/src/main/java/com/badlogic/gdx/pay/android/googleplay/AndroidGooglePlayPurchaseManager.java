@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 See AUTHORS file.
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ package com.badlogic.gdx.pay.android.googleplay;
 import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidFragmentApplication;
@@ -39,7 +40,6 @@ import com.badlogic.gdx.pay.android.googleplay.billing.NewThreadSleepAsyncExecut
 import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,8 +61,6 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     private final GoogleInAppBillingService googleInAppBillingService;
 
-    Logger logger = new Logger(LOG_TAG);
-
     private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
     private PurchaseObserver observer;
     private PurchaseManagerConfig purchaseManagerConfig;
@@ -74,7 +72,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     @SuppressWarnings("unused") // Unit tested with reflection. (as in IAP.java)
     public AndroidGooglePlayPurchaseManager(Activity activity, int activityRequestCode) {
-        if (!(activity instanceof  AndroidApplication)) {
+        if (!(activity instanceof AndroidApplication)) {
             throw new IllegalArgumentException("Bootstrapping gdx-pay only supported with AndroidApplication activity.");
         }
         AndroidApplication application = (AndroidApplication) activity;
@@ -123,7 +121,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
     }
 
     private void assertConfigSupported(PurchaseManagerConfig purchaseManagerConfig) {
-        for(int i=0; i < purchaseManagerConfig.getOfferCount(); i++) {
+        for (int i = 0; i < purchaseManagerConfig.getOfferCount(); i++) {
             Offer offer = purchaseManagerConfig.getOffer(i);
             if (offer.getType() == OfferType.SUBSCRIPTION) {
                 throw new IllegalArgumentException("Unsupported offer: " + offer);
@@ -157,7 +155,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         new Thread(runnable).start();
     }
 
-    private void loadSkusAndFillPurchaseInformation()  {
+    private void loadSkusAndFillPurchaseInformation() {
         List<String> productIds = productIdStringList();
 
         Map<String, Information> skuDetails = googleInAppBillingService.getProductsDetails(productIds);
@@ -210,7 +208,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
                             break;
                         default:
                             String error = "Unsupported OfferType=" + getOfferType(identifier)
-                                   + " for identifier=" + identifier;
+                                    + " for identifier=" + identifier;
                             throw new GdxPayException(error);
                     }
                 }
@@ -262,7 +260,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
             if (observer != null) {
                 observer.handleRestore(entitlements.toArray());
             }
-        } catch(GdxPayException e) {
+        } catch (GdxPayException e) {
             if (observer != null) {
                 observer.handleRestoreError(e);
             }
@@ -301,7 +299,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
                     }
                 } catch (Exception e) {
                     // TODO: this situation not yet unit-tested.
-                    logger.error("Failed to load skus in onServiceConnected()", e);
+                    Log.e(LOG_TAG, "Failed to load skus in onServiceConnected()", e);
                 }
                 observer.handleInstall();
             }
