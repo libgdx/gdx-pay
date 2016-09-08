@@ -21,9 +21,9 @@
 * Verify purchase authenticity (using the Google license Key)
 * Handle purchase non-consumable product
 * Support working with AndroidFragmentApplication
-* Handle purchase consumable product
+* DONE: Handle purchase consumable product
 * Handle purchase subscription
-* Set up CI (e.g. travis ci)
+* DONE: Set up CI (e.g. travis ci)
 * update root README.md (update versions)
 * Check for TODO's
 * Move testdata (objectmothers) to a common place (gdx-pay-testdata?)

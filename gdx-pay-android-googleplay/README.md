@@ -13,8 +13,7 @@ Handles purchases and restores for non-consumable products.
 It implements only features the users have needed so far. The following features are not yet implemented:
 
 * No support for more than 700 purchases per user per app: we do not yet support INAPP_CONTINUATION_TOKEN	
-* No support for consumables and subscriptions (only supports non-consumable products currently).
-* No support for Libgdx applications that use AndroidFragmentApplication (only activity AndroidApplication is supported yet).
+* No support for subscriptions (only supports non-consumable and consumable products currently).
 
 More details on [Status page](STATUS.md) 
 
