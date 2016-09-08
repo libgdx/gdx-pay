@@ -95,6 +95,7 @@ public class V3GoogleInAppBillingServiceTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+    private AndroidEventListener androidEventListener;
 
     @Before
     public void setUp() throws Exception {
@@ -106,6 +107,13 @@ public class V3GoogleInAppBillingServiceTest {
                 return nativeInAppBillingService;
             }
         };
+
+        androidEventListener = captureAndroidEventListener();
+    }
+
+    private AndroidEventListener captureAndroidEventListener() {
+        verify(applicationProxy).addAndroidEventListener(androidEventListenerArgumentCaptor.capture());
+        return androidEventListenerArgumentCaptor.getValue();
     }
 
     @Test
@@ -255,14 +263,12 @@ public class V3GoogleInAppBillingServiceTest {
 
         bindConnectAndStartPurchaseRequest(offer);
 
-        AndroidEventListener eventListener = captureAndroidEventListener();
-
         whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
 
         when(purchaseResponseActivityResultConverter.convertToTransaction(isA(Intent.class)))
                 .thenReturn(transactionFullEditionEuroGooglePlay());
 
-        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_OK, activityResultPurchaseFullEditionSuccess());
+        androidEventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_OK, activityResultPurchaseFullEditionSuccess());
 
         verify(purchaseRequestCallback).purchaseSuccess(isA(Transaction.class));
     }
@@ -271,12 +277,10 @@ public class V3GoogleInAppBillingServiceTest {
     public void shouldCallPurchaseErrorIfConvertingIntentDataToTransactionFails() throws Exception {
         bindConnectAndStartPurchaseRequest(offerFullEditionEntitlement());
 
-        AndroidEventListener eventListener = captureAndroidEventListener();
-
         when(purchaseResponseActivityResultConverter.convertToTransaction(isA(Intent.class)))
                 .thenThrow(new GdxPayException("Exception parsing Json"));
 
-        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_OK, activityResultPurchaseFullEditionSuccess());
+        androidEventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_OK, activityResultPurchaseFullEditionSuccess());
 
         verify(purchaseRequestCallback).purchaseError(isA(GdxPayException.class));
     }
@@ -286,9 +290,7 @@ public class V3GoogleInAppBillingServiceTest {
     public void shouldCallPurchaseErrorIfResultIsError() throws Exception {
         bindConnectAndStartPurchaseRequest(offerFullEditionEntitlement());
 
-        AndroidEventListener eventListener = captureAndroidEventListener();
-
-        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE.getCode(), activityResultPurchaseFullEditionSuccess());
+        androidEventListener.onActivityResult(ACTIVITY_REQUEST_CODE, BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE.getCode(), activityResultPurchaseFullEditionSuccess());
 
         verify(purchaseRequestCallback).purchaseError(isA(GdxPayException.class));
 
@@ -301,14 +303,12 @@ public class V3GoogleInAppBillingServiceTest {
 
         bindConnectAndStartPurchaseRequest(offer);
 
-        AndroidEventListener eventListener = captureAndroidEventListener();
-
         whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
 
         when(purchaseResponseActivityResultConverter.convertToTransaction(isA(Intent.class)))
                 .thenReturn(transactionFullEditionEuroGooglePlay());
 
-        eventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_CANCELED, new Intent());
+        androidEventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_CANCELED, new Intent());
 
         verify(purchaseRequestCallback).purchaseCanceled();
     }
@@ -362,7 +362,6 @@ public class V3GoogleInAppBillingServiceTest {
         verify(connectionListener, times(1)).connected();
     }
 
-
     @Test
     public void disconnectShouldDisconnectFromActivity() throws Exception {
         ServiceConnection connection = bindAndFetchNewConnection();
@@ -371,7 +370,6 @@ public class V3GoogleInAppBillingServiceTest {
 
         v3InAppbillingService.disconnect();
 
-        verify(applicationProxy).removeAndroidEventListener(isA(AndroidEventListener.class));
         verify(applicationProxy).unbindService(connection);
 
         assertFalse(v3InAppbillingService.isListeningForConnections());
@@ -390,6 +388,13 @@ public class V3GoogleInAppBillingServiceTest {
         int actualDelta= v3InAppbillingService.deltaInSeconds(System.currentTimeMillis() - 5_001);
 
         assertEquals(5, actualDelta);
+    }
+
+    @Test
+    public void disposeShouldRemoveAndroidListener() throws Exception {
+        v3InAppbillingService.dispose();
+
+        verify(applicationProxy).removeAndroidEventListener(androidEventListener);
     }
 
     @Test
@@ -418,11 +423,6 @@ public class V3GoogleInAppBillingServiceTest {
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private AndroidEventListener captureAndroidEventListener() {
-        verify(applicationProxy).addAndroidEventListener(androidEventListenerArgumentCaptor.capture());
-        return androidEventListenerArgumentCaptor.getValue();
     }
 
     private void bindConnectAndStartPurchaseRequest(Offer offer) throws android.os.RemoteException {

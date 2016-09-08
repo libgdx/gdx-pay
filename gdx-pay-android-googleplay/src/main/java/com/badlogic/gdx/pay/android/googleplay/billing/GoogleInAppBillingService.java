@@ -23,6 +23,8 @@ public interface GoogleInAppBillingService {
 
     List<Transaction> getPurchases();
 
+    void dispose();
+
     interface ConnectionListener {
         void connected();
 

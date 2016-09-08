@@ -164,6 +164,7 @@ method in that fail if you want to run/test it :)
 ### Release History
 
 Release history for major milestones (available via Maven):
+* (in progress) 0.10.3: Bugfix release for issue #118 
 * Version 0.10.2: Bugfix release for issue #117
 * Version 0.10.1: Bugfix release for issue #113
 * Version 0.10.0: Bugfix release for issue #110

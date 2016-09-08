@@ -64,8 +64,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
     private GdxPayAsyncOperationResultListener asyncOperationResultListener;
     private ConnectionListener connectionListener;
-
-    private AndroidEventListenerManager androidEventListenerManager;
+    private V3GoogleInAppBillingServiceAndroidEventListener androidEventListener;
 
     public V3GoogleInAppBillingService(ApplicationProxy applicationProxy,
                                        int activityRequestCode,
@@ -77,7 +76,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         this.purchaseResponseActivityResultConverter = resultConverter;
         this.asyncExecutor = asyncExecutor;
         this.installerPackageName = applicationProxy.getPackageName();
-        androidEventListenerManager = new AndroidEventListenerManager(applicationProxy, new V3GoogleInAppBillingServiceAndroidEventListener());
+        androidEventListener = new V3GoogleInAppBillingServiceAndroidEventListener();
+        applicationProxy.addAndroidEventListener(androidEventListener);
     }
 
     @SuppressWarnings("unused") // Used by Fragment applications, but should be tested.
@@ -180,7 +180,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     private void reconnectToHandleDeadObjectExceptions() {
-        unbindBillingServiceAndRemoveAndroidEventListener();
+        unbindBillingServiceConnection();
         bindBillingServiceConnectionToActivity();
     }
 
@@ -270,7 +270,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public void disconnect() {
         iInAppBillingService = null;
-        unbindBillingServiceAndRemoveAndroidEventListener();
+        unbindBillingServiceConnection();
         connectionListener = null;
     }
 
@@ -296,7 +296,13 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         }
     }
 
-    private void unbindBillingServiceAndRemoveAndroidEventListener() {
+    @Override
+    public void dispose() {
+        applicationProxy.removeAndroidEventListener(androidEventListener);
+        disconnect();
+    }
+
+    private void unbindBillingServiceConnection() {
         if (billingServiceConnection != null) {
             try {
                 applicationProxy.unbindService(billingServiceConnection);
@@ -308,7 +314,6 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
                 Log.e(LOG_TAG, "Unexpected exception in unbindService()", e);
             }
         }
-        androidEventListenerManager.removeListenerOnce();
     }
 
     private Bundle executeGetSkuDetails(Bundle skusRequest) {
@@ -337,7 +342,6 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.d(LOG_TAG, "start onServiceConnected(), isConnected() is: " + isConnected());
-            androidEventListenerManager.addListenerOnce();
 
             if (isConnected()) {
                 return;
@@ -350,7 +354,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            unbindBillingServiceAndRemoveAndroidEventListener();
+            unbindBillingServiceConnection();
             iInAppBillingService = null;
             connectionListener.disconnected(new GdxPayException(ERROR_ON_SERVICE_DISCONNECTED_RECEIVED));
         }

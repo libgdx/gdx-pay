@@ -198,7 +198,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
         purchaseManager.dispose();
 
-        verify(googleInAppBillingService).disconnect();
+        verify(googleInAppBillingService).dispose();
 
         when(googleInAppBillingService.isListeningForConnections()).thenReturn(false);
 

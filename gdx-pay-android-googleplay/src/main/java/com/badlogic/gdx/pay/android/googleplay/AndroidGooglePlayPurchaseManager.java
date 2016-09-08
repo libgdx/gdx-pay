@@ -103,6 +103,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
         this.purchaseManagerConfig = purchaseManagerConfig;
 
         if (googleInAppBillingService.isListeningForConnections()) {
+            // Supports calling me multiple times.
             // TODO: scenario not unit tested, test this!
             googleInAppBillingService.disconnect();
         }
@@ -183,7 +184,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager {
 
     @Override
     public void dispose() {
-        googleInAppBillingService.disconnect();
+        googleInAppBillingService.dispose();
         clearCaches();
         observer = null;
     }
