@@ -425,7 +425,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         private int consume(String token) throws RemoteException {
             // TODO: unit-test this
             if (iInAppBillingService == null) {
-                String message = "Failed to consume purchase token:" + token + "; iInAppBillingService disconnected.";
+                String message = "Failed to consume purchase token: " + token + "; iInAppBillingService disconnected.";
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
                     throw new RemoteException(message);
                 }
