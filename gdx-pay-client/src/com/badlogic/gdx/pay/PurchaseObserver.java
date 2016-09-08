@@ -26,37 +26,37 @@ public interface PurchaseObserver {
 	 * <p>The in-app purchase service has been connected, and in-app products have been successfully
 	 * retrieved from the in-app payment service. </p>
 	 */
-	public void handleInstall ();
+	void handleInstall();
 
 	/** Called when the installation of the purchase manager failed.
 	 * 
 	 * @param e The error, e.g. network outage, invalid keys, etc. */
-	public void handleInstallError (Throwable e);
+	void handleInstallError(Throwable e);
 
 	/** Called when purchases have been restored. The "valid" parameter will indicate if the purchase was successful (true) or was
 	 * aborted or refunded by the user (false).
 	 * 
 	 * @param transactions The restored purchases. */
-	public void handleRestore (Transaction[] transactions);
+	void handleRestore(Transaction[] transactions);
 
 	/** Called when a restore failed for unexpected reasons.
 	 * 
 	 * @param e The error, e.g. network outage, invalid identifier, etc. */
-	public void handleRestoreError (Throwable e);
+	void handleRestoreError(Throwable e);
 	
 	/** The item that was purchased. The "valid" parameter will indicate if the purchase was successful (true) or was aborted or
 	 * refunded by the user (false).
 	 * 
 	 * @param transaction The purchased item information. */
-	public void handlePurchase (Transaction transaction);
+	void handlePurchase(Transaction transaction);
 
 	/** Called when a purchase failed for unexpected reasons.
 	 * 
 	 * @param e The error, e.g. network outage, invalid identifier, etc. */
-	public void handlePurchaseError (Throwable e);
+	void handlePurchaseError(Throwable e);
 	
 	/** Called when a purchase is canceled by the user.
 	 * 
 	 *  */
-	public void handlePurchaseCanceled ();
+	void handlePurchaseCanceled();
 }
