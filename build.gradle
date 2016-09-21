@@ -15,10 +15,10 @@ class Developer {
 
 ext {
 
-    androidBuildToolsVersion = '24.0.0' // version also referenced in .travis.yml.
-    androidCompileSdkVersion = 23 // version also referenced in .travis.yml.
+    androidBuildToolsVersion = '24.0.2' // version also referenced in .travis.yml.
+    androidCompileSdkVersion = 24 // version also referenced in .travis.yml.
     androidMinimalSdkVersion = 8
-    androidTargetSdkVersion = 23
+    androidTargetSdkVersion = 24
     assertJVersion = '1.7.1'
     gdxVersion = '1.8.0'
     openIabVersion = '0.9.8.7'
@@ -34,7 +34,7 @@ ext {
 
 buildscript {
     ext {
-        androidToolsVersion = '2.1.3'
+        androidToolsVersion = '2.2.0'
         roboVMVersion = '1.12.0'
         unmockVersion = "0.3.6"
     }
