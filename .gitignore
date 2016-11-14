@@ -38,3 +38,6 @@ local.properties
 .loadpath
 .externalToolBuilders/
 *.launch
+**/xcuserdata
+gdx-pay-tests-iosmoe/xcode/native/ios/libgdx.a
+gdx-pay-tests-iosmoe/xcode/native/ios/libObjectAL.a

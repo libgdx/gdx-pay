@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/libgdx/gdx-pay.svg?branch=master)](https://travis-ci.org/libgdx/gdx-pay)
 
 This project aims to provide a **cross-platform API for InApp purchasing**.
-The gdx-pay project is a libGDX extension. Current release version is 0.10.3. Please use at least libGDX v1.9.1 and robovm v1.13.0.
+The gdx-pay project is a libGDX extension. Current release version is 0.10.3. Please use at least libGDX v1.9.1 and robovm v1.13.0. or libGDX v1.9.5 and multi-os-engine v1.2.0.
 
 ### Getting Started
 
@@ -40,10 +40,16 @@ Dependency can be configured using Gradle or by manually downloading the depende
         compile "com.badlogicgames.gdxpay:gdx-pay-android-googleplay:${gdxPayVersion}@aar"
     }
 
-*ios:*
+*ios-robovm:*
     
     dependencies {
         compile "com.badlogicgames.gdxpay:gdx-pay-iosrobovm-apple:$gdxPayVersion"
+    }
+
+*ios-moe:*
+    
+    dependencies {
+        compile "com.badlogicgames.gdxpay:gdx-pay-iosmoe-apple:$gdxPayVersion"
     }
 
 **Configure dependencies manually**
@@ -58,8 +64,11 @@ Dependency can be configured using Gradle or by manually downloading the depende
 * [gdx-pay-android-openiab.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-openiab/0.10.3/gdx-pay-android-openiab-0.10.3-library.jar) (to support GooglePlay, Amazon etc. [This component is deprecated!](gdx-pay-android-openiab/README.md) Do not use if you are using gdx-pay-android-googleplay.jar, they are mutually exclusive.))
 * [gdx-pay-android-ouya.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-ouya/0.10.3/gdx-pay-android-ouya-0.10.3-library.jar) (to support OUYA)
 
-*iOS:*
+*iOS RoboVM:*
 * [gdx-pay-iosrobovm-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-iosrobovm-apple/0.10.3/gdx-pay-iosrobovm-apple-0.10.3-library.jar)
+
+*iOS MOE:*
+* [gdx-pay-iosmoe-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-iosmoe-apple/0.10.3/gdx-pay-iosmoe-apple-0.10.3-library.jar)
 
 *Desktop:*
 * [gdx-pay-desktop-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-desktop-apple/0.10.3/gdx-pay-desktop-apple-0.10.3-library.jar) (to support the Mac App Store): *needs implementation/volunteers wanted!*

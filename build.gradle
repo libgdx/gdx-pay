@@ -21,6 +21,7 @@ ext {
     androidTargetSdkVersion = 24
     assertJVersion = '1.7.1'
     gdxVersion = '1.8.0'
+    moeGdxVersion = '1.9.5-SNAPSHOT'
     openIabVersion = '0.9.8.7'
     robolectricVersion = '4.3_r2-robolectric-0'
     junitVersion = '4.12'
@@ -34,18 +35,22 @@ ext {
 
 buildscript {
     ext {
-        androidToolsVersion = '2.2.0'
+        androidToolsVersion = '2.2.2'
         roboVMVersion = '1.12.0'
+        moeVersion = '1.2.0'
         unmockVersion = "0.3.6"
     }
 
     repositories {
         mavenCentral()
+        mavenLocal()
         jcenter()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:${androidToolsVersion}"
         classpath "org.robovm:robovm-gradle-plugin:${roboVMVersion}"
+        classpath "org.multi-os-engine:moe-gradle:${moeVersion}"
         classpath "de.mobilej.unmock:UnMockPlugin:${unmockVersion}"
     }
 }
@@ -54,10 +59,22 @@ allprojects {
 	  apply plugin: "eclipse"
     
     repositories {
+        mavenLocal()
         mavenCentral()
-        maven {
-            url "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+    }
+}
+
+project(":gdx-pay-tests-iosmoe") {
+    apply plugin: "moe"
+    configurations { natives }
+    dependencies {
+        compile project(':gdx-pay-client')
+        compile project(':gdx-pay-tests')
+        compile project(':gdx-pay-iosmoe-apple')
+        compile "com.badlogicgames.gdx:gdx-backend-moe:$moeGdxVersion"
+        natives "com.badlogicgames.gdx:gdx-platform:$moeGdxVersion:natives-ios"
     }
 }
 

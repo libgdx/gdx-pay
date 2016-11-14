@@ -47,7 +47,7 @@ public final class PurchaseSystem {
             // check if we are on iOS
             if (Gdx.app.getType() == Application.ApplicationType.iOS) {
                 try {
-                    // look for gdx-pay-iosrobovm and if it exists, instantiate it (gdx-pay jars need to be in place)
+                    // look for gdx-pay-iosrobovm or gdx-pay-iosmoe and if it exists, instantiate it (gdx-pay jars need to be in place)
                     Class<?> iapClazz =
                         ClassReflection.forName("com.badlogic.gdx.pay.ios.apple.PurchaseManageriOSApple");
                     PurchaseSystem.setManager((PurchaseManager) ClassReflection.newInstance(iapClazz));

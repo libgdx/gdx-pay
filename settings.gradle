@@ -8,10 +8,13 @@ include ':gdx-pay-android-googleplay'
 include ':gdx-pay-desktop-apple'
 include ':gdx-pay-gwt-googlewallet'
 include ':gdx-pay-iosrobovm-apple'
+include ':gdx-pay-iosmoe-apple'
 include ':gdx-pay-server'
 include ':gdx-pay-tests'
 include ':gdx-pay-tests-android'
 include ':gdx-pay-tests-iosrobovm'
+include ':gdx-pay-tests-iosmoe'
 
 rootProject.name = "gdx-pay-root"
 
+include ':com.badlogic.gdx.pay.tests'
