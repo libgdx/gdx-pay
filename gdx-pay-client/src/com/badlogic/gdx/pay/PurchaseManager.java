@@ -33,7 +33,7 @@ package com.badlogic.gdx.pay;
  * <li>Required for Android: gdx-pay-android.jar (into "android"/libs)
  * <li>Optional for Android: gdx-pay-android-openiab.jar (for Google Play, Amazon etc.)
  * <li>Optional for Android: gdx-pay-android-ouya.jar (for OUYA)
- * <li>Required for iOS: gdx-pay-iosrobovm-apple (for iOS/Apple Store)
+ * <li>Required for iOS: gdx-pay-iosrobovm-apple (for iOS/Apple Store) or gdx-pay-iosmoe-apple (for iOS/Apple Store)
  * <li>...
  * </ul>
  * <p>
