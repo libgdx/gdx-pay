@@ -22,7 +22,6 @@ import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
-import com.badlogic.gdx.pay.server.util.Base64Util;
 
 import java.util.ArrayList;
 import java.util.Date;
