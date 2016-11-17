@@ -22,6 +22,7 @@ import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
+import com.badlogic.gdx.pay.server.util.Base64Util;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,11 +34,18 @@ import apple.foundation.NSArray;
 import apple.foundation.NSBundle;
 import apple.foundation.NSData;
 import apple.foundation.NSDate;
+import apple.foundation.NSDictionary;
 import apple.foundation.NSError;
+import apple.foundation.NSJSONSerialization;
 import apple.foundation.NSLocale;
 import apple.foundation.NSMutableSet;
+import apple.foundation.NSMutableURLRequest;
 import apple.foundation.NSNumberFormatter;
+import apple.foundation.NSOperationQueue;
+import apple.foundation.NSString;
 import apple.foundation.NSURL;
+import apple.foundation.NSURLConnection;
+import apple.foundation.NSURLResponse;
 import apple.foundation.enums.NSNumberFormatterBehavior;
 import apple.foundation.enums.NSNumberFormatterStyle;
 import apple.storekit.SKPayment;
@@ -55,6 +63,8 @@ import apple.storekit.protocol.SKProductsRequestDelegate;
 import apple.storekit.protocol.SKRequestDelegate;
 
 import static apple.foundation.c.Foundation.NSLocaleCurrencyCode;
+import static apple.foundation.enums.Enums.NSASCIIStringEncoding;
+import static apple.foundation.enums.Enums.NSUTF8StringEncoding;
 
 /** The purchase manager implementation for Apple's iOS IAP system.
  * 
@@ -279,18 +289,6 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
         } else {
             transaction.setTransactionData(null);
         }
-        // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9 & hopefully long there after :)
-
-        String transactionDataSignature;
-        try {
-            NSData transactionReceipt = t.transactionReceipt();
-            transactionDataSignature = transactionReceipt.base64EncodedStringWithOptions(0);
-        } catch (Throwable e) {
-            log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears broken (was " +
-                    "deprecated starting iOS 7.0).", e);
-            transactionDataSignature = null;
-        }
-        transaction.setTransactionDataSignature(transactionDataSignature);
 
         // return the transaction
         return transaction;
@@ -458,8 +456,9 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                                         NSData receipt = NSData.dataWithContentsOfURL(receiptURL);
                                         String encodedReceipt = receipt
                                                 .base64EncodedStringWithOptions(0);
+
                                         // FIXME: parse out actual receipt for this IAP purchase:
-                                        //       t.setTransactionDataSignature(encodedReceipt);
+                                        t.setTransactionDataSignature(encodedReceipt);
                                         log(LOGTYPELOG, "Receipt was fetched!");
                                     } else {
                                         log(LOGTYPEERROR, "Receipt fetching failed: Request " +
@@ -491,8 +490,10 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                             request.start();
                         } else {
                             String encodedReceipt = receipt.base64EncodedStringWithOptions(0);
-                            // FIXME: parse out actual receipt for this IAP purchase:        t
-                            // .setTransactionDataSignature(encodedReceipt);
+
+                            // FIXME: parse out actual receipt for this IAP purchase:
+                            t.setTransactionDataSignature(encodedReceipt);
+
 
                             log(LOGTYPELOG, "Transaction was completed: " + getOriginalTxID
                                     (transaction));
@@ -501,6 +502,7 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                             // Finish transaction.
                             ((SKPaymentQueue) SKPaymentQueue.defaultQueue()).finishTransaction
                                     (transaction);
+
                         }
                     } else {
                         // we are done: let's report!
