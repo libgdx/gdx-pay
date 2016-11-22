@@ -25,6 +25,7 @@ import com.badlogic.gdx.pay.Transaction;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -179,24 +180,30 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
     @Override
     public void purchase(String identifier) {
         // Find the SKProduct for this identifier.
-        String identifierForStore = config.getOffer(identifier).getIdentifierForStore
-                (PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
-        SKProduct product = getProductByStoreIdentifier(identifierForStore);
-        if (product == null) {
-            // Product with this identifier not found: load product info first and try to purchase again
-            log(LOGTYPELOG, "Requesting product info for " + identifierForStore);
-            NSMutableSet<String> identifierForStoreSet = (NSMutableSet<String>) NSMutableSet
-                    .alloc().initWithCapacity(1);
-            identifierForStoreSet.addObject(identifierForStore);
-            productsRequest = SKProductsRequest.alloc().initWithProductIdentifiers
-                    (identifierForStoreSet);
-            productsRequest.setDelegate(new AppleProductsDelegatePurchase());
-            productsRequest.start();
+        Offer offer = config.getOffer(identifier);
+        if (offer == null) {
+            log(LOGTYPEERROR, "Invalid product identifier, " + identifier);
+            observer.handlePurchaseError(new RuntimeException("Invalid product identifier, " + identifier));
         } else {
-            // Create a SKPayment from the product and start purchase flow
-            log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
-            SKPayment payment = SKPayment.paymentWithProduct(product);
-            ((SKPaymentQueue) SKPaymentQueue.defaultQueue()).addPayment(payment);
+            String identifierForStore = offer.getIdentifierForStore
+                    (PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
+            SKProduct product = getProductByStoreIdentifier(identifierForStore);
+            if (product == null) {
+                // Product with this identifier not found: load product info first and try to purchase again
+                log(LOGTYPELOG, "Requesting product info for " + identifierForStore);
+                NSMutableSet<String> identifierForStoreSet = (NSMutableSet<String>) NSMutableSet
+                        .alloc().initWithCapacity(1);
+                identifierForStoreSet.addObject(identifierForStore);
+                productsRequest = SKProductsRequest.alloc().initWithProductIdentifiers
+                        (identifierForStoreSet);
+                productsRequest.setDelegate(new AppleProductsDelegatePurchase());
+                productsRequest.start();
+            } else {
+                // Create a SKPayment from the product and start purchase flow
+                log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
+                SKPayment payment = SKPayment.paymentWithProduct(product);
+                ((SKPaymentQueue) SKPaymentQueue.defaultQueue()).addPayment(payment);
+            }
         }
     }
 
@@ -339,7 +346,24 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                                                       SKProductsResponse response) {
             // Received the registered products from AppStore.
             products = response.products();
-            log(LOGTYPELOG, "Products successfully received!");
+            log(LOGTYPELOG, products.size() + " products successfully received");
+
+            // Parse valid products
+            if (products != null && !products.isEmpty()) {
+                Iterator<? extends SKProduct> it = products.iterator();
+                while (it.hasNext()) {
+                    log(LOGTYPELOG, it.next().productIdentifier());
+                }
+            }
+
+            // Parse invalid products
+            NSArray<String> invalids = response.invalidProductIdentifiers();
+            if (invalids != null && !invalids.isEmpty()) {
+                Iterator<String> it = invalids.iterator();
+                while (it.hasNext()) {
+                    log(LOGTYPEERROR, "Invalid product received, " + it.next());
+                }
+            }
 
             final SKPaymentQueue defaultQueue = (SKPaymentQueue) SKPaymentQueue.defaultQueue();
 
