@@ -37,8 +37,10 @@ import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPO
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.BILLING_API_VERSION;
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.DEFAULT_DEVELOPER_PAYLOAD;
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.PURCHASE_TYPE_IN_APP;
+import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.PURCHASE_TYPE_SUBSCRIPTION;
 import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.RETRY_PURCHASE_DELAY_IN_MS;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetBuyIntentResponseObjectMother.buyIntentResponseOk;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.GetPurchasesResponseObjectMother.purchasesResponseEmptyResponse;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetPurchasesResponseObjectMother.purchasesResponseOneTransactionFullEdition;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetPurchasesResponseObjectMother.purchasesResponseOneTransactionFullEditionSandboxOrder;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.GetSkuDetailsResponseBundleObjectMother.skuDetailsResponseResultNetworkError;
@@ -121,6 +123,7 @@ public class V3GoogleInAppBillingServiceTest {
         v3InAppbillingService.cancelTestPurchases();
 
         verify(nativeInAppBillingService).getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_IN_APP, null);
+        verify(nativeInAppBillingService).getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_SUBSCRIPTION, null);
 
         verifyNoMoreInteractions(nativeInAppBillingService);
     }
@@ -182,7 +185,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         Offer offer = offerFullEditionEntitlement();
 
-        Map<String, Information> details = v3InAppbillingService.getProductsDetails(singletonList(offer.getIdentifier()));
+        Map<String, Information> details = v3InAppbillingService.getProductsDetails(singletonList(offer.getIdentifier()), PURCHASE_TYPE_IN_APP);
 
         assertEquals(details, Collections.singletonMap(offer.getIdentifier(), informationFullEditionEntitlement()));
     }
@@ -195,14 +198,14 @@ public class V3GoogleInAppBillingServiceTest {
 
         thrown.expect(GdxPayException.class);
 
-        v3InAppbillingService.getProductsDetails(singletonList("TEST"));
+        v3InAppbillingService.getProductsDetails(singletonList("TEST"), PURCHASE_TYPE_IN_APP);
     }
 
     @Test
     public void shouldThrowExceptionOnGetSkuDetailsWhenDisconnected() throws Exception {
         thrown.expect(GdxPayException.class);
 
-        v3InAppbillingService.getProductsDetails(singletonList("TEST"));
+        v3InAppbillingService.getProductsDetails(singletonList("TEST"), PURCHASE_TYPE_IN_APP);
     }
 
     @Test
@@ -213,7 +216,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         whenGetBuyIntentForIdentifierReturn(offer.getIdentifier(), buyIntentResponseOk());
 
-        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
+        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), PURCHASE_TYPE_IN_APP, purchaseRequestCallback);
 
         verify(applicationProxy).startIntentSenderForResult(isA(IntentSender.class),
                 eq(ACTIVITY_REQUEST_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
@@ -227,7 +230,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         whenGetBuyIntentForIdentifierThrow(offer.getIdentifier(), new DeadObjectException("Purchase service died."));
 
-        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
+        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), PURCHASE_TYPE_IN_APP, purchaseRequestCallback);
 
         verify(applicationProxy).unbindService(isA(ServiceConnection.class));
 
@@ -244,7 +247,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         whenGetBuyIntentForIdentifierThrow(offer.getIdentifier(), new DeadObjectException("Purchase service died."));
 
-        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
+        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), PURCHASE_TYPE_IN_APP, purchaseRequestCallback);
 
         verifyAsyncExecutorWasCalledForRetryAndRetryRun();
 
@@ -271,7 +274,7 @@ public class V3GoogleInAppBillingServiceTest {
         doThrow(new IntentSender.SendIntentException("Intent cancelled")).when(applicationProxy)
                 .startIntentSenderForResult(isA(IntentSender.class),
                         eq(ACTIVITY_REQUEST_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
-        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
+        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), PURCHASE_TYPE_IN_APP, purchaseRequestCallback);
 
         verify(applicationProxy).startIntentSenderForResult(isA(IntentSender.class),
                 eq(ACTIVITY_REQUEST_CODE), isA(Intent.class), eq(0), eq(0), eq(0));
@@ -344,6 +347,21 @@ public class V3GoogleInAppBillingServiceTest {
         List<Transaction> transactions = v3InAppbillingService.getPurchases();
 
         verify(nativeInAppBillingService).getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_IN_APP, null);
+
+        assertEquals(1, transactions.size());
+
+        assertEquals(offerFullEditionEntitlement().getIdentifier(), transactions.get(0).getIdentifier());
+    }
+
+    @Test
+    public void getSubscriptionPurchasesWithResultOkShouldReturnPurchaseTransactions() throws Exception {
+        activityBindAndConnect();
+
+        whenGetPurchasesRequestReturn(purchasesResponseOneTransactionFullEdition());
+
+        List<Transaction> transactions = v3InAppbillingService.getPurchases();
+
+        verify(nativeInAppBillingService).getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_SUBSCRIPTION, null);
 
         assertEquals(1, transactions.size());
 
@@ -442,6 +460,7 @@ public class V3GoogleInAppBillingServiceTest {
     private void whenGetPurchasesRequestReturn(Bundle response) {
         try {
             when(nativeInAppBillingService.getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_IN_APP, null)).thenReturn(response);
+            when(nativeInAppBillingService.getPurchases(BILLING_API_VERSION, PACKAGE_NAME_GOOD, PURCHASE_TYPE_SUBSCRIPTION, null)).thenReturn(purchasesResponseEmptyResponse());
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
@@ -453,7 +472,7 @@ public class V3GoogleInAppBillingServiceTest {
 
         whenGetBuyIntentForIdentifierReturn(offer.getIdentifier(), buyIntentResponseOk());
 
-        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), purchaseRequestCallback);
+        v3InAppbillingService.startPurchaseRequest(offer.getIdentifier(), PURCHASE_TYPE_IN_APP, purchaseRequestCallback);
     }
 
     private void whenGetBuyIntentForIdentifierReturn(String productId, Bundle buyIntentResponse) throws android.os.RemoteException {

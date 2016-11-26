@@ -12,9 +12,9 @@ public interface GoogleInAppBillingService {
 
     void requestConnect(ConnectionListener callback);
 
-    Map<String, Information> getProductsDetails(List<String> productIds);
+    Map<String, Information> getProductsDetails(List<String> productIds, String productType);
 
-    void startPurchaseRequest(String productId, PurchaseRequestCallback listener);
+    void startPurchaseRequest(String productId, String type, PurchaseRequestCallback listener);
     void consumePurchase(Transaction transaction, PurchaseObserver observer);
 
     void cancelTestPurchases();

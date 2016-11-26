@@ -24,6 +24,7 @@ import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.ResponseCode;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     public static final int BILLING_API_VERSION = 3;
 
     public static final String PURCHASE_TYPE_IN_APP = "inapp";
+    public static final String PURCHASE_TYPE_SUBSCRIPTION = "subs";
     public static final String ERROR_NOT_CONNECTED_TO_GOOGLE_IAB = "Not connected to Google In-app Billing service";
     public static final String ERROR_ON_SERVICE_DISCONNECTED_RECEIVED = "onServiceDisconnected() received.";
     public static final String DEFAULT_DEVELOPER_PAYLOAD = "JustRandomStringTooHardToRememberTralala";
@@ -126,18 +128,18 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     }
 
     @Override
-    public Map<String, Information> getProductsDetails(List<String> productIds) {
+    public Map<String, Information> getProductsDetails(List<String> productIds, String productType) {
         long startTimeInMs = System.currentTimeMillis();
         try {
-            return fetchSkuDetails(productIds);
+            return fetchSkuDetails(productIds, productType);
         } catch (RuntimeException e) {
             throw new GdxPayException("getProductsDetails(" + productIds + " failed) after " + deltaInSeconds(startTimeInMs) + " seconds", e);
         }
     }
 
     @Override
-    public void startPurchaseRequest(String productId, PurchaseRequestCallback listener) {
-        internalStartPurchaseRequest(productId, listener, true);
+    public void startPurchaseRequest(String productId, String type, PurchaseRequestCallback listener) {
+        internalStartPurchaseRequest(productId, type, listener, true);
     }
 
     @Override
@@ -178,10 +180,10 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         return  transaction.getOrderId() == null || transaction.getOrderId().length() == 0;
     }
 
-    private void internalStartPurchaseRequest(String productId, PurchaseRequestCallback listener, boolean retryOnError) {
+    private void internalStartPurchaseRequest(String productId, String type, PurchaseRequestCallback listener, boolean retryOnError) {
         PendingIntent pendingIntent;
         try {
-            pendingIntent = getBuyIntent(productId);
+            pendingIntent = getBuyIntent(productId, type);
         } catch (RemoteException | RuntimeException e) {
             if (retryOnError) {
                 reconnectToHandleDeadObjectExceptions();
@@ -200,7 +202,7 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                internalStartPurchaseRequest(productId, listener, false);
+                internalStartPurchaseRequest(productId, productId, listener, false);
             }
         };
 
@@ -259,8 +261,8 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         asyncOperationResultListener = gdxPayAsyncListener;
     }
 
-    private PendingIntent getBuyIntent(String productId) throws RemoteException {
-        Bundle intent = billingService().getBuyIntent(BILLING_API_VERSION, installerPackageName, productId, PURCHASE_TYPE_IN_APP, DEFAULT_DEVELOPER_PAYLOAD);
+    private PendingIntent getBuyIntent(String productId, String type) throws RemoteException {
+        Bundle intent = billingService().getBuyIntent(BILLING_API_VERSION, installerPackageName, productId, type, DEFAULT_DEVELOPER_PAYLOAD);
 
         return fetchPendingIntentFromGetBuyIntentResponse(intent);
     }
@@ -283,10 +285,10 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         return pendingIntent;
     }
 
-    private Map<String, Information> fetchSkuDetails(List<String> productIds) {
+    private Map<String, Information> fetchSkuDetails(List<String> productIds, String productType) {
         Bundle skusRequest = convertProductIdsToItemIdList(productIds);
 
-        Bundle skuDetailsResponse = executeGetSkuDetails(skusRequest);
+        Bundle skuDetailsResponse = executeGetSkuDetails(skusRequest, productType);
 
         Map<String, Information> informationMap = new HashMap<>();
 
@@ -314,10 +316,14 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
     @Override
     public List<Transaction> getPurchases() {
         try {
-            Bundle purchases = billingService().getPurchases(BILLING_API_VERSION, installerPackageName, PURCHASE_TYPE_IN_APP, null);
+            Bundle inAppPurchases = billingService().getPurchases(BILLING_API_VERSION, installerPackageName, PURCHASE_TYPE_IN_APP, null);
+            Bundle subscriptions = billingService().getPurchases(BILLING_API_VERSION, installerPackageName, PURCHASE_TYPE_SUBSCRIPTION, null);
 
-            return convertPurchasesResponseToTransactions(purchases);
+            List<Transaction> transactions = new ArrayList<>();
+            transactions.addAll(convertPurchasesResponseToTransactions(inAppPurchases));
+            transactions.addAll(convertPurchasesResponseToTransactions(subscriptions));
 
+            return transactions;
         } catch (RemoteException | RuntimeException e) { // TODO: unit test RuntimeException scenario, e.g. :  java.lang.IllegalArgumentException: Unexpected response code: ResponseCode{code=3, message='Billing API version is not supported for the type requested'}, response: Bundle[{RESPONSE_CODE=3}]
 
             throw new GdxPayException("Unexpected exception in getPurchases()", e);
@@ -344,10 +350,10 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         }
     }
 
-    private Bundle executeGetSkuDetails(Bundle skusRequest) {
+    private Bundle executeGetSkuDetails(Bundle skusRequest, String type) {
         try {
             return billingService().getSkuDetails(BILLING_API_VERSION, installerPackageName,
-                    PURCHASE_TYPE_IN_APP, skusRequest);
+                    type, skusRequest);
         } catch (RemoteException e) {
             // TODO: unit test this.
             throw new GdxPayException("getProductsDetails failed for bundle:" + skusRequest, e);

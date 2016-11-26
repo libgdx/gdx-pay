@@ -39,6 +39,7 @@ import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.PurchaseRequestCallback;
 import com.badlogic.gdx.pay.android.googleplay.billing.NewThreadSleepAsyncExecutor;
 import com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService;
+import com.badlogic.gdx.pay.android.googleplay.billing.converter.OfferToInAppPurchaseConverter;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 import com.badlogic.gdx.utils.Array;
 
@@ -46,6 +47,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.PURCHASE_TYPE_IN_APP;
+import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.PURCHASE_TYPE_SUBSCRIPTION;
 
 /**
  * The purchase manager implementation for Google Play (Android).
@@ -96,7 +100,6 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager, Purcha
 
     @Override
     public void install(final PurchaseObserver observer, final PurchaseManagerConfig purchaseManagerConfig, final boolean autoFetchInformation) {
-        assertConfigSupported(purchaseManagerConfig);
         this.observer = observer;
         this.purchaseManagerConfig = purchaseManagerConfig;
 
@@ -117,16 +120,6 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager, Purcha
                 observer.handleInstallError(new GdxPayException("Failed to bind to service", exception));
             }
         });
-
-    }
-
-    private void assertConfigSupported(PurchaseManagerConfig purchaseManagerConfig) {
-        for (int i = 0; i < purchaseManagerConfig.getOfferCount(); i++) {
-            Offer offer = purchaseManagerConfig.getOffer(i);
-            if (offer.getType() == OfferType.SUBSCRIPTION) {
-                throw new IllegalArgumentException("Unsupported offer: " + offer);
-            }
-        }
     }
 
     /**
@@ -156,23 +149,30 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager, Purcha
     }
 
     private void loadSkusAndFillPurchaseInformation() {
-        List<String> productIds = productIdStringList();
+        List<String> inAppPurchasesIds = new ArrayList<>();
+        List<String> subsPurchasesIds = new ArrayList<>();
 
-        Map<String, Information> skuDetails = googleInAppBillingService.getProductsDetails(productIds);
+        getPurchaseIdsByType(inAppPurchasesIds, subsPurchasesIds);
 
         informationMap.clear();
-        informationMap.putAll(skuDetails);
+        if (!inAppPurchasesIds.isEmpty()) {
+            Map<String, Information> inappSkuDetails = googleInAppBillingService.getProductsDetails(inAppPurchasesIds, PURCHASE_TYPE_IN_APP);
+            informationMap.putAll(inappSkuDetails);
+        }
+        if (!subsPurchasesIds.isEmpty()) {
+            Map<String, Information> subsSkuDetails = googleInAppBillingService.getProductsDetails(subsPurchasesIds, PURCHASE_TYPE_SUBSCRIPTION);
+            informationMap.putAll(subsSkuDetails);
+        }
     }
 
-    private List<String> productIdStringList() {
-        List<String> list = new ArrayList<>();
+    private void getPurchaseIdsByType(List<String> inAppPurchasesIds, List<String> subsPurchasesIds) {
         for (int i = 0; i < purchaseManagerConfig.getOfferCount(); i++) {
             Offer offer = purchaseManagerConfig.getOffer(i);
-
-            list.add(offer.getIdentifier());
+            if (offer.getType().equals(OfferType.SUBSCRIPTION))
+                subsPurchasesIds.add(offer.getIdentifier());
+            else
+                inAppPurchasesIds.add(offer.getIdentifier());
         }
-
-        return list;
     }
 
     @Override
@@ -192,7 +192,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager, Purcha
         assertInstalled();
         final OfferType offerType = getOfferType(identifier);
 
-        googleInAppBillingService.startPurchaseRequest(identifier, new PurchaseRequestCallback() {
+        googleInAppBillingService.startPurchaseRequest(identifier, OfferToInAppPurchaseConverter.convertOfferType(offerType), new PurchaseRequestCallback() {
             @Override
             public void purchaseSuccess(Transaction transaction) {
                 if (observer != null) {
@@ -204,6 +204,7 @@ public class AndroidGooglePlayPurchaseManager implements PurchaseManager, Purcha
                             googleInAppBillingService.consumePurchase(transaction, observer);
                             break;
                         case ENTITLEMENT:
+                        case SUBSCRIPTION:
                             observer.handlePurchase(transaction);
                             break;
                         default:
