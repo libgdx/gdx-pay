@@ -25,6 +25,7 @@ import com.badlogic.gdx.pay.Transaction;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -33,11 +34,18 @@ import apple.foundation.NSArray;
 import apple.foundation.NSBundle;
 import apple.foundation.NSData;
 import apple.foundation.NSDate;
+import apple.foundation.NSDictionary;
 import apple.foundation.NSError;
+import apple.foundation.NSJSONSerialization;
 import apple.foundation.NSLocale;
 import apple.foundation.NSMutableSet;
+import apple.foundation.NSMutableURLRequest;
 import apple.foundation.NSNumberFormatter;
+import apple.foundation.NSOperationQueue;
+import apple.foundation.NSString;
 import apple.foundation.NSURL;
+import apple.foundation.NSURLConnection;
+import apple.foundation.NSURLResponse;
 import apple.foundation.enums.NSNumberFormatterBehavior;
 import apple.foundation.enums.NSNumberFormatterStyle;
 import apple.storekit.SKPayment;
@@ -55,6 +63,8 @@ import apple.storekit.protocol.SKProductsRequestDelegate;
 import apple.storekit.protocol.SKRequestDelegate;
 
 import static apple.foundation.c.Foundation.NSLocaleCurrencyCode;
+import static apple.foundation.enums.Enums.NSASCIIStringEncoding;
+import static apple.foundation.enums.Enums.NSUTF8StringEncoding;
 
 /** The purchase manager implementation for Apple's iOS IAP system.
  * 
@@ -170,24 +180,30 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
     @Override
     public void purchase(String identifier) {
         // Find the SKProduct for this identifier.
-        String identifierForStore = config.getOffer(identifier).getIdentifierForStore
-                (PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
-        SKProduct product = getProductByStoreIdentifier(identifierForStore);
-        if (product == null) {
-            // Product with this identifier not found: load product info first and try to purchase again
-            log(LOGTYPELOG, "Requesting product info for " + identifierForStore);
-            NSMutableSet<String> identifierForStoreSet = (NSMutableSet<String>) NSMutableSet
-                    .alloc().initWithCapacity(1);
-            identifierForStoreSet.addObject(identifierForStore);
-            productsRequest = SKProductsRequest.alloc().initWithProductIdentifiers
-                    (identifierForStoreSet);
-            productsRequest.setDelegate(new AppleProductsDelegatePurchase());
-            productsRequest.start();
+        Offer offer = config.getOffer(identifier);
+        if (offer == null) {
+            log(LOGTYPEERROR, "Invalid product identifier, " + identifier);
+            observer.handlePurchaseError(new RuntimeException("Invalid product identifier, " + identifier));
         } else {
-            // Create a SKPayment from the product and start purchase flow
-            log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
-            SKPayment payment = SKPayment.paymentWithProduct(product);
-            ((SKPaymentQueue) SKPaymentQueue.defaultQueue()).addPayment(payment);
+            String identifierForStore = offer.getIdentifierForStore
+                    (PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
+            SKProduct product = getProductByStoreIdentifier(identifierForStore);
+            if (product == null) {
+                // Product with this identifier not found: load product info first and try to purchase again
+                log(LOGTYPELOG, "Requesting product info for " + identifierForStore);
+                NSMutableSet<String> identifierForStoreSet = (NSMutableSet<String>) NSMutableSet
+                        .alloc().initWithCapacity(1);
+                identifierForStoreSet.addObject(identifierForStore);
+                productsRequest = SKProductsRequest.alloc().initWithProductIdentifiers
+                        (identifierForStoreSet);
+                productsRequest.setDelegate(new AppleProductsDelegatePurchase());
+                productsRequest.start();
+            } else {
+                // Create a SKPayment from the product and start purchase flow
+                log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
+                SKPayment payment = SKPayment.paymentWithProduct(product);
+                ((SKPaymentQueue) SKPaymentQueue.defaultQueue()).addPayment(payment);
+            }
         }
     }
 
@@ -279,18 +295,6 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
         } else {
             transaction.setTransactionData(null);
         }
-        // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9 & hopefully long there after :)
-
-        String transactionDataSignature;
-        try {
-            NSData transactionReceipt = t.transactionReceipt();
-            transactionDataSignature = transactionReceipt.base64EncodedStringWithOptions(0);
-        } catch (Throwable e) {
-            log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears broken (was " +
-                    "deprecated starting iOS 7.0).", e);
-            transactionDataSignature = null;
-        }
-        transaction.setTransactionDataSignature(transactionDataSignature);
 
         // return the transaction
         return transaction;
@@ -342,7 +346,24 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                                                       SKProductsResponse response) {
             // Received the registered products from AppStore.
             products = response.products();
-            log(LOGTYPELOG, "Products successfully received!");
+            log(LOGTYPELOG, products.size() + " products successfully received");
+
+            // Parse valid products
+            if (products != null && !products.isEmpty()) {
+                Iterator<? extends SKProduct> it = products.iterator();
+                while (it.hasNext()) {
+                    log(LOGTYPELOG, it.next().productIdentifier());
+                }
+            }
+
+            // Parse invalid products
+            NSArray<String> invalids = response.invalidProductIdentifiers();
+            if (invalids != null && !invalids.isEmpty()) {
+                Iterator<String> it = invalids.iterator();
+                while (it.hasNext()) {
+                    log(LOGTYPEERROR, "Invalid product received, " + it.next());
+                }
+            }
 
             final SKPaymentQueue defaultQueue = (SKPaymentQueue) SKPaymentQueue.defaultQueue();
 
@@ -458,8 +479,9 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                                         NSData receipt = NSData.dataWithContentsOfURL(receiptURL);
                                         String encodedReceipt = receipt
                                                 .base64EncodedStringWithOptions(0);
+
                                         // FIXME: parse out actual receipt for this IAP purchase:
-                                        //       t.setTransactionDataSignature(encodedReceipt);
+                                        t.setTransactionDataSignature(encodedReceipt);
                                         log(LOGTYPELOG, "Receipt was fetched!");
                                     } else {
                                         log(LOGTYPEERROR, "Receipt fetching failed: Request " +
@@ -491,8 +513,10 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                             request.start();
                         } else {
                             String encodedReceipt = receipt.base64EncodedStringWithOptions(0);
-                            // FIXME: parse out actual receipt for this IAP purchase:        t
-                            // .setTransactionDataSignature(encodedReceipt);
+
+                            // FIXME: parse out actual receipt for this IAP purchase:
+                            t.setTransactionDataSignature(encodedReceipt);
+
 
                             log(LOGTYPELOG, "Transaction was completed: " + getOriginalTxID
                                     (transaction));
@@ -501,6 +525,7 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                             // Finish transaction.
                             ((SKPaymentQueue) SKPaymentQueue.defaultQueue()).finishTransaction
                                     (transaction);
+
                         }
                     } else {
                         // we are done: let's report!
