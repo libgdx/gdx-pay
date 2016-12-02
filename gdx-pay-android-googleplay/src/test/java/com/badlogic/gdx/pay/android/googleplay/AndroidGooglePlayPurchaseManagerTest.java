@@ -30,6 +30,7 @@ import java.util.List;
 
 import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.GOOGLE_MARKET_NAME;
 import static com.badlogic.gdx.pay.android.googleplay.AndroidGooglePlayPurchaseManager.GOOGLE_PLAY_STORE_NAME;
+import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBillingService.PURCHASE_TYPE_IN_APP;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseManagerConfigObjectMother.managerConfigGooglePlayOneOfferBuyFullEditionProduct;
@@ -149,9 +150,8 @@ public class AndroidGooglePlayPurchaseManagerTest {
     }
 
     @Test
-    public void installShouldFailFastWhenRegisteringWithNonEntitlementProduct() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(containsString("Unsupported offer:"));
+    public void requestPurchaseMangerInstallWithSubscriptionProduct() throws Exception {
+
         purchaseManager.install(purchaseObserver, managerConfigGooglePlayOneOfferSubscriptionProduct(), true);
     }
 
@@ -217,7 +217,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
 
         Information actualInformation = purchaseManager.getInformation(identifier);
 
-        verify(googleInAppBillingService).getProductsDetails(singletonList(identifier));
+        verify(googleInAppBillingService).getProductsDetails(singletonList(identifier), PURCHASE_TYPE_IN_APP);
         assertEquals(expectedInformation, actualInformation);
     }
 
@@ -317,13 +317,13 @@ public class AndroidGooglePlayPurchaseManagerTest {
         String productIdentifier = offerFullEditionEntitlement().getIdentifier();
         purchaseManager.purchase(productIdentifier);
 
-        verify(googleInAppBillingService).startPurchaseRequest(Mockito.eq(productIdentifier), purchaseRequestListenerArgumentCaptor.capture());
+        verify(googleInAppBillingService).startPurchaseRequest(Mockito.eq(productIdentifier), Mockito.eq(PURCHASE_TYPE_IN_APP), purchaseRequestListenerArgumentCaptor.capture());
 
         return purchaseRequestListenerArgumentCaptor.getValue();
     }
 
     private void whenGetProductsDetailsReturn(String identifier, Information expectedInformation) {
-        when(googleInAppBillingService.getProductsDetails(singletonList(identifier))).
+        when(googleInAppBillingService.getProductsDetails(singletonList(identifier), PURCHASE_TYPE_IN_APP)).
                 thenReturn(singletonMap(identifier, expectedInformation));
     }
 
@@ -355,7 +355,7 @@ public class AndroidGooglePlayPurchaseManagerTest {
     }
 
     private void verifyBillingGetSkuDetailsCalled() throws android.os.RemoteException {
-        verify(googleInAppBillingService).getProductsDetails(singletonList(offerFullEditionEntitlement().getIdentifier()));
+        verify(googleInAppBillingService).getProductsDetails(singletonList(offerFullEditionEntitlement().getIdentifier()), PURCHASE_TYPE_IN_APP);
     }
 
     private void requestPurchaseMangerInstallWithFullEditionOffer() {

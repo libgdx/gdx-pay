@@ -61,4 +61,14 @@ public class GetPurchasesResponseObjectMother {
 
         return list;
     }
+
+    public static Bundle purchasesResponseEmptyResponse() {
+        Bundle bundle = new Bundle();
+
+        bundle.putInt(RESPONSE_CODE, BILLING_RESPONSE_RESULT_OK.getCode());
+
+        bundle.putStringArrayList(INAPP_PURCHASE_DATA_LIST, new ArrayList<String>());
+
+        return bundle;
+    }
 }
