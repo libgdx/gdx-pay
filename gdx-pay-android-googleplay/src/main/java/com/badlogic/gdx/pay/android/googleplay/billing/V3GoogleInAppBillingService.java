@@ -137,6 +137,9 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
                 currentList = new ArrayList<String>();
             }
         }
+        if (currentList.size() > 0) {
+            result.add(currentList);
+        }
         return result;
     }
 
