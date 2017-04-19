@@ -1,3 +1,4 @@
+
 task copyNatives << {
     file("xcode/native/ios/").mkdirs();
     def LD_FLAGS = "LIBGDX_NATIVES = "
@@ -39,11 +40,13 @@ sourceSets.main.java.srcDirs = [ "src/" ]
 
 moe {
     xcode {
+        project 'xcode/ios-moe.xcodeproj'
         mainTarget 'ios-moe'
-        packageName 'com.badlogic.gdx.pay.tests'
-        deploymentTarget = '9.0'
-        xcodeProjectDirPath 'xcode'
-        generateProject false
+        testTarget 'ios-moe-Test'
+
+        mainScheme 'ios-moe'
+        testScheme 'ios-moe-Test'
+
     }
 }
 
