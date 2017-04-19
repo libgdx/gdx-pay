@@ -127,11 +127,33 @@ public class V3GoogleInAppBillingService implements GoogleInAppBillingService {
         return serviceIntent;
     }
 
+    private List<List<String>> splitList(List<String> input, int maxSize) {
+        List<List<String>> result = new ArrayList<List<String>>();
+        List<String> currentList = new ArrayList<String>();
+        for (String item : input) {
+            currentList.add(item);
+            if (currentList.size() >= maxSize) {
+                result.add(currentList);
+                currentList = new ArrayList<String>();
+            }
+        }
+        if (currentList.size() > 0) {
+            result.add(currentList);
+        }
+        return result;
+    }
+
     @Override
     public Map<String, Information> getProductsDetails(List<String> productIds, String productType) {
         long startTimeInMs = System.currentTimeMillis();
         try {
-            return fetchSkuDetails(productIds, productType);
+            Map<String, Information> result = new HashMap<String, Information>();
+            // max 20 Items
+            List<List<String>> splitProductList = splitList(productIds, 20);
+            for (List<String> splitProductIds : splitProductList) {
+                result.putAll(fetchSkuDetails(splitProductIds, productType));
+            }
+            return result;
         } catch (RuntimeException e) {
             throw new GdxPayException("getProductsDetails(" + productIds + " failed) after " + deltaInSeconds(startTimeInMs) + " seconds", e);
         }
