@@ -14,6 +14,7 @@ import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.ORD
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PACKAGE_NAME;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PRODUCT_ID;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PURCHASE_TIME;
+import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.PURCHASE_TOKEN;
 import static com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants.RESPONSE_CODE;
 import static com.badlogic.gdx.pay.android.googleplay.ResponseCode.BILLING_RESPONSE_RESULT_OK;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.TestConstants.PACKAGE_NAME_GOOD;
@@ -53,6 +54,7 @@ public class GetPurchasesResponseObjectMother {
             jsonObject.put(ORDER_ID, transaction.getOrderId());
             jsonObject.put(PRODUCT_ID, transaction.getIdentifier());
             jsonObject.put(PURCHASE_TIME, System.currentTimeMillis());
+            jsonObject.put(PURCHASE_TOKEN, transaction.getTransactionData());
 
             list.add(jsonObject.toString());
         } catch (JSONException e) {

@@ -17,6 +17,7 @@ public class TransactionObjectMother {
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE);
         transaction.setPurchaseTime(new Date());
         transaction.setIdentifier(PRODUCT_IDENTIFIER_FULL_EDITION);
+        transaction.setTransactionData("minodojglppganfbiedlabed.AO-J1OyNtpooSraUdtKlZ_9gYs0o20ZF_0ryTNACmvaaaG5EwPX0hPruUdGbE3XejoXYCYzJA2xjjAxrDLFhmu9WC4fvTDNL-RDXCWjlHKpzLOigxCr1QhScXR8uXtX8R94iV6MmMHqD");
         return transaction;
     }
 

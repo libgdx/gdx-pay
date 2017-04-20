@@ -28,16 +28,15 @@ configurations {
 }
 
 dependencies {
-    testCompile "junit:junit:${junitVersion}"
-    testCompile "org.mockito:mockito-core:${mockitoVersion}"
-    testCompile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-    testCompile "org.assertj:assertj-core:${assertJVersion}"
-    compile "com.badlogicgames.gdx:gdx-backend-android:${gdxVersion}"
+    testCompile libraries.junit
+    testCompile libraries.mockito_core
+    testCompile libraries.libgdx_platform_natives_desktop
+    testCompile libraries.assertj_core
+    compile libraries.libgdx_backend_android
     compile project(':gdx-pay-client')
-    compile "com.google.code.findbugs:jsr305:${jsr305Version}"
+    compile libraries.jsr305
 
-    // versions >= 24.0.0 do not work with minSdkVersion=8.0
-    compile 'com.android.support:support-v4:23.4.0'
+    compile libraries.support_v4
 }
 
 tasks.withType(Test) {

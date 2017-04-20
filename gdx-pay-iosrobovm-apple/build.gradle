@@ -8,6 +8,6 @@ targetCompatibility = 1.6
 
 dependencies {
     compile project(':gdx-pay-client')
-    compile "org.robovm:robovm-rt:$roboVMVersion"
-    compile "org.robovm:robovm-cocoatouch:$roboVMVersion"
+    compile libraries.robovm_rt
+    compile libraries.robovm_cocoatouch
 }

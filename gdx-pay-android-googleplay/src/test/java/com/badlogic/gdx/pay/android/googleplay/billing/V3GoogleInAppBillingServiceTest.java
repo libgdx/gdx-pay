@@ -330,9 +330,6 @@ public class V3GoogleInAppBillingServiceTest {
 
         whenBillingServiceGetSkuDetailsReturn(skuDetailsResponseResultOkProductFullEditionEntitlement());
 
-        when(purchaseResponseActivityResultConverter.convertToTransaction(isA(Intent.class)))
-                .thenReturn(transactionFullEditionEuroGooglePlay());
-
         androidEventListener.onActivityResult(ACTIVITY_REQUEST_CODE, Activity.RESULT_CANCELED, new Intent());
 
         verify(purchaseRequestCallback).purchaseCanceled();
