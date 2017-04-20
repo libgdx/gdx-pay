@@ -87,6 +87,7 @@ afterEvaluate { project ->
                             developer {
                                 id dev.id
                                 name dev.name
+                                url dev.url
                             }
                         }
                     }
