@@ -34,18 +34,11 @@ import apple.foundation.NSArray;
 import apple.foundation.NSBundle;
 import apple.foundation.NSData;
 import apple.foundation.NSDate;
-import apple.foundation.NSDictionary;
 import apple.foundation.NSError;
-import apple.foundation.NSJSONSerialization;
 import apple.foundation.NSLocale;
 import apple.foundation.NSMutableSet;
-import apple.foundation.NSMutableURLRequest;
 import apple.foundation.NSNumberFormatter;
-import apple.foundation.NSOperationQueue;
-import apple.foundation.NSString;
 import apple.foundation.NSURL;
-import apple.foundation.NSURLConnection;
-import apple.foundation.NSURLResponse;
 import apple.foundation.enums.NSNumberFormatterBehavior;
 import apple.foundation.enums.NSNumberFormatterStyle;
 import apple.storekit.SKPayment;
@@ -63,8 +56,6 @@ import apple.storekit.protocol.SKProductsRequestDelegate;
 import apple.storekit.protocol.SKRequestDelegate;
 
 import static apple.foundation.c.Foundation.NSLocaleCurrencyCode;
-import static apple.foundation.enums.Enums.NSASCIIStringEncoding;
-import static apple.foundation.enums.Enums.NSUTF8StringEncoding;
 
 /** The purchase manager implementation for Apple's iOS IAP system.
  * 
@@ -421,8 +412,14 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                         numberFormatter.setNumberStyle(NSNumberFormatterStyle.CurrencyStyle);
                     }
                     numberFormatter.setLocale(p.priceLocale());
-                    return new Information(p.localizedTitle(), p.localizedDescription(),
-                            numberFormatter.stringFromNumber(p.price()));
+
+                    return Information.newBuilder()
+                            .localName(p.localizedTitle())
+                            .localDescription(p.localizedDescription())
+                            .localPricing(numberFormatter.stringFromNumber(p.price()))
+                            .priceCurrencyCode(p.priceLocale().currencyCode())
+                            .build();
+
                 }
             }
         }
