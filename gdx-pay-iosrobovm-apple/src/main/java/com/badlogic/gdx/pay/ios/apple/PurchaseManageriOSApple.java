@@ -514,8 +514,12 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                         numberFormatter.setNumberStyle(NSNumberFormatterStyle.Currency);
                     }
                     numberFormatter.setLocale(p.getPriceLocale());
-                    return new Information(p.getLocalizedTitle(), p.getLocalizedDescription(),
-                numberFormatter.format(p.getPrice()));
+                    return Information.newBuilder()
+                        .localName(p.getLocalizedTitle())
+                        .localDescription(p.getLocalizedDescription())
+                        .localPricing(numberFormatter.format(p.getPrice()))
+                        .priceCurrencyCode(p.getPriceLocale().getCurrencyCode())
+                        .build();
                 }
             }
         }
