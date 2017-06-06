@@ -11,9 +11,13 @@ import org.json.JSONObject;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.OfferObjectMother.offerFullEditionEntitlement;
 
 public class PurchaseRequestActivityResultObjectMother {
+
+    public static final String INAPP_DATA_SIGNATURE_ACTIVITY_RESULT_SUCCESS = "NowIdeaHowSuchAValueLooksTODOFindRealValue";
+
     public static Intent activityResultPurchaseFullEditionSuccess() {
         Intent intent = new Intent();
         intent.putExtra(GoogleBillingConstants.INAPP_PURCHASE_DATA, makeInAppPurchaseJsonData());
+        intent.putExtra(GoogleBillingConstants.INAPP_DATA_SIGNATURE, INAPP_DATA_SIGNATURE_ACTIVITY_RESULT_SUCCESS);
         return intent;
     }
 

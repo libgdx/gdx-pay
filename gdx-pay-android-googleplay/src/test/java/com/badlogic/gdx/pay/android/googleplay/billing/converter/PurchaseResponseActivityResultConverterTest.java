@@ -8,10 +8,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import static com.badlogic.gdx.pay.android.googleplay.testdata.InformationObjectMother.informationFullEditionEntitlementNoPriceInCents;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.ProductIdentifierObjectMother.PRODUCT_IDENTIFIER_FULL_EDITION;
+import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseRequestActivityResultObjectMother.INAPP_DATA_SIGNATURE_ACTIVITY_RESULT_SUCCESS;
 import static com.badlogic.gdx.pay.android.googleplay.testdata.PurchaseRequestActivityResultObjectMother.activityResultPurchaseFullEditionSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
@@ -37,5 +38,6 @@ public class PurchaseResponseActivityResultConverterTest {
         Transaction transaction = converter.convertToTransaction(activityResultPurchaseFullEditionSuccess());
 
         assertEquals(0, transaction.getPurchaseCost());
+        assertEquals(INAPP_DATA_SIGNATURE_ACTIVITY_RESULT_SUCCESS, transaction.getTransactionDataSignature());
     }
 }

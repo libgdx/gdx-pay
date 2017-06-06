@@ -22,9 +22,12 @@ public class PurchaseResponseActivityResultConverter {
 
     // TODO: throw GdxPayException only from service boundaries.
     public Transaction convertToTransaction(Intent responseData) {
+
         String purchaseDataString = responseData.getStringExtra(GoogleBillingConstants.INAPP_PURCHASE_DATA);
         try {
             Transaction transaction = convertJSONPurchaseToTransaction(purchaseDataString);
+
+            transaction.setTransactionDataSignature(responseData.getStringExtra(GoogleBillingConstants.INAPP_DATA_SIGNATURE));
 
             String productId = transaction.getIdentifier();
 
@@ -36,7 +39,7 @@ public class PurchaseResponseActivityResultConverter {
         }
     }
 
-    protected void setInformationFields(Transaction transaction, String productId) {
+    private void setInformationFields(Transaction transaction, String productId) {
         Information information = purchaseManager.getInformation(productId);
 
         Integer priceInCents = information.getPriceInCents();
