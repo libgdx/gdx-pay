@@ -106,6 +106,7 @@ Dependency can be configured using Gradle or by manually downloading the depende
 -keep class com.amazon.** {*;}
 -keep class com.sec.android.iap.**
 -keep class com.nokia.payment.iap.aidl.**
+-keep class com.badlogic.gdx.pay.android.** { *; }
 -dontwarn org.onepf.oms.appstore.FortumoBillingService
 ```
 
