@@ -1,5 +1,5 @@
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.5'
+    gradleVersion = '3.5.1'
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
@@ -62,9 +62,9 @@ ext {
 
 buildscript {
     ext {
-        androidToolsVersion = '2.3.2'
-        roboVMVersion = '2.3.1'
-        moeVersion = '1.3.6'
+        androidToolsVersion = '2.3.3'
+        roboVMVersion = '2.3.2'
+        moeVersion = '1.3.12'
         unmockVersion = "0.3.6"
     }
 
