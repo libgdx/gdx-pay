@@ -417,7 +417,9 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
                             .localName(p.localizedTitle())
                             .localDescription(p.localizedDescription())
                             .localPricing(numberFormatter.stringFromNumber(p.price()))
-                            .priceCurrencyCode(p.priceLocale().currencyCode())
+
+                            // p.priceLocale().currencyCode() is not supported on iOS 9
+                            .priceCurrencyCode(String.valueOf(p.priceLocale().objectForKey("CurrencyCode")))
                             .build();
 
                 }
