@@ -138,7 +138,11 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     public void dispose () {
         if (appleObserver != null) {
             // Remove and null our apple transaction observer.
-            SKPaymentQueue.getDefaultQueue().removeTransactionObserver(appleObserver);
+
+            SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
+            defaultQueue.removeTransactionObserver(appleObserver);
+            defaultQueue.removeStrongRef(appleObserver);
+
             appleObserver = null;
             productsRequest = null;
             products = null;
@@ -320,6 +324,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             // Create and register our apple transaction observer.
             appleObserver = new AppleTransactionObserver();
             defaultQueue.addTransactionObserver(appleObserver);
+            defaultQueue.addStrongRef(appleObserver);
             log(LOGTYPELOG, "Purchase observer successfully installed!");
 
             // notify of success...
