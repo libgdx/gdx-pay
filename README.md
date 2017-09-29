@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/libgdx/gdx-pay.svg?branch=master)](https://travis-ci.org/libgdx/gdx-pay)
 
 This project aims to provide a **cross-platform API for InApp purchasing**.
-The gdx-pay project is a libGDX extension. Current release version is 0.11.2. Please use at least libGDX v1.9.6, robovm 2.3.0 or multi-os-engine v1.3.6.
+The gdx-pay project is a libGDX extension. Current release version is 0.11.2. Please use at least libGDX v1.9.6, Robovm 2.3.2 or multi-os-engine v1.3.8.
 
 ### Getting Started
 
