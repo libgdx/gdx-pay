@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/libgdx/gdx-pay.svg?branch=master)](https://travis-ci.org/libgdx/gdx-pay)
 [![Maven Central](http://maven-badges.herokuapp.com/maven-central/com.badlogicgames.gdxpay/gdx-pay/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.badlogicgames.gdxpay%22)
-
-
+[![Dependency Status](https://dependencyci.com/github/libgdx/gdx-pay/badge)](https://dependencyci.com/github/libgdx/gdx-pay)
+[![Dependency Status](https://dependencyci.com/github/libgdx/gdx-pay/badge)](https://dependencyci.com/github/libgdx/gdx-pay)
 
 
 This project aims to provide a **cross-platform API for InApp purchasing**.
