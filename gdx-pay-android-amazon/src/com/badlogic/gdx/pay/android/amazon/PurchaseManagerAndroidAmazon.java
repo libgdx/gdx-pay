@@ -16,8 +16,6 @@
 
 package com.badlogic.gdx.pay.android.amazon;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +35,6 @@ import com.amazon.device.iap.model.PurchaseUpdatesResponse;
 import com.amazon.device.iap.model.Receipt;
 import com.amazon.device.iap.model.UserData;
 import com.amazon.device.iap.model.UserDataResponse;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
@@ -103,13 +100,13 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	}
 	
 	private void updateUserData(UserData userData) {
-		this.currentUserId = userData.getUserId();
-		this.currentMarketplace = userData.getMarketplace();
-	}
-	
-	private void clearUserData() {
-		this.currentUserId = null;
-		this.currentMarketplace = null;
+		if (userData == null) {
+			this.currentUserId = null;
+			this.currentMarketplace = null;
+		} else {
+			this.currentUserId = userData.getUserId();
+			this.currentMarketplace = userData.getMarketplace();
+		}
 	}
 
 	@Override
@@ -197,8 +194,8 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	        + ")");
 	        
 		     // convert receipt to transaction
-	        Transaction trans = convertReceiptToTransaction(1, requestId, receipt, userData);	// provides cancleState also
-	        
+	        Transaction trans = AmazonTransactionUtils.convertReceiptToTransaction(1, requestId, receipt, userData);	// provides cancleState also
+			
 	    	switch (receipt.getProductType()) {
 	                
 	        case CONSUMABLE:
@@ -297,7 +294,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         case FAILED:
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onUserDataResponse failed, status code is " + status);
-            clearUserData();
+        	updateUserData(null);
             break;
         }
     }
@@ -319,16 +316,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         	Map<String, Product> availableSkus = response.getProductData();
             showMessage(LOGTYPELOG,  "onProductDataResponse: " + availableSkus.size() + " available skus");
         	for (Entry<String, Product> entry : availableSkus.entrySet()) {
-        		Product product = entry.getValue();
-        		String priceString = product.getPrice();
-            	informationMap.put(entry.getKey(),
-            			Information.newBuilder()
-        				.localName(product.getTitle())
-        				.localDescription(product.getDescription())
-        				.localPricing(priceString)
-        				.priceCurrencyCode(tryParseCurrency(priceString))
-        				.priceInCents(tryParsePriceInCents(priceString))
-        				.build());
+            	informationMap.put(entry.getKey(), AmazonTransactionUtils.convertProductToInformation(entry.getValue()));
         	}
         	
             final Set<String> unavailableSkus = response.getUnavailableSkus();
@@ -344,41 +332,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
             break;
         }
     }
-
-    // Faulty currency parsing, feel free to improve
-    // Currently returns first character that is neither a digit nor a comma nor a dot
-	private String tryParseCurrency(String priceString) {
-		if (priceString == null)
-			return null;
-		for (int i = 0, n = priceString.length(); i < n; i++) {
-			char current = priceString.charAt(i);
-			if (
-					current == '.'
-					|| current == ','
-					|| Character.isDigit(current)
-					)
-				continue;
-			return new String(new char[] { current });
-		}
-		return null;
-	}
-
-    private Integer tryParsePriceInCents(String priceString) {
-		if (priceString == null || priceString.length() == 0)
-			return null;
-		try {
-			// Remove currency from string
-			// The ugly way
-			priceString = priceString.substring(1);
-			
-			// Remaining should be parseable
-			float value = NumberFormat.getInstance().parse(priceString).floatValue();
-			return MathUtils.ceilPositive(value * 100);
-		} catch (ParseException exception) {
-	    	showMessage(LOGTYPEERROR,  "Unable to parse price string: (" + priceString + ") -- " + exception.getLocalizedMessage());
-		}
-		return null;
-	}
 
 	/**
      * This is the callback for {@link PurchasingService#getPurchaseUpdates}.
@@ -415,7 +368,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 				if (receipt.getProductType() == ProductType.CONSUMABLE)
 					consumables.add(receipt);
 
-				transactions.add(convertReceiptToTransaction(i, response.getRequestId().toString(), receipt, response.getUserData()));
+				transactions.add(AmazonTransactionUtils.convertReceiptToTransaction(i, response.getRequestId().toString(), receipt, response.getUserData()));
 			}
 			// send inventory to observer
 			observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
@@ -500,40 +453,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
     }
 
     //=======================================================
-    
-    
-    
-	/** Converts a Receipt to our transaction object. */
-	Transaction convertReceiptToTransaction (int i, String requestId, Receipt receipt, final UserData userData) {
-
-		// build the transaction from the purchase object
-		Transaction transaction = new Transaction();
-		transaction.setIdentifier(receipt.getSku());
-		transaction.setOrderId(receipt.getReceiptId());
-		transaction.setStoreName(storeName());
-		transaction.setRequestId(requestId);
-		transaction.setUserId(userData.getUserId());
-		transaction.setPurchaseTime(receipt.getPurchaseDate());
-		transaction.setPurchaseText("Purchased: " + receipt.getSku().toString());
-		// transaction.setPurchaseCost(receipt.getSku()); // TODO: GdxPay: impl. parsing of COST + CURRENCY via skuDetails.getPrice()!
-		// transaction.setPurchaseCostCurrency(null);
-
-		 if (receipt.isCanceled()) {
-		// order has been refunded or cancelled
-		 transaction.setReversalTime(receipt.getCancelDate());
-//		 transaction.setReversalText(receipt..getPurchaseState() == 1 ? "Cancelled" : "Refunded");
-		 } else {
-		 // still valid!
-			 transaction.setReversalTime(null);
-			 transaction.setReversalText(null);
-		 }
-
-		 transaction.setTransactionData(receipt.toJSON().toString());
-		// transaction.setTransactionDataSignature(purchase.getSignature());
-
-		showMessage(LOGTYPELOG, "converted purchased product " + i + " to transaction.");
-		return transaction;
-	}
 	
 	@Override
 	public String toString () {
