@@ -19,18 +19,17 @@ package com.badlogic.gdx.pay.android.amazon;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-
-import android.app.Activity;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.util.Log;
-import android.widget.Toast;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.amazon.device.iap.PurchasingListener;
 import com.amazon.device.iap.PurchasingService;
+import com.amazon.device.iap.model.FulfillmentResult;
+import com.amazon.device.iap.model.Product;
 import com.amazon.device.iap.model.ProductDataResponse;
+import com.amazon.device.iap.model.ProductType;
 import com.amazon.device.iap.model.PurchaseResponse;
 import com.amazon.device.iap.model.PurchaseUpdatesResponse;
 import com.amazon.device.iap.model.Receipt;
@@ -41,6 +40,14 @@ import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
+import com.badlogic.gdx.utils.Array;
+
+import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.util.Log;
+import android.widget.Toast;
 
 /** The purchase manager implementation for OUYA.
  * <p>
@@ -68,6 +75,8 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	
 	/** The productList */
 	Set<String> productIdentifiers;
+
+	private final Map<String, Information> informationMap = new ConcurrentHashMap<String, Information>();
 	
 	// ------- for Toasts (debugging) -----
 	String toastText;
@@ -80,6 +89,24 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 	public PurchaseManagerAndroidAmazon (Activity activity, int requestCode) {
 		this.activity = activity;
+	}
+
+	public String getCurrentUserId() {
+		return currentUserId;
+	}
+
+	public String getCurrentMarketplace() {
+		return currentMarketplace;
+	}
+	
+	private void updateUserData(UserData userData) {
+		if (userData == null) {
+			this.currentUserId = null;
+			this.currentMarketplace = null;
+		} else {
+			this.currentUserId = userData.getUserId();
+			this.currentMarketplace = userData.getMarketplace();
+		}
 	}
 
 	@Override
@@ -110,6 +137,8 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		observer.handleInstall();
 		
 		PurchasingService.getUserData();
+		
+		PurchasingService.getProductData(productIdentifiers);
 	}
 
 	// ----- Handler --------------------
@@ -140,7 +169,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	@Override
 	public void purchase(String identifier) {  
 		String identifierForStore = config.getOffer(identifier).getIdentifierForStore(storeName());
-		String requestId = PurchasingService.purchase(identifierForStore).toString();		
+		PurchasingService.purchase(identifierForStore);		
 	}
 
 	@Override
@@ -158,14 +187,22 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	     * @param userData
 	     */
 	    public void handleReceipt(final String requestId, final Receipt receipt, final UserData userData) {
+
+	    	showMessage(LOGTYPELOG,  "Handle receipt: requestId (" + requestId
+	        + ") receipt: "
+	        + receipt
+	        + ")");
 	        
 		     // convert receipt to transaction
-	        Transaction trans = convertReceiptToTransaction(1, requestId, receipt, userData);	// provides cancleState also
-	        
+	        Transaction trans = AmazonTransactionUtils.convertReceiptToTransaction(1, requestId, receipt, userData);	// provides cancleState also
+			
 	    	switch (receipt.getProductType()) {
 	                
 	        case CONSUMABLE:
-	            // TODO: check consumable sample for how to handle consumable purchases
+				// inform the listener
+				observer.handlePurchase(trans);
+	            // Automatically consume item
+	        	PurchasingService.notifyFulfillment(receipt.getReceiptId(), FulfillmentResult.FULFILLED);
 	            break;
 	            
 	        case ENTITLED:
@@ -179,11 +216,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	        }
 	    }
 //====================================================================================
-
-//	public void onActivityResult (int requestCode, int resultCode, Intent data) {
-//		// forwards activities to OpenIAB for processing
-//		// this is only relevant for android
-//	}
 
 	void showMessage (final int type, final String message) {
 		if (LOGDEBUG) {
@@ -222,8 +254,8 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
     @Override
     public Information getInformation(String identifier) {
-        // not implemented yet for this purchase manager -> TODO
-        return Information.UNAVAILABLE;
+        Information information = informationMap.get(identifier);
+        return information == null ? Information.UNAVAILABLE : information;
     }
     
     
@@ -241,41 +273,35 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
      */
     @Override
     public void onUserDataResponse(final UserDataResponse response) {
-    	showMessage(LOGTYPELOG,  "onGetUserDataResponse: requestId (" + response.getRequestId()
-                   + ") userIdRequestStatus: "
-                   + response.getRequestStatus()
-                   + ")");
 
         final UserDataResponse.RequestStatus status = response.getRequestStatus();
+
+    	showMessage(LOGTYPELOG,  "onGetUserDataResponse: requestId (" + response.getRequestId()
+        + ") userIdRequestStatus: "
+        + status
+        + ")");
         
         switch (status) {
         case SUCCESSFUL:
-        	showMessage(LOGTYPELOG,  "onUserDataResponse: get user id (" + response.getUserData().getUserId()
-                       + ", marketplace ("
-                       + response.getUserData().getMarketplace()
+        	UserData userData = response.getUserData();
+        	showMessage(LOGTYPELOG,  "onUserDataResponse: get user id (" + userData.getUserId()
+                       + "), marketplace ("
+                       + userData.getMarketplace()
                        + ") ");
-            currentUserId = response.getUserData().getUserId();
-            currentMarketplace = response.getUserData().getMarketplace();
+        	updateUserData(userData);
             break;
 
         case FAILED:
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onUserDataResponse failed, status code is " + status);
-            currentUserId = null;
-            currentMarketplace = null;
+        	updateUserData(null);
             break;
         }
     }
 
     
-    //========= TODO =============
     /**
-     * This is the callback for {@link PurchasingService#getProductData}. After
-     * SDK sends the product details and availability to this method, it will
-     * call {@link SampleIAPManager#enablePurchaseForSkus}
-     * {@link SampleIAPManager#disablePurchaseForSkus} or
-     * {@link SampleIAPManager#disableAllPurchases} method to set the purchase
-     * status accordingly.
+     * This is the callback for {@link PurchasingService#getProductData}.
      */
     @Override
     public void onProductDataResponse(final ProductDataResponse response) {
@@ -284,23 +310,30 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
         switch (status) {
         case SUCCESSFUL:
-        	showMessage(LOGTYPELOG,  "onProductDataResponse: successful.  The item data map in this response includes the valid SKUs");
+        	showMessage(LOGTYPELOG,  "onProductDataResponse: successful");
+        	
+        	// Store product information
+        	Map<String, Product> availableSkus = response.getProductData();
+            showMessage(LOGTYPELOG,  "onProductDataResponse: " + availableSkus.size() + " available skus");
+        	for (Entry<String, Product> entry : availableSkus.entrySet()) {
+            	informationMap.put(entry.getKey(), AmazonTransactionUtils.convertProductToInformation(entry.getValue()));
+        	}
+        	
             final Set<String> unavailableSkus = response.getUnavailableSkus();
             showMessage(LOGTYPELOG,  "onProductDataResponse: " + unavailableSkus.size() + " unavailable skus");
-//            enablePurchaseForSkus(response.getProductData());
-//            disablePurchaseForSkus(response.getUnavailableSkus());
-//            refreshLevel2Availability();
+        	for (String sku : unavailableSkus) {
+                showMessage(LOGTYPELOG,  "onProductDataResponse: sku " + sku + " is not available");
+        	}
             break;
             
         case FAILED:
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onProductDataResponse: failed, should retry request");
-//            disableAllPurchases();
             break;
         }
     }
 
-    /**
+	/**
      * This is the callback for {@link PurchasingService#getPurchaseUpdates}.
      * 
      * You will receive Entitlement receipts from this callback.
@@ -318,8 +351,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         switch (status) {
         case SUCCESSFUL:
 
-            currentUserId = response.getUserData().getUserId();
-            currentMarketplace = response.getUserData().getMarketplace();
+            updateUserData(response.getUserData());
             
 //            for (final Receipt receipt : response.getReceipts()) {
 //                handleReceipt(response.getRequestId().toString(), receipt, response.getUserData());
@@ -328,11 +360,24 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
             // send result to observer --------
 			List<Transaction> transactions = new ArrayList<Transaction>(response.getReceipts().size());
 
+			Array<Receipt> consumables = new Array<Receipt>(response.getReceipts().size());
 			for (int i = 0; i < response.getReceipts().size(); i++) {
-				transactions.add(convertReceiptToTransaction(i, response.getRequestId().toString(), response.getReceipts().get(i), response.getUserData()));
+				Receipt receipt = response.getReceipts().get(i);
+				
+				// Memoize consumables for later check
+				if (receipt.getProductType() == ProductType.CONSUMABLE)
+					consumables.add(receipt);
+
+				transactions.add(AmazonTransactionUtils.convertReceiptToTransaction(i, response.getRequestId().toString(), receipt, response.getUserData()));
 			}
 			// send inventory to observer
 			observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
+
+            // Automatically consume consumables if this was not previously the case
+			for (int i = 0; i < consumables.size; i++) {
+				Receipt consumable = consumables.get(i);
+	        	PurchasingService.notifyFulfillment(consumable.getReceiptId(), FulfillmentResult.FULFILLED);
+			}
 			
 			//---- check if there are more receipts -------
             if (response.hasMore()) {
@@ -342,13 +387,11 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
             
         case FAILED:
         	showMessage(LOGTYPEERROR,  "onPurchaseUpdatesResponse: FAILED, should retry request");
-//          disableAllPurchases();
         	observer.handleRestoreError(new Throwable("onPurchaseUpdatesResponse: FAILED, should retry request"));
       		break;
       		
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request");
-//            disableAllPurchases();
         	observer.handleRestoreError(new Throwable("onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request"));
             break;
         }
@@ -381,8 +424,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         case SUCCESSFUL:
             final Receipt receipt = response.getReceipt();
             
-            currentUserId = userId;
-            currentMarketplace = response.getUserData().getMarketplace();
+            updateUserData(response.getUserData());
             showMessage(LOGTYPELOG,  "onPurchaseResponse: receipt json:" + receipt.toJSON());
             handleReceipt(response.getRequestId().toString(), receipt, response.getUserData());
             break;
@@ -395,9 +437,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         case INVALID_SKU:
         	showMessage(LOGTYPEERROR, 
                   "onPurchaseResponse: invalid SKU!  onProductDataResponse should have disabled buy button already.");
-//            final Set<String> unavailableSkus = new HashSet<String>();
-//            unavailableSkus.add(response.getReceipt().getSku());
-//            disablePurchaseForSkus(unavailableSkus);
         	observer.handlePurchaseError(new Throwable("onPurchaseResponse: INVALID_SKU"));
             break;
             
@@ -412,43 +451,8 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
             break;
         }
     }
-//    }
 
     //=======================================================
-    
-    
-    
-	/** Converts a Receipt to our transaction object. */
-	Transaction convertReceiptToTransaction (int i, String requestId, Receipt receipt, final UserData userData) {
-
-		// build the transaction from the purchase object
-		Transaction transaction = new Transaction();
-		transaction.setIdentifier(receipt.getSku());
-		transaction.setOrderId(receipt.getReceiptId());
-		transaction.setStoreName(storeName());
-		transaction.setRequestId(requestId);
-		transaction.setUserId(userData.getUserId());
-		transaction.setPurchaseTime(receipt.getPurchaseDate());
-		transaction.setPurchaseText("Purchased: " + receipt.getSku().toString());
-		// transaction.setPurchaseCost(receipt.getSku()); // TODO: GdxPay: impl. parsing of COST + CURRENCY via skuDetails.getPrice()!
-		// transaction.setPurchaseCostCurrency(null);
-
-		 if (receipt.isCanceled()) {
-		// order has been refunded or cancelled
-		 transaction.setReversalTime(receipt.getCancelDate());
-//		 transaction.setReversalText(receipt..getPurchaseState() == 1 ? "Cancelled" : "Refunded");
-		 } else {
-		 // still valid!
-			 transaction.setReversalTime(null);
-			 transaction.setReversalText(null);
-		 }
-
-		 transaction.setTransactionData(receipt.toJSON().toString());
-		// transaction.setTransactionDataSignature(purchase.getSignature());
-
-		showMessage(LOGTYPELOG, "converted purchased product " + i + " to transaction.");
-		return transaction;
-	}
 	
 	@Override
 	public String toString () {
