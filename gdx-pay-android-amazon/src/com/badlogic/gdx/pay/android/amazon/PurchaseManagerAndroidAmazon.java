@@ -49,11 +49,9 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
-/** The purchase manager implementation for OUYA.
+/** The purchase manager implementation for Amazon.
  * <p>
- * Include the gdx-pay-android-ouya.jar for this to work (plus gdx-pay-android.jar). Also update the "uses-permission" settings in
- * AndroidManifest.xml and your proguard settings.
- * 
+ *
  * @author just4phil */
 public class PurchaseManagerAndroidAmazon implements PurchaseManager, PurchasingListener {
 
