@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.ConsumeResponseListener;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
@@ -12,11 +14,14 @@ import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.OfferType;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.Transaction;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,12 +38,14 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     private static final String TAG = "GdxPay/GoogleBilling";
     private final BillingClient mBillingClient;
     private final Map<String, Information> informationMap = new ConcurrentHashMap<String, Information>();
+    private final Activity activity;
     private boolean serviceConnected;
     private boolean installationComplete;
     private PurchaseObserver observer;
     private PurchaseManagerConfig config;
 
     public PurchaseManagerGoogleBilling(Activity activity) {
+        this.activity = activity;
         mBillingClient = BillingClient.newBuilder(activity).setListener(this).build();
     }
 
@@ -162,16 +169,62 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     @Override
     public void purchase(String identifier) {
-
+        BillingFlowParams flowParams = BillingFlowParams.newBuilder()
+                .setSku(identifier)
+                .setType(BillingClient.SkuType.INAPP) // SkuType.SUB for subscription
+                .build();
+        int responseCode = mBillingClient.launchBillingFlow(activity, flowParams);
     }
 
     @Override
     public void purchaseRestore() {
-
+        //TODO
     }
 
     @Override
-    public void onPurchasesUpdated(int i, @Nullable List<Purchase> list) {
+    public void onPurchasesUpdated(int responseCode, @Nullable List<Purchase> purchases) {
+        if (responseCode == BillingClient.BillingResponse.OK && purchases != null) {
+            for (Purchase purchase : purchases) {
+                handlePurchase(purchase);
+            }
+        } else if (responseCode == BillingClient.BillingResponse.USER_CANCELED) {
+            observer.handlePurchaseCanceled();
+        } else {
+            Gdx.app.error(TAG, "onPurchasesUpdated failed with responseCode " + responseCode);
+            observer.handlePurchaseError(new RuntimeException("onPurchasesUpdated failed with responseCode " +
+                    responseCode));
+        }
 
+    }
+
+    private void handlePurchase(Purchase purchase) {
+        // build the transaction from the purchase object
+        Transaction transaction = new Transaction();
+        transaction.setIdentifier(purchase.getSku());
+        transaction.setOrderId(purchase.getOrderId());
+        transaction.setRequestId(purchase.getPurchaseToken());
+        transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE);
+        transaction.setPurchaseTime(new Date(purchase.getPurchaseTime()));
+        transaction.setPurchaseText("Purchased: " + purchase.getSku());
+        transaction.setReversalTime(null);
+        transaction.setReversalText(null);
+        transaction.setTransactionData(purchase.getOriginalJson());
+
+        observer.handlePurchase(transaction);
+
+        // CONSUMABLES need to get consumed
+        if (config.getOffer(purchase.getSku()).getType().equals(OfferType.CONSUMABLE)) {
+            ConsumeResponseListener listener = new ConsumeResponseListener() {
+                @Override
+                public void onConsumeResponse(@BillingClient.BillingResponse int responseCode, String outToken) {
+                    if (responseCode == BillingClient.BillingResponse.OK) {
+                        // Handle the success of the consume operation.
+                        // For example, increase the number of coins inside the user&#39;s basket.
+                    }
+                }
+            };
+
+            mBillingClient.consumeAsync(purchase.getPurchaseToken(), listener);
+        }
     }
 }
