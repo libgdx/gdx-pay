@@ -1,0 +1,37 @@
+apply plugin: 'com.android.library'
+
+android {
+    defaultPublishConfig "release"
+
+    compileSdkVersion androidCompileSdkVersion
+    buildToolsVersion androidBuildToolsVersion
+
+    defaultConfig {
+        minSdkVersion androidMinimalSdkVersion
+        targetSdkVersion androidTargetSdkVersion
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        testOptions {
+            unitTests.returnDefaultValues = true
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java {
+                srcDir 'src'
+            }
+        }
+    }
+}
+
+configurations {
+    compileAndIncludeClassesInLibraryJar
+    compile.extendsFrom compileAndIncludeClassesInLibraryJar
+}
+
+dependencies {
+    compile project(':gdx-pay-android')
+
+    compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
+}
