@@ -82,6 +82,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 	private String currentUserId = null;
 	private String currentMarketplace = null;
+	private boolean productDataRetrieved = false;
 	
 	// --------------------------------------------------
 
@@ -112,7 +113,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		return PurchaseManagerConfig.STORE_NAME_ANDROID_AMAZON;
 	}
 
-	/* TODO use autoFetchInformation */
 	@Override
 	public void install (final PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
 		this.observer = observer;
@@ -132,11 +132,12 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		// or in the live production environment.
 		showMessage(LOGTYPELOG, "Amazon IAP: sandbox mode is:" + PurchasingService.IS_SANDBOX_MODE);
 		
-		observer.handleInstall();
-		
 		PurchasingService.getUserData();
-		
-		PurchasingService.getProductData(productIdentifiers);
+
+		if (autoFetchInformation)
+		    PurchasingService.getProductData(productIdentifiers);
+		else
+			productDataRetrieved = true;
 	}
 
 	// ----- Handler --------------------
@@ -235,8 +236,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 	@Override
 	public boolean installed () {
-//		if (PurchaseSystem.hasManager()) return true;	// this leads to unwanted binding via reflection !!
-		return observer != null;
+		return observer != null && currentUserId != null && productDataRetrieved;
 	}
 
 	@Override
@@ -287,18 +287,25 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
                        + userData.getMarketplace()
                        + ") ");
         	updateUserData(userData);
+        	notifyObserverWhenInstalled();
             break;
 
         case FAILED:
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onUserDataResponse failed, status code is " + status);
         	updateUserData(null);
+        	observer.handleInstallError(new RuntimeException("onUserDataResponse failed, status code is " + status));
             break;
         }
     }
 
-    
-    /**
+	private void notifyObserverWhenInstalled() {
+		if (installed())
+			observer.handleInstall();
+	}
+
+
+	/**
      * This is the callback for {@link PurchasingService#getProductData}.
      */
     @Override
@@ -322,11 +329,19 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         	for (String sku : unavailableSkus) {
                 showMessage(LOGTYPELOG,  "onProductDataResponse: sku " + sku + " is not available");
         	}
+        	if (!productDataRetrieved) {
+				productDataRetrieved = true;
+				notifyObserverWhenInstalled();
+			}
             break;
             
         case FAILED:
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onProductDataResponse: failed, should retry request");
+			if (!productDataRetrieved) {
+				observer.handleInstallError(new RuntimeException("onProductDataResponse failed, status code is " + status));
+			}
+
             break;
         }
     }
