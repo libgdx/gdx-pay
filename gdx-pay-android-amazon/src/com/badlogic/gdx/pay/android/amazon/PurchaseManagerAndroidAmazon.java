@@ -51,6 +51,7 @@ import android.widget.Toast;
 
 /** The purchase manager implementation for Amazon.
  * <p>
+ * See https://developer.amazon.com/de/docs/in-app-purchasing/iap-implement-iap.html
  *
  * @author just4phil */
 public class PurchaseManagerAndroidAmazon implements PurchaseManager, PurchasingListener {
@@ -255,10 +256,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 
     /**
-     * This is the callback for {@link PurchasingService#getUserData}. For
-     * successful case, get the current user from {@link UserDataResponse} and
-     * call {@link SampleIAPManager#setAmazonUserId} method to load the Amazon
-     * user and related purchase information
+     * This is the callback for {@link PurchasingService#getUserData}.
      *
      * @param response
      */
@@ -408,11 +406,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
      * This is the callback for {@link PurchasingService#purchase}. For each
      * time the application sends a purchase request
      * {@link PurchasingService#purchase}, Amazon Appstore will call this
-     * callback when the purchase request is completed. If the RequestStatus is
-     * Successful or AlreadyPurchased then application needs to call
-     * {@link SampleIAPManager#handleReceipt} to handle the purchase
-     * fulfillment. If the RequestStatus is INVALID_SKU, NOT_SUPPORTED, or
-     * FAILED, notify corresponding method of {@link SampleIAPManager} .
+     * callback when the purchase request is completed.
      */
     @Override
     public void onPurchaseResponse(final PurchaseResponse response) {
