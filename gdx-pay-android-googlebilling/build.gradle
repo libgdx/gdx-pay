@@ -1,5 +1,7 @@
 apply plugin: 'com.android.library'
 
+apply from : '../publish_android.gradle'
+
 android {
     defaultPublishConfig "release"
 
@@ -30,8 +32,11 @@ configurations {
     compile.extendsFrom compileAndIncludeClassesInLibraryJar
 }
 
+repositories {
+    maven { url "https://jcenter.bintray.com" }
+}
+
 dependencies {
     compile project(':gdx-pay-android')
-
-    compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
+    compile 'com.android.billingclient:billing:1.1'
 }
