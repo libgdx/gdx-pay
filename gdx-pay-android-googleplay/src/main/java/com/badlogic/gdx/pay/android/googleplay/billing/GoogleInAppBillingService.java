@@ -3,7 +3,7 @@ package com.badlogic.gdx.pay.android.googleplay.billing;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
-import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
+import com.badlogic.gdx.pay.GdxPayException;
 
 import java.util.List;
 import java.util.Map;

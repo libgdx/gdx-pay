@@ -1,5 +1,6 @@
 package com.badlogic.gdx.pay.android.googleplay;
 
+import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.Transaction;
 
 public class ConsumeException extends GdxPayException {

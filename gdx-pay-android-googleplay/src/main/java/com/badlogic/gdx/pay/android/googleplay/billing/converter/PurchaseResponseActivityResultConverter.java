@@ -5,7 +5,7 @@ import android.content.Intent;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.Transaction;
-import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
+import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.GoogleBillingConstants;
 
 import org.json.JSONException;

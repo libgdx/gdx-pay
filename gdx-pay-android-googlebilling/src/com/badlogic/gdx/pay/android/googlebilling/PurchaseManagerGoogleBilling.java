@@ -14,7 +14,9 @@ import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.ItemAlreadyOwnedException;
 import com.badlogic.gdx.pay.OfferType;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
@@ -74,7 +76,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
             @Override
             public void run() {
                 if (!serviceConnected)
-                    observer.handleInstallError(new RuntimeException("Connection to Play Billing not possible"));
+                    observer.handleInstallError(new GdxPayException("Connection to Play Billing not possible"));
                 else if (autoFetchInformation) {
                     fetchOfferDetails();
                 } else
@@ -121,7 +123,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                             if (responseCode != BillingClient.BillingResponse.OK) {
                                 Gdx.app.error(TAG, "onSkuDetailsResponse failed, error code is " + responseCode);
                                 if (!installationComplete)
-                                    observer.handleInstallError(new RuntimeException("onSkuDetailsResponse failed, " +
+                                    observer.handleInstallError(new GdxPayException("onSkuDetailsResponse failed, " +
                                             "status code is " + responseCode));
 
                             } else {
@@ -186,7 +188,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                     handlePurchase(purchases, true);
                 } else {
                     Gdx.app.error(TAG, "onPurchaseHistoryResponse failed with responseCode " + responseCode);
-                    observer.handleRestoreError(new RuntimeException("onPurchaseHistoryResponse failed with " +
+                    observer.handleRestoreError(new GdxPayException("onPurchaseHistoryResponse failed with " +
                             "responseCode " + responseCode));
                 }
             }
@@ -200,9 +202,11 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
             handlePurchase(purchases, false);
         } else if (responseCode == BillingClient.BillingResponse.USER_CANCELED) {
             observer.handlePurchaseCanceled();
+        } else if (responseCode == BillingClient.BillingResponse.ITEM_ALREADY_OWNED) {
+            observer.handlePurchaseError(new ItemAlreadyOwnedException());
         } else {
             Gdx.app.error(TAG, "onPurchasesUpdated failed with responseCode " + responseCode);
-            observer.handlePurchaseError(new RuntimeException("onPurchasesUpdated failed with responseCode " +
+            observer.handlePurchaseError(new GdxPayException("onPurchasesUpdated failed with responseCode " +
                     responseCode));
         }
 

@@ -15,7 +15,7 @@ import com.badlogic.gdx.backends.android.AndroidEventListener;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.Transaction;
-import com.badlogic.gdx.pay.android.googleplay.GdxPayException;
+import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.android.googleplay.billing.GoogleInAppBillingService.ConnectionListener;
 import com.badlogic.gdx.pay.android.googleplay.billing.converter.PurchaseResponseActivityResultConverter;
 
