@@ -8,6 +8,7 @@ import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.ConsumeResponseListener;
 import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchaseHistoryResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
@@ -178,15 +179,25 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     @Override
     public void purchaseRestore() {
-        //TODO
+        mBillingClient.queryPurchaseHistoryAsync(BillingClient.SkuType.INAPP, new PurchaseHistoryResponseListener() {
+            @Override
+            public void onPurchaseHistoryResponse(int responseCode, List<Purchase> purchases) {
+                if (responseCode == BillingClient.BillingResponse.OK && purchases != null) {
+                    handlePurchase(purchases, true);
+                } else {
+                    Gdx.app.error(TAG, "onPurchaseHistoryResponse failed with responseCode " + responseCode);
+                    observer.handleRestoreError(new RuntimeException("onPurchaseHistoryResponse failed with " +
+                            "responseCode " + responseCode));
+                }
+            }
+        });
+
     }
 
     @Override
     public void onPurchasesUpdated(int responseCode, @Nullable List<Purchase> purchases) {
         if (responseCode == BillingClient.BillingResponse.OK && purchases != null) {
-            for (Purchase purchase : purchases) {
-                handlePurchase(purchase);
-            }
+            handlePurchase(purchases, false);
         } else if (responseCode == BillingClient.BillingResponse.USER_CANCELED) {
             observer.handlePurchaseCanceled();
         } else {
@@ -197,34 +208,44 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     }
 
-    private void handlePurchase(Purchase purchase) {
-        // build the transaction from the purchase object
-        Transaction transaction = new Transaction();
-        transaction.setIdentifier(purchase.getSku());
-        transaction.setOrderId(purchase.getOrderId());
-        transaction.setRequestId(purchase.getPurchaseToken());
-        transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE);
-        transaction.setPurchaseTime(new Date(purchase.getPurchaseTime()));
-        transaction.setPurchaseText("Purchased: " + purchase.getSku());
-        transaction.setReversalTime(null);
-        transaction.setReversalText(null);
-        transaction.setTransactionData(purchase.getOriginalJson());
+    private void handlePurchase(List<Purchase> purchases, boolean fromRestore) {
+        List<Transaction> transactions = new ArrayList<>(purchases.size());
 
-        observer.handlePurchase(transaction);
+        for (Purchase purchase : purchases) {
+            // build the transaction from the purchase object
+            Transaction transaction = new Transaction();
+            transaction.setIdentifier(purchase.getSku());
+            transaction.setOrderId(purchase.getOrderId());
+            transaction.setRequestId(purchase.getPurchaseToken());
+            transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE);
+            transaction.setPurchaseTime(new Date(purchase.getPurchaseTime()));
+            transaction.setPurchaseText("Purchased: " + purchase.getSku());
+            transaction.setReversalTime(null);
+            transaction.setReversalText(null);
+            transaction.setTransactionData(purchase.getOriginalJson());
 
-        // CONSUMABLES need to get consumed
-        if (config.getOffer(purchase.getSku()).getType().equals(OfferType.CONSUMABLE)) {
-            ConsumeResponseListener listener = new ConsumeResponseListener() {
-                @Override
-                public void onConsumeResponse(@BillingClient.BillingResponse int responseCode, String outToken) {
-                    if (responseCode == BillingClient.BillingResponse.OK) {
-                        // Handle the success of the consume operation.
-                        // For example, increase the number of coins inside the user&#39;s basket.
+            // if this is from restoring old transactions, we call handlePurchaseRestore with the complete list
+            // from a direct purchase, we call handlePurchase directly
+            if (fromRestore)
+                transactions.add(transaction);
+            else
+                observer.handlePurchase(transaction);
+
+            // CONSUMABLES need to get consumed
+            if (config.getOffer(purchase.getSku()).getType().equals(OfferType.CONSUMABLE)) {
+                mBillingClient.consumeAsync(purchase.getPurchaseToken(), new ConsumeResponseListener() {
+                    @Override
+                    public void onConsumeResponse(@BillingClient.BillingResponse int responseCode, String outToken) {
+                        if (responseCode == BillingClient.BillingResponse.OK) {
+                            // Handle the success of the consume operation.
+                            // For example, increase the number of coins inside the user&#39;s basket.
+                        }
                     }
-                }
-            };
-
-            mBillingClient.consumeAsync(purchase.getPurchaseToken(), listener);
+                });
+            }
         }
+
+        if (fromRestore)
+            observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
     }
 }
