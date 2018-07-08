@@ -16,13 +16,7 @@
 
 package com.badlogic.gdx.pay.android.amazon;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import android.app.Activity;
 
 import com.amazon.device.iap.PurchasingListener;
 import com.amazon.device.iap.PurchasingService;
@@ -35,6 +29,7 @@ import com.amazon.device.iap.model.PurchaseUpdatesResponse;
 import com.amazon.device.iap.model.Receipt;
 import com.amazon.device.iap.model.UserData;
 import com.amazon.device.iap.model.UserDataResponse;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.ItemAlreadyOwnedException;
@@ -44,12 +39,13 @@ import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
 import com.badlogic.gdx.utils.Array;
 
-import android.app.Activity;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.util.Log;
-import android.widget.Toast;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** The purchase manager implementation for Amazon.
  * <p>
@@ -60,10 +56,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 	/** Debug tag for logging. */
 	private static final String TAG = "GdxPay/Amazon";
-	private static final boolean LOGDEBUG 		= true;
-	private static final boolean SHOWTOASTS 	= false;
-	private static final int LOGTYPELOG = 0;
-	private static final int LOGTYPEERROR = 1;
 
 	/** Our Android activity. */
 	Activity activity;
@@ -133,7 +125,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		// PurchasingService.IS_SANDBOX_MODE returns a boolean value.
 		// Use this boolean value to check whether your app is running in test mode under the App Tester
 		// or in the live production environment.
-		showMessage(LOGTYPELOG, "Amazon IAP: sandbox mode is:" + PurchasingService.IS_SANDBOX_MODE);
+		Gdx.app.log(TAG, "Amazon IAP: sandbox mode is:" + PurchasingService.IS_SANDBOX_MODE);
 
 		PurchasingService.getUserData();
 
@@ -141,31 +133,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		    PurchasingService.getProductData(productIdentifiers);
 		else
 			productDataRetrieved = true;
-	}
-
-	// ----- Handler --------------------
-
-	Handler handler = new HandlerExtension(Looper.getMainLooper());
-
-	final static int showToast = 0;
-
-	final class HandlerExtension extends Handler {
-
-		public HandlerExtension(Looper mainLooper) {
-			super(mainLooper);
-		}
-
-		@Override
-		public void handleMessage (Message msg) {
-
-			switch (msg.what) {
-
-			case showToast:
-				Toast toast = Toast.makeText(activity, toastText, duration);
-				toast.show();
-				break;
-			}
-		}
 	}
 
 	@Override
@@ -190,12 +157,9 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	     */
 	    public void handleReceipt(final String requestId, final Receipt receipt, final UserData userData) {
 
-	    	showMessage(LOGTYPELOG,  "Handle receipt: requestId (" + requestId
-	        + ") receipt: "
-	        + receipt
-	        + ")");
+			Gdx.app.log(TAG, "Handle receipt: requestId (" + requestId + ") receipt: " + receipt + ")");
 
-		     // convert receipt to transaction
+			// convert receipt to transaction
 	        Transaction trans = AmazonTransactionUtils.convertReceiptToTransaction(1, requestId, receipt, userData);	// provides cancleState also
 
 			switch (receipt.getProductType()) {
@@ -212,24 +176,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	    }
 //====================================================================================
 
-	void showMessage (final int type, final String message) {
-		if (LOGDEBUG) {
-			if (type == LOGTYPELOG) Log.d(TAG, message);
-			if (type == LOGTYPEERROR) Log.e(TAG, message);
-		}
-		if (SHOWTOASTS) {
-			if (type == LOGTYPELOG) showToast(message);
-			if (type == LOGTYPEERROR) showToast("error: " + message);
-		}
-	}
-
-	// ---- saves the toast text and displays it
-	void showToast (String toastText) {
-		this.duration = Toast.LENGTH_SHORT;
-		this.toastText = toastText;
-		handler.sendEmptyMessage(showToast);
-	}
-
 	@Override
 	public boolean installed () {
 		return observer != null && currentUserId != null && productDataRetrieved;
@@ -242,7 +188,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 			// remove observer and config as well
 			observer = null;
 			config = null;
-			showMessage(LOGTYPELOG, "disposed all the Amazon IAP stuff.");
+			Gdx.app.log(TAG, "disposed all the Amazon IAP stuff.");
 		}
 	}
 
@@ -267,7 +213,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
         final UserDataResponse.RequestStatus status = response.getRequestStatus();
 
-    	showMessage(LOGTYPELOG,  "onGetUserDataResponse: requestId (" + response.getRequestId()
+		Gdx.app.log(TAG, "onGetUserDataResponse: requestId (" + response.getRequestId()
         + ") userIdRequestStatus: "
         + status
         + ")");
@@ -275,7 +221,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         switch (status) {
         case SUCCESSFUL:
         	UserData userData = response.getUserData();
-        	showMessage(LOGTYPELOG,  "onUserDataResponse: get user id (" + userData.getUserId()
+			Gdx.app.log(TAG, "onUserDataResponse: get user id (" + userData.getUserId()
                        + "), marketplace ("
                        + userData.getMarketplace()
                        + ") ");
@@ -285,7 +231,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
         case FAILED:
         case NOT_SUPPORTED:
-        	showMessage(LOGTYPEERROR,  "onUserDataResponse failed, status code is " + status);
+			Gdx.app.error(TAG, "onUserDataResponse failed, status code is " + status);
         	updateUserData(null);
         	observer.handleInstallError(new GdxPayException("onUserDataResponse failed, status code is " + status));
             break;
@@ -304,23 +250,23 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
     @Override
     public void onProductDataResponse(final ProductDataResponse response) {
         final ProductDataResponse.RequestStatus status = response.getRequestStatus();
-        showMessage(LOGTYPELOG,  "onProductDataResponse: RequestStatus (" + status + ")");
+		Gdx.app.log(TAG, "onProductDataResponse: RequestStatus (" + status + ")");
 
         switch (status) {
         case SUCCESSFUL:
-        	showMessage(LOGTYPELOG,  "onProductDataResponse: successful");
+			Gdx.app.log(TAG, "onProductDataResponse: successful");
 
         	// Store product information
         	Map<String, Product> availableSkus = response.getProductData();
-            showMessage(LOGTYPELOG,  "onProductDataResponse: " + availableSkus.size() + " available skus");
+			Gdx.app.log(TAG, "onProductDataResponse: " + availableSkus.size() + " available skus");
         	for (Entry<String, Product> entry : availableSkus.entrySet()) {
             	informationMap.put(entry.getKey(), AmazonTransactionUtils.convertProductToInformation(entry.getValue()));
         	}
 
             final Set<String> unavailableSkus = response.getUnavailableSkus();
-            showMessage(LOGTYPELOG,  "onProductDataResponse: " + unavailableSkus.size() + " unavailable skus");
+			Gdx.app.log(TAG, "onProductDataResponse: " + unavailableSkus.size() + " unavailable skus");
         	for (String sku : unavailableSkus) {
-                showMessage(LOGTYPELOG,  "onProductDataResponse: sku " + sku + " is not available");
+				Gdx.app.log(TAG, "onProductDataResponse: sku " + sku + " is not available");
         	}
         	if (!productDataRetrieved) {
 				productDataRetrieved = true;
@@ -330,7 +276,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
         case FAILED:
         case NOT_SUPPORTED:
-        	showMessage(LOGTYPEERROR,  "onProductDataResponse: failed, should retry request");
+			Gdx.app.error(TAG, "onProductDataResponse: failed, should retry request");
 			if (!productDataRetrieved) {
 				observer.handleInstallError(new GdxPayException("onProductDataResponse failed, status code is " + status));
 			}
@@ -347,7 +293,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
      */
     @Override
     public void onPurchaseUpdatesResponse(final PurchaseUpdatesResponse response) {
-    	showMessage(LOGTYPELOG,  "onPurchaseUpdatesResponse: requestId (" + response.getRequestId()
+		Gdx.app.log(TAG, "onPurchaseUpdatesResponse: requestId (" + response.getRequestId()
                    + ") purchaseUpdatesResponseStatus ("
                    + response.getRequestStatus()
                    + ") userId ("
@@ -392,12 +338,12 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
             break;
 
         case FAILED:
-        	showMessage(LOGTYPEERROR,  "onPurchaseUpdatesResponse: FAILED, should retry request");
+			Gdx.app.error(TAG, "onPurchaseUpdatesResponse: FAILED, should retry request");
         	observer.handleRestoreError(new GdxPayException("onPurchaseUpdatesResponse: FAILED, should retry request"));
       		break;
 
         case NOT_SUPPORTED:
-        	showMessage(LOGTYPEERROR,  "onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request");
+			Gdx.app.error(TAG, "onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request");
         	observer.handleRestoreError(new GdxPayException("onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request"));
             break;
         }
@@ -415,7 +361,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         final String requestId = response.getRequestId().toString();
         final String userId = response.getUserData().getUserId();
         final PurchaseResponse.RequestStatus status = response.getRequestStatus();
-        showMessage(LOGTYPELOG,  "onPurchaseResponse: requestId (" + requestId
+		Gdx.app.log(TAG, "onPurchaseResponse: requestId (" + requestId
                    + ") userId ("
                    + userId
                    + ") purchaseRequestStatus ("
@@ -427,28 +373,27 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
             final Receipt receipt = response.getReceipt();
 
             updateUserData(response.getUserData());
-            showMessage(LOGTYPELOG,  "onPurchaseResponse: receipt json:" + receipt.toJSON());
+			Gdx.app.log(TAG, "onPurchaseResponse: receipt json:" + receipt.toJSON());
             handleReceipt(response.getRequestId().toString(), receipt, response.getUserData());
             break;
 
         case ALREADY_PURCHASED:
-        	showMessage(LOGTYPELOG, "onPurchaseResponse: already purchased, you should verify the entitlement purchase on your side and make sure the purchase was granted to customer");
+			Gdx.app.log(TAG, "onPurchaseResponse: already purchased, you should verify the entitlement purchase on your side and make sure the purchase was granted to customer");
         	observer.handlePurchaseError(new ItemAlreadyOwnedException());
             break;
 
         case INVALID_SKU:
-        	showMessage(LOGTYPEERROR,
-                  "onPurchaseResponse: invalid SKU!  onProductDataResponse should have disabled buy button already.");
+			Gdx.app.error(TAG, "onPurchaseResponse: invalid SKU!  onProductDataResponse should have disabled buy button already.");
         	observer.handlePurchaseError(new GdxPayException("onPurchaseResponse: INVALID_SKU"));
             break;
 
         case FAILED:
-        	showMessage(LOGTYPEERROR, "onPurchaseResponse: FAILED");
+			Gdx.app.error(TAG, "onPurchaseResponse: FAILED");
         	observer.handlePurchaseError(new GdxPayException("onPurchaseResponse: FAILED"));
             break;
 
         case NOT_SUPPORTED:
-        	showMessage(LOGTYPEERROR,  "onPurchaseResponse: NOT_SUPPORTED so remove purchase request from local storage");
+			Gdx.app.error(TAG, "onPurchaseResponse: NOT_SUPPORTED so remove purchase request from local storage");
         	observer.handlePurchaseError(new GdxPayException("onPurchaseResponse: NOT_SUPPORTED"));
             break;
         }
