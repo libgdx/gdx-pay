@@ -49,11 +49,10 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
-/** The purchase manager implementation for OUYA.
+/** The purchase manager implementation for Amazon.
  * <p>
- * Include the gdx-pay-android-ouya.jar for this to work (plus gdx-pay-android.jar). Also update the "uses-permission" settings in
- * AndroidManifest.xml and your proguard settings.
- * 
+ * See https://developer.amazon.com/de/docs/in-app-purchasing/iap-implement-iap.html
+ *
  * @author just4phil */
 public class PurchaseManagerAndroidAmazon implements PurchaseManager, PurchasingListener {
 
@@ -72,19 +71,20 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 	/** The configuration. */
 	PurchaseManagerConfig config;
-	
+
 	/** The productList */
 	Set<String> productIdentifiers;
 
 	private final Map<String, Information> informationMap = new ConcurrentHashMap<String, Information>();
-	
+
 	// ------- for Toasts (debugging) -----
 	String toastText;
 	int duration;
 
 	private String currentUserId = null;
 	private String currentMarketplace = null;
-	
+	private boolean productDataRetrieved = false;
+
 	// --------------------------------------------------
 
 	public PurchaseManagerAndroidAmazon (Activity activity, int requestCode) {
@@ -98,7 +98,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	public String getCurrentMarketplace() {
 		return currentMarketplace;
 	}
-	
+
 	private void updateUserData(UserData userData) {
 		if (userData == null) {
 			this.currentUserId = null;
@@ -114,31 +114,31 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 		return PurchaseManagerConfig.STORE_NAME_ANDROID_AMAZON;
 	}
 
-	/* TODO use autoFetchInformation */
 	@Override
 	public void install (final PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
 		this.observer = observer;
 		this.config = config;
-		
+
 		// --- copy all available products to the list of productIdentifiers
 		int offerSize = config.getOfferCount();
 		productIdentifiers = new HashSet<String>(offerSize);
 		for (int z = 0; z < config.getOfferCount(); z++) {
 			productIdentifiers.add(config.getOffer(z).getIdentifierForStore(storeName()));
 		}
-		
+
 		PurchasingService.registerListener(activity.getApplicationContext(), this);
-		
-		// PurchasingService.IS_SANDBOX_MODE returns a boolean value. 
-		// Use this boolean value to check whether your app is running in test mode under the App Tester 
+
+		// PurchasingService.IS_SANDBOX_MODE returns a boolean value.
+		// Use this boolean value to check whether your app is running in test mode under the App Tester
 		// or in the live production environment.
 		showMessage(LOGTYPELOG, "Amazon IAP: sandbox mode is:" + PurchasingService.IS_SANDBOX_MODE);
-		
-		observer.handleInstall();
-		
+
 		PurchasingService.getUserData();
-		
-		PurchasingService.getProductData(productIdentifiers);
+
+		if (autoFetchInformation)
+		    PurchasingService.getProductData(productIdentifiers);
+		else
+			productDataRetrieved = true;
 	}
 
 	// ----- Handler --------------------
@@ -167,21 +167,21 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	}
 
 	@Override
-	public void purchase(String identifier) {  
+	public void purchase(String identifier) {
 		String identifierForStore = config.getOffer(identifier).getIdentifierForStore(storeName());
-		PurchasingService.purchase(identifierForStore);		
+		PurchasingService.purchase(identifierForStore);
 	}
 
 	@Override
 	public void purchaseRestore() {
 		PurchasingService.getPurchaseUpdates(true);		// true: always gets ALL purchased items (complete history)
 	}
-	
+
 //=====================================================================================
 
 	    /**
 	     * Method to handle receipts
-	     * 
+	     *
 	     * @param requestId
 	     * @param receipt
 	     * @param userData
@@ -192,28 +192,21 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	        + ") receipt: "
 	        + receipt
 	        + ")");
-	        
+
 		     // convert receipt to transaction
 	        Transaction trans = AmazonTransactionUtils.convertReceiptToTransaction(1, requestId, receipt, userData);	// provides cancleState also
-			
-	    	switch (receipt.getProductType()) {
-	                
-	        case CONSUMABLE:
-				// inform the listener
-				observer.handlePurchase(trans);
-	            // Automatically consume item
-	        	PurchasingService.notifyFulfillment(receipt.getReceiptId(), FulfillmentResult.FULFILLED);
-	            break;
-	            
-	        case ENTITLED:
-				// inform the listener
-				observer.handlePurchase(trans);
-	            break;
-	            
-	        case SUBSCRIPTION:
-	            // TODO: check subscription sample for how to handle consumable purchases
-	            break;
-	        }
+
+			switch (receipt.getProductType()) {
+				case CONSUMABLE:
+				case SUBSCRIPTION:
+				case ENTITLED:
+					// inform the listener
+					observer.handlePurchase(trans);
+					// Automatically inform Amazon about the fullfilment
+					PurchasingService.notifyFulfillment(receipt.getReceiptId(), FulfillmentResult.FULFILLED);
+					break;
+
+			}
 	    }
 //====================================================================================
 
@@ -237,14 +230,13 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 	@Override
 	public boolean installed () {
-//		if (PurchaseSystem.hasManager()) return true;	// this leads to unwanted binding via reflection !!
-		return observer != null;
+		return observer != null && currentUserId != null && productDataRetrieved;
 	}
 
 	@Override
 	public void dispose () {
 
-		if (observer != null) {			
+		if (observer != null) {
 			// remove observer and config as well
 			observer = null;
 			config = null;
@@ -257,18 +249,15 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         Information information = informationMap.get(identifier);
         return information == null ? Information.UNAVAILABLE : information;
     }
-    
-    
+
+
     //=================================================
-    
-    
-  
+
+
+
     /**
-     * This is the callback for {@link PurchasingService#getUserData}. For
-     * successful case, get the current user from {@link UserDataResponse} and
-     * call {@link SampleIAPManager#setAmazonUserId} method to load the Amazon
-     * user and related purchase information
-     * 
+     * This is the callback for {@link PurchasingService#getUserData}.
+     *
      * @param response
      */
     @Override
@@ -280,7 +269,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         + ") userIdRequestStatus: "
         + status
         + ")");
-        
+
         switch (status) {
         case SUCCESSFUL:
         	UserData userData = response.getUserData();
@@ -289,18 +278,25 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
                        + userData.getMarketplace()
                        + ") ");
         	updateUserData(userData);
+        	notifyObserverWhenInstalled();
             break;
 
         case FAILED:
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onUserDataResponse failed, status code is " + status);
         	updateUserData(null);
+        	observer.handleInstallError(new RuntimeException("onUserDataResponse failed, status code is " + status));
             break;
         }
     }
 
-    
-    /**
+	private void notifyObserverWhenInstalled() {
+		if (installed())
+			observer.handleInstall();
+	}
+
+
+	/**
      * This is the callback for {@link PurchasingService#getProductData}.
      */
     @Override
@@ -311,33 +307,41 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         switch (status) {
         case SUCCESSFUL:
         	showMessage(LOGTYPELOG,  "onProductDataResponse: successful");
-        	
+
         	// Store product information
         	Map<String, Product> availableSkus = response.getProductData();
             showMessage(LOGTYPELOG,  "onProductDataResponse: " + availableSkus.size() + " available skus");
         	for (Entry<String, Product> entry : availableSkus.entrySet()) {
             	informationMap.put(entry.getKey(), AmazonTransactionUtils.convertProductToInformation(entry.getValue()));
         	}
-        	
+
             final Set<String> unavailableSkus = response.getUnavailableSkus();
             showMessage(LOGTYPELOG,  "onProductDataResponse: " + unavailableSkus.size() + " unavailable skus");
         	for (String sku : unavailableSkus) {
                 showMessage(LOGTYPELOG,  "onProductDataResponse: sku " + sku + " is not available");
         	}
+        	if (!productDataRetrieved) {
+				productDataRetrieved = true;
+				notifyObserverWhenInstalled();
+			}
             break;
-            
+
         case FAILED:
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onProductDataResponse: failed, should retry request");
+			if (!productDataRetrieved) {
+				observer.handleInstallError(new RuntimeException("onProductDataResponse failed, status code is " + status));
+			}
+
             break;
         }
     }
 
 	/**
      * This is the callback for {@link PurchasingService#getPurchaseUpdates}.
-     * 
+     *
      * You will receive Entitlement receipts from this callback.
-     * 
+     *
      */
     @Override
     public void onPurchaseUpdatesResponse(final PurchaseUpdatesResponse response) {
@@ -352,7 +356,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         case SUCCESSFUL:
 
             updateUserData(response.getUserData());
-            
+
 //            for (final Receipt receipt : response.getReceipts()) {
 //                handleReceipt(response.getRequestId().toString(), receipt, response.getUserData());
 //            }
@@ -363,7 +367,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 			Array<Receipt> consumables = new Array<Receipt>(response.getReceipts().size());
 			for (int i = 0; i < response.getReceipts().size(); i++) {
 				Receipt receipt = response.getReceipts().get(i);
-				
+
 				// Memoize consumables for later check
 				if (receipt.getProductType() == ProductType.CONSUMABLE)
 					consumables.add(receipt);
@@ -378,18 +382,18 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 				Receipt consumable = consumables.get(i);
 	        	PurchasingService.notifyFulfillment(consumable.getReceiptId(), FulfillmentResult.FULFILLED);
 			}
-			
+
 			//---- check if there are more receipts -------
             if (response.hasMore()) {
                 PurchasingService.getPurchaseUpdates(false);
             }
             break;
-            
+
         case FAILED:
         	showMessage(LOGTYPEERROR,  "onPurchaseUpdatesResponse: FAILED, should retry request");
         	observer.handleRestoreError(new Throwable("onPurchaseUpdatesResponse: FAILED, should retry request"));
       		break;
-      		
+
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request");
         	observer.handleRestoreError(new Throwable("onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request"));
@@ -402,11 +406,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
      * This is the callback for {@link PurchasingService#purchase}. For each
      * time the application sends a purchase request
      * {@link PurchasingService#purchase}, Amazon Appstore will call this
-     * callback when the purchase request is completed. If the RequestStatus is
-     * Successful or AlreadyPurchased then application needs to call
-     * {@link SampleIAPManager#handleReceipt} to handle the purchase
-     * fulfillment. If the RequestStatus is INVALID_SKU, NOT_SUPPORTED, or
-     * FAILED, notify corresponding method of {@link SampleIAPManager} .
+     * callback when the purchase request is completed.
      */
     @Override
     public void onPurchaseResponse(final PurchaseResponse response) {
@@ -423,28 +423,28 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         switch (status) {
         case SUCCESSFUL:
             final Receipt receipt = response.getReceipt();
-            
+
             updateUserData(response.getUserData());
             showMessage(LOGTYPELOG,  "onPurchaseResponse: receipt json:" + receipt.toJSON());
             handleReceipt(response.getRequestId().toString(), receipt, response.getUserData());
             break;
-            
+
         case ALREADY_PURCHASED:
         	showMessage(LOGTYPELOG, "onPurchaseResponse: already purchased, you should verify the entitlement purchase on your side and make sure the purchase was granted to customer");
         	observer.handlePurchaseError(new Throwable("onPurchaseResponse: ALREADY_PURCHASED"));
             break;
-            
+
         case INVALID_SKU:
-        	showMessage(LOGTYPEERROR, 
+        	showMessage(LOGTYPEERROR,
                   "onPurchaseResponse: invalid SKU!  onProductDataResponse should have disabled buy button already.");
         	observer.handlePurchaseError(new Throwable("onPurchaseResponse: INVALID_SKU"));
             break;
-            
+
         case FAILED:
         	showMessage(LOGTYPEERROR, "onPurchaseResponse: FAILED");
         	observer.handlePurchaseError(new Throwable("onPurchaseResponse: FAILED"));
             break;
-            
+
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onPurchaseResponse: NOT_SUPPORTED so remove purchase request from local storage");
         	observer.handlePurchaseError(new Throwable("onPurchaseResponse: NOT_SUPPORTED"));
@@ -453,7 +453,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
     }
 
     //=======================================================
-	
+
 	@Override
 	public String toString () {
 		return storeName();
