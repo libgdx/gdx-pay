@@ -35,7 +35,9 @@ import com.amazon.device.iap.model.PurchaseUpdatesResponse;
 import com.amazon.device.iap.model.Receipt;
 import com.amazon.device.iap.model.UserData;
 import com.amazon.device.iap.model.UserDataResponse;
+import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.ItemAlreadyOwnedException;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
@@ -285,7 +287,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onUserDataResponse failed, status code is " + status);
         	updateUserData(null);
-        	observer.handleInstallError(new RuntimeException("onUserDataResponse failed, status code is " + status));
+        	observer.handleInstallError(new GdxPayException("onUserDataResponse failed, status code is " + status));
             break;
         }
     }
@@ -330,7 +332,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onProductDataResponse: failed, should retry request");
 			if (!productDataRetrieved) {
-				observer.handleInstallError(new RuntimeException("onProductDataResponse failed, status code is " + status));
+				observer.handleInstallError(new GdxPayException("onProductDataResponse failed, status code is " + status));
 			}
 
             break;
@@ -391,12 +393,12 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
         case FAILED:
         	showMessage(LOGTYPEERROR,  "onPurchaseUpdatesResponse: FAILED, should retry request");
-        	observer.handleRestoreError(new Throwable("onPurchaseUpdatesResponse: FAILED, should retry request"));
+        	observer.handleRestoreError(new GdxPayException("onPurchaseUpdatesResponse: FAILED, should retry request"));
       		break;
 
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request");
-        	observer.handleRestoreError(new Throwable("onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request"));
+        	observer.handleRestoreError(new GdxPayException("onPurchaseUpdatesResponse: NOT_SUPPORTED, should retry request"));
             break;
         }
 
@@ -431,23 +433,23 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
         case ALREADY_PURCHASED:
         	showMessage(LOGTYPELOG, "onPurchaseResponse: already purchased, you should verify the entitlement purchase on your side and make sure the purchase was granted to customer");
-        	observer.handlePurchaseError(new Throwable("onPurchaseResponse: ALREADY_PURCHASED"));
+        	observer.handlePurchaseError(new ItemAlreadyOwnedException());
             break;
 
         case INVALID_SKU:
         	showMessage(LOGTYPEERROR,
                   "onPurchaseResponse: invalid SKU!  onProductDataResponse should have disabled buy button already.");
-        	observer.handlePurchaseError(new Throwable("onPurchaseResponse: INVALID_SKU"));
+        	observer.handlePurchaseError(new GdxPayException("onPurchaseResponse: INVALID_SKU"));
             break;
 
         case FAILED:
         	showMessage(LOGTYPEERROR, "onPurchaseResponse: FAILED");
-        	observer.handlePurchaseError(new Throwable("onPurchaseResponse: FAILED"));
+        	observer.handlePurchaseError(new GdxPayException("onPurchaseResponse: FAILED"));
             break;
 
         case NOT_SUPPORTED:
         	showMessage(LOGTYPEERROR,  "onPurchaseResponse: NOT_SUPPORTED so remove purchase request from local storage");
-        	observer.handlePurchaseError(new Throwable("onPurchaseResponse: NOT_SUPPORTED"));
+        	observer.handlePurchaseError(new GdxPayException("onPurchaseResponse: NOT_SUPPORTED"));
             break;
         }
     }

@@ -1,0 +1,42 @@
+apply plugin: 'com.android.library'
+
+apply from : '../publish_android.gradle'
+
+android {
+    defaultPublishConfig "release"
+
+    compileSdkVersion androidCompileSdkVersion
+    buildToolsVersion androidBuildToolsVersion
+
+    defaultConfig {
+        minSdkVersion androidMinimalSdkVersion
+        targetSdkVersion androidTargetSdkVersion
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        testOptions {
+            unitTests.returnDefaultValues = true
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java {
+                srcDir 'src'
+            }
+        }
+    }
+}
+
+configurations {
+    compileAndIncludeClassesInLibraryJar
+    compile.extendsFrom compileAndIncludeClassesInLibraryJar
+}
+
+repositories {
+    maven { url "https://jcenter.bintray.com" }
+}
+
+dependencies {
+    compile project(':gdx-pay-android')
+    compile 'com.android.billingclient:billing:1.1'
+}

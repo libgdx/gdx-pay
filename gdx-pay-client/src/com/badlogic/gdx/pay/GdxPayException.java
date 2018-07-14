@@ -1,4 +1,4 @@
-package com.badlogic.gdx.pay.android.googleplay;
+package com.badlogic.gdx.pay;
 
 public class GdxPayException extends RuntimeException {
 
