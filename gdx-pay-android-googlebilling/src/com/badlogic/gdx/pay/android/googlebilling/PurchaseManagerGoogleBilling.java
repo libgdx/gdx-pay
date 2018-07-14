@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesUpdatedListener {
     private static final String TAG = "GdxPay/GoogleBilling";
     private final BillingClient mBillingClient;
-    private final Map<String, Information> informationMap = new ConcurrentHashMap<String, Information>();
+    private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
     private final Activity activity;
     private boolean serviceConnected;
     private boolean installationComplete;
@@ -85,7 +85,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         });
     }
 
-    public void startServiceConnection(final Runnable excecuteOnSetupFinished) {
+    private void startServiceConnection(final Runnable excecuteOnSetupFinished) {
         mBillingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(int billingResponseCode) {
@@ -107,7 +107,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     private void fetchOfferDetails() {
         int offerSize = config.getOfferCount();
-        List skuList = new ArrayList<>(offerSize);
+        List<String> skuList = new ArrayList<>(offerSize);
         for (int z = 0; z < config.getOfferCount(); z++) {
             skuList.add(config.getOffer(z).getIdentifierForStore(storeName()));
         }
@@ -167,7 +167,13 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     @Override
     public void dispose() {
-
+        if (observer != null) {
+            // remove observer and config as well
+            observer = null;
+            config = null;
+            Gdx.app.log(TAG, "disposed observer and config");
+        }
+        installationComplete = false;
     }
 
     @Override
@@ -241,8 +247,9 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                     @Override
                     public void onConsumeResponse(@BillingClient.BillingResponse int responseCode, String outToken) {
                         if (responseCode == BillingClient.BillingResponse.OK) {
-                            // Handle the success of the consume operation.
-                            // For example, increase the number of coins inside the user&#39;s basket.
+                            // handlepurchase is done before item is consumed for compatibility with other
+                            // gdx-pay implementations
+                            //TODO what to do if it did not return OK?
                         }
                     }
                 });
