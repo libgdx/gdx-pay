@@ -58,22 +58,18 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 	private static final String TAG = "GdxPay/Amazon";
 
 	/** Our Android activity. */
-	Activity activity;
+	private Activity activity;
 
 	/** The registered observer. */
-	PurchaseObserver observer;
+	private PurchaseObserver observer;
 
 	/** The configuration. */
-	PurchaseManagerConfig config;
+	private PurchaseManagerConfig config;
 
 	/** The productList */
-	Set<String> productIdentifiers;
+	private Set<String> productIdentifiers;
 
-	private final Map<String, Information> informationMap = new ConcurrentHashMap<String, Information>();
-
-	// ------- for Toasts (debugging) -----
-	String toastText;
-	int duration;
+	private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
 
 	private String currentUserId = null;
 	private String currentMarketplace = null;
@@ -115,7 +111,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 		// --- copy all available products to the list of productIdentifiers
 		int offerSize = config.getOfferCount();
-		productIdentifiers = new HashSet<String>(offerSize);
+		productIdentifiers = new HashSet<>(offerSize);
 		for (int z = 0; z < config.getOfferCount(); z++) {
 			productIdentifiers.add(config.getOffer(z).getIdentifierForStore(storeName()));
 		}
@@ -150,12 +146,8 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
 	    /**
 	     * Method to handle receipts
-	     *
-	     * @param requestId
-	     * @param receipt
-	     * @param userData
 	     */
-	    public void handleReceipt(final String requestId, final Receipt receipt, final UserData userData) {
+		private void handleReceipt(final String requestId, final Receipt receipt, final UserData userData) {
 
 			Gdx.app.log(TAG, "Handle receipt: requestId (" + requestId + ") receipt: " + receipt + ")");
 
@@ -205,8 +197,6 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
     /**
      * This is the callback for {@link PurchasingService#getUserData}.
-     *
-     * @param response
      */
     @Override
     public void onUserDataResponse(final UserDataResponse response) {
@@ -310,9 +300,9 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 //            }
 
             // send result to observer --------
-			List<Transaction> transactions = new ArrayList<Transaction>(response.getReceipts().size());
+			List<Transaction> transactions = new ArrayList<>(response.getReceipts().size());
 
-			Array<Receipt> consumables = new Array<Receipt>(response.getReceipts().size());
+			Array<Receipt> consumables = new Array<>(response.getReceipts().size());
 			for (int i = 0; i < response.getReceipts().size(); i++) {
 				Receipt receipt = response.getReceipts().get(i);
 

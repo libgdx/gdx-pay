@@ -2,7 +2,7 @@
 
 Handles purchases and restores for non-consumable and consumable products, will not work as intended for subscriptions.
 
-## proguard configuration
+## ProGuard configuration
 
      #IAP
      -dontwarn com.amazon.**
