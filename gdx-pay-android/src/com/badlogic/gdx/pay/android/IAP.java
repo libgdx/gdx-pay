@@ -16,6 +16,8 @@
 
 package com.badlogic.gdx.pay.android;
 
+import java.lang.reflect.Method;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
@@ -25,18 +27,7 @@ import com.badlogic.gdx.backends.android.AndroidEventListener;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseSystem;
 
-import java.lang.reflect.Method;
-
-/** The IAP system for Android supporting the following stores:
- * <ul>
- * <li>via gdx-pay-android-openiab.jar: Google Play
- * <li>via gdx-pay-android-openiab.jar: Amazon
- * <li>via gdx-pay-android-openiab.jar: Samsung Apps
- * <li>via gdx-pay-android-openiab.jar: Nokia
- * <li>via gdx-pay-android-openiab.jar: Open Store
- * <li>via gdx-pay-android-openiab.jar: SlideME
- * <li>via gdx-pay-android-openiab.jar: Aptoide
- * <li>via gdx-pay-android-ouya.jar: Ouya
+/** The IAP system for Android supporting Android stores.
  * </ul>
  * <p>
  * To integrate into your Android project do the following:
@@ -45,8 +36,7 @@ import java.lang.reflect.Method;
  * <ul>
  * <li>gdx-pay.jar: This goes into your "core"/lib project.
  * <li>gdx-pay-android.jar: ALWAYS include within your Android/lib directory to support the IAP systems below!
- * <li>gdx-pay-android-openiab.jar: into Android/lib if you want to support the stores listed from above mentioning OpenIAB.
- * <li>gdx-pay-android-ouya.jar: into Android/lib if you want to support OUYA.
+ * <li>gdx-pay-android-amazon | gdx-pay-android-googleplay | gdx-pay-android-googlebilling.jar</li>
  * </ul>
  * <li>2. AndroidManifest.xml: add the required permissions (i.e. "uses-permission...").
  * <li>3. proguard.cfg: add the required proguard settings for each store you want to support (see: TODO).
@@ -131,28 +121,6 @@ public class IAP implements LifecycleListener, AndroidEventListener {
 			}
 		} catch (Exception e) {
 			Log.d(TAG, "Failed to locate purchase manager for GooglePlay (gdx-pay-android-googleplay.jar file not installed)", e);
-		}
-
-
-		// let's go with OpenIAB instead if we can find it...
-		try {
-			Class<?> iabClazz = Class.forName("com.badlogic.gdx.pay.android.openiab.PurchaseManagerAndroidOpenIAB");
-		   PurchaseSystem.setManager((PurchaseManager)iabClazz.getConstructor(Activity.class, int.class).newInstance(activity, requestCode));
-		} catch (Exception e) {
-			Log.d(TAG, "Failed to locate purchase manager for OpenIAB-IAP (gdx-pay-android-openiab.jar file not installed)", e);
-		}
-
-		// are we on OUYA-hardware?
-		try {
-			Class<?> ouyaClazz = Class.forName("com.badlogic.gdx.pay.android.ouya.PurchaseManagerAndroidOUYA");
-			Method method = ouyaClazz.getMethod("isRunningOnOUYAHardware");
-			if ((Boolean)method.invoke(ouyaClazz)) {
-				// we are running on OUYA: let's set the purchase manager and be done with it!
-				PurchaseSystem.setManager((PurchaseManager)ouyaClazz.getConstructor(Activity.class, int.class).newInstance(activity, requestCode));
-				return;
-			}
-		} catch (Exception e) {
-			Log.d(TAG, "Failed to locate purchase manager for OUYA-IAP (gdx-pay-android-ouya.jar file not installed)", e);
 		}
 
 	}

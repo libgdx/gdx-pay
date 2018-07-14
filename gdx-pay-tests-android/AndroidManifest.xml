@@ -5,8 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!--Google Play-->
     <uses-permission android:name="com.android.vending.BILLING"/>
-    <!--Open Store-->
-    <uses-permission android:name="org.onepf.openiab.permission.BILLING"/>
     <!--Samsung Apps-->
     <uses-permission android:name="com.sec.android.iap.permission.BILLING"/>
     <!--Nokia-->

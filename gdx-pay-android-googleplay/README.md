@@ -4,7 +4,6 @@ Handles purchases and restores for non-consumable products.
 
 ## Unique selling points
 
-* Does not use OpenIAB (OpenIAB is currently unmaintained and has open issues, making payments fail too often)
 * Detailed error reports: all exception messages contain as many details as possible in erroneous situations
 * High quality: developed using TDD practices, aiming to deliver a high quality Android payment module.
 

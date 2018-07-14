@@ -21,7 +21,6 @@ ext {
     androidTargetSdkVersion = 24
     assertJVersion = '1.7.1'
     gdxVersion = '1.9.6'
-    openIabVersion = '0.9.8.7'
     robolectricVersion = '4.3_r2-robolectric-0'
 
     developers = [

@@ -38,7 +38,6 @@ import com.badlogic.gdx.pay.Transaction;
  * // add the various purchase verifiers
  * verifier.addVerifier(new PurchaseVerifierAndroidGoogle(...));
  * verifier.addVerifier(new PurchaseVerifierAndroidAmazon(...));
- * verifier.addVerifier(new PurchaseVerifierAndroidOUYA(...));
  * verifier.addVerifier(new PurchaseVerifieriOSApple(...));
  * ...
  * 

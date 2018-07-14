@@ -65,21 +65,12 @@ Dependency can be configured using Gradle or by manually downloading the depende
 *android:*
 * [gdx-pay-android.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android/0.11.2/gdx-pay-android-0.11.2-library.jar)
 * [gdx-pay-android-googleplay.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-googleplay/0.11.2/gdx-pay-android-googleplay-0.11.2.jar) ( for Google Play with non-consumable products only, exclude this artifact when using other product types. [See status](gdx-pay-android-googleplay/README.md))
-* [gdx-pay-android-openiab.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-openiab/0.11.2/gdx-pay-android-openiab-0.11.2-library.jar) (to support GooglePlay, Amazon etc. [This component is deprecated!](gdx-pay-android-openiab/README.md) Do not use if you are using gdx-pay-android-googleplay.jar, they are mutually exclusive.))
-* [gdx-pay-android-ouya.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-android-ouya/0.11.2/gdx-pay-android-ouya-0.11.2-library.jar) (to support OUYA)
 
 *iOS RoboVM:*
 * [gdx-pay-iosrobovm-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-iosrobovm-apple/0.11.2/gdx-pay-iosrobovm-apple-0.11.2-library.jar)
 
 *iOS MOE:*
 * [gdx-pay-iosmoe-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-iosmoe-apple/0.11.2/gdx-pay-iosmoe-apple-0.11.2-library.jar)
-
-*Desktop:*
-* [gdx-pay-desktop-apple.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-desktop-apple/0.11.2/gdx-pay-desktop-apple-0.11.2-library.jar) (to support the Mac App Store): *needs implementation/volunteers wanted!*
-
-*GWT:*
-* [gdx-pay-gwt-googlewallet.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-gwt-googlewallet/0.11.2/gdx-pay-gwt-googlewallet-0.11.2-library.jar) (to support Google Wallet): *needs implementation/volunteers wanted!*
-
 
 **Gdx-Pay configuration**
 
@@ -95,8 +86,6 @@ Dependency can be configured using Gradle or by manually downloading the depende
 <uses-permission android:name="android.permission.INTERNET"/>
 <!--Google Play-->
 <uses-permission android:name="com.android.vending.BILLING"/>
-<!--Open Store-->
-<uses-permission android:name="org.onepf.openiab.permission.BILLING"/>
 <!--Samsung Apps-->
 <uses-permission android:name="com.sec.android.iap.permission.BILLING"/>
 <!--Nokia-->
@@ -138,10 +127,6 @@ if (PurchaseSystem.hasManager()) {
   //add any stores you are planning on using (Note, IOS_APPLE doesn't actually have an encoded key so pass any string as the second parameter)
   config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE, "<Google key>");
   
-  config.addStoreParam(PurchaseManagerConfig.STORE_NAME_ANDROID_OUYA, new Object[] { 
-    OUYA_DEVELOPER_ID, 
-    KEYPATH 
-  });
   ...
 
   // let's start the purchase system...
@@ -204,7 +189,6 @@ How to integrate in your server:
  // add the various purchase verifiers
  verifier.addVerifier(new PurchaseVerifierAndroidGoogle(...));
  verifier.addVerifier(new PurchaseVerifierAndroidAmazon(...));
- verifier.addVerifier(new PurchaseVerifierAndroidOUYA(...));
  verifier.addVerifier(new PurchaseVerifieriOSApple(...));
  ...
  

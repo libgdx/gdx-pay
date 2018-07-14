@@ -43,13 +43,7 @@ dependencies {
 
     compile project(':gdx-pay-android')
 
-    compile project(':gdx-pay-android-openiab')
-
-
-    compile "org.onepf:openiab:${openIabVersion}"
-
-    compile project(':gdx-pay-android-ouya')
-    compile fileTree(dir: '../gdx-pay-android-ouya/lib', include: ['*.jar'])
+    compile project(':gdx-pay-android-googleplay')
 
     compile "com.badlogicgames.gdx:gdx-backend-android:${gdxVersion}"
     natives "com.badlogicgames.gdx:gdx-platform:${gdxVersion}:natives-armeabi"
