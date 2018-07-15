@@ -14,6 +14,7 @@ import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.pay.FetchItemInformationException;
 import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.ItemAlreadyOwnedException;
@@ -123,8 +124,8 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                             if (responseCode != BillingClient.BillingResponse.OK) {
                                 Gdx.app.error(TAG, "onSkuDetailsResponse failed, error code is " + responseCode);
                                 if (!installationComplete)
-                                    observer.handleInstallError(new GdxPayException("onSkuDetailsResponse failed, " +
-                                            "status code is " + responseCode));
+                                    observer.handleInstallError(new FetchItemInformationException(
+                                            String.valueOf(responseCode)));
 
                             } else {
                                 if (skuDetailsList != null) {
