@@ -14,7 +14,16 @@ Hint: Probably you have to add
 
 to your Gradle file's repository paragraph.
 
-## Proguard Config
+## Configuration
+
+### Dependencies
+
+ * android:
+
+    compile "com.badlogicgames.gdxpay:gdx-pay-android-googlebilling:$gdxPayVersion"
+
+
+### ProGuard configuration
 Just one line:
 
       -keep class com.android.vending.billing.**

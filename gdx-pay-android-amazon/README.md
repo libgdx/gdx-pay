@@ -2,7 +2,16 @@
 
 Handles purchases and restores for non-consumable and consumable products, will not work as intended for subscriptions.
 
-## ProGuard configuration
+## Configuration
+
+### Dependencies
+
+ * android:
+
+    compile "com.badlogicgames.gdxpay:gdx-pay-android-amazon:$gdxPayVersion"
+
+
+### ProGuard configuration
 
      #IAP
      -dontwarn com.amazon.**
