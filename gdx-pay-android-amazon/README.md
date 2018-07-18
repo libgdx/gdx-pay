@@ -2,13 +2,13 @@
 
 Handles purchases and restores for non-consumable and consumable products, will not work as intended for subscriptions.
 
-## Configuration
+## Usage
 
 ### Dependencies
 
- * android:
+ *android:*
 
-    compile "com.badlogicgames.gdxpay:gdx-pay-android-amazon:$gdxPayVersion"
+     compile "com.badlogicgames.gdxpay:gdx-pay-android-amazon:$gdxPayVersion"
 
 
 ### ProGuard configuration
@@ -18,6 +18,12 @@ Handles purchases and restores for non-consumable and consumable products, will 
      -keep class com.amazon.** {*;}
      -keepattributes *Annotation*
      -optimizations !code/allocation/variable
+
+### Instantiation
+
+Add this to your `AndroidLauncher`'s `onCreate` method:
+
+    game.purchaseManager = new PurchaseManagerAndroidAmazon(this, 0);
 
 ## Testing
 * Draft some IAPs in Amazon's developer console

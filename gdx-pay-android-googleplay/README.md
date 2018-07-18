@@ -39,6 +39,9 @@ Handles purchases and restores for non-consumable products.
 -dontwarn org.onepf.oms.appstore.FortumoBillingService
 ```
 
+Add this to your `AndroidLauncher`'s `onCreate` method:
+
+    game.purchaseManager = new AndroidGooglePlayPurchaseManager(this, 0);
 
 ## Limitations
 

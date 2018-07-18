@@ -48,7 +48,80 @@ Look in the service subproject's readme files linked above.
     
 ### Usage
 
-...
+The main interface you use to communicate with payment services is the `PurchaseManager`. Add a field holding it 
+to your main game class:
+
+    public PurchaseManager purchaseManager;
+
+In the launcher class you instantiate the PurchaseManager for the payment service you want to use:
+
+    game.purchaseManager = new DesiredPlatformPurchaseManager(...);
+
+See the documentation of your desired payment service linked above on how to instantiate its `PurchaseManager` implementation.
+
+#### Configuration
+
+Before using the PurchaseManager for payments, it needs to get installed:
+You need to provide a callback listener implementing the `PurchaseObserver` interface and a configuration. 
+Typically, the configuration just passes the items you want to offer: 
+
+        PurchaseManagerConfig pmc = new PurchaseManagerConfig();
+        pmc.addOffer(new Offer().setType(OfferType.ENTITLEMENT).setIdentifier(YOUR_ITEM_SKU));
+        pmc.addOffer(new Offer().setType(OfferType.CONSUMABLE).setIdentifier(YOUR_ITEM_SKU));
+        pmc.addOffer(new Offer().setType(OfferType.SUBSCRIPTION).setIdentifier(YOUR_ITEM_SKU));
+        // some payment services might need special parameters, see documentation
+        pmc.addStoreParam(storename, param)
+
+        purchaseManager.install(new MyPurchaseObserver(), pmc, true);
+
+When the PurchaseManager is sucessfully installed, your `PurchaseObserver` will receive a
+ callback and `purchaseManager.installed()` will return `true`. That might take some seconds depending 
+ on the payment service. You can now request information or purchase items.
+ 
+If you are completely done with the `PurchaseManager`, call its `dipose()` method.
+ 
+#### Request item information
+
+It is important to know which of the items you added to the configuration are available at which
+price. Use `getInformation()` to retrieve an item `Information` object to do so:
+
+    Information skuInfo = purchaseManager.getInformation(sku);
+    if (skuInfo == null || skuInfo.equals(Information.UNAVAILABLE)) {
+       // the item is not available...
+       purchaseButton.setDisabled(true);
+    } else {
+       // enable a purchase button and set its price label
+       purchaseButton.setText(skuInfo.getLocalPricing());
+    }
+        
+#### Purchase items
+
+This is for what you are reading this! It is pretty easy to start a purchasement:
+
+    purchaseManager.purchase(sku);
+    
+If the purchasement was successfully done, 
+you will receive a call to `PurchaseObserver.handlePurchase()`. If there was an error, 
+you *might* receive a call to your observer's `handlePurchaseError()` or `handlePurchaseCanceled()` 
+method.
+
+#### Restore purchases
+
+If the user reinstalls your game or erased its data, it is important to let him restore his past purchases.
+You can do so by calling
+
+    purchaseManager.purchaseRestore()
+    
+You will get a callback to your observer's `handleRestore()` method with a list of past transactions.
+
+**Please note:** Don't use this to query the user's bought entitlements on every game start,
+but persist them yourself. Call this method only when the user hits a "reclaim" button. The most important reasons 
+for this:
+
+ * (iOS only) Apple will reject your game if it calls `purchaseRestore()` without user interaction
+ * You get only reliable results if the device is connected to the internet. If you don't persist
+  entitlements yourself, your paying users are not able to use their purchases offline.
+ * `purchaseRestore()` might take some time to fetch its results 
 
 ### News & Community
 
