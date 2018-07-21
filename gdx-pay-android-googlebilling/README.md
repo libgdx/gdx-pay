@@ -14,10 +14,25 @@ Hint: Probably you have to add
 
 to your Gradle file's repository paragraph.
 
-## Proguard Config
+## Usage
+
+### Dependencies
+
+*android:*
+
+     compile "com.badlogicgames.gdxpay:gdx-pay-android-googlebilling:$gdxPayVersion"
+
+
+### ProGuard configuration
 Just one line:
 
       -keep class com.android.vending.billing.**
+
+### Instantiation
+
+Add this to your `AndroidLauncher`'s `onCreate` method:
+
+    game.purchaseManager = new PurchaseManagerGoogleBilling(this);
 
 ## Testing
 * Upload your compile build with this lib included as an closed alpha build first. This is needed to even being able to add IAPs in the console.

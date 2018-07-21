@@ -30,6 +30,7 @@ import com.amazon.device.iap.model.Receipt;
 import com.amazon.device.iap.model.UserData;
 import com.amazon.device.iap.model.UserDataResponse;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.pay.FetchItemInformationException;
 import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.ItemAlreadyOwnedException;
@@ -268,7 +269,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
         case NOT_SUPPORTED:
 			Gdx.app.error(TAG, "onProductDataResponse: failed, should retry request");
 			if (!productDataRetrieved) {
-				observer.handleInstallError(new GdxPayException("onProductDataResponse failed, status code is " + status));
+				observer.handleInstallError(new FetchItemInformationException(String.valueOf(status)));
 			}
 
             break;

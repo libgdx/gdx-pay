@@ -26,19 +26,6 @@ package com.badlogic.gdx.pay;
  * example to retrieve the IAP item list for all the stores. It is also not possible to store icons, downloadable content etc. in
  * some IAP services. Icons and downloadable content have to be either integrated into your application or served by a separate
  * server that you setup. Your application is responsible to display the items for purchase.
- * <p>
- * 1. Copy the needed JAR files into your Application to make this all work:
- * <ul>
- * <li>Required: gdx-pay.jar (into "core"/libs)
- * <li>Required for Android: gdx-pay-android.jar (into "android"/libs)
- * <li>Required for iOS: gdx-pay-iosrobovm-apple (for iOS/Apple Store) or gdx-pay-iosmoe-apple (for iOS/Apple Store)
- * <li>...
- * </ul>
- * <p>
- * 2. For Android, the correct purchase manager is located automatically if the jar files are available (via Java reflection). No
- * code changes are needed within your Android project. In your "core" project is where it all happens: Have a look at
- * PayTest.java to see how it works.
- * <p>
  *
  * @author noblemaster
  */
