@@ -16,13 +16,20 @@
 
 package com.badlogic.gdx.pay.ios.apple;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
-
+import libcore.io.Base64;
 import org.robovm.apple.foundation.Foundation;
 import org.robovm.apple.foundation.NSArray;
 import org.robovm.apple.foundation.NSBundle;
@@ -47,17 +54,8 @@ import org.robovm.apple.storekit.SKReceiptRefreshRequest;
 import org.robovm.apple.storekit.SKRequest;
 import org.robovm.apple.storekit.SKRequestDelegateAdapter;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import libcore.io.Base64;
-
 /** The purchase manager implementation for Apple's iOS IAP system.
- * 
+ *
  * <p>
  * To integrate into your iOS project do the following:
  * <ol>
@@ -70,7 +68,7 @@ import libcore.io.Base64;
  * </ol>
  * Please note that no code changes for iOS are necessary. As soon as you place the jar files everything will work out of the box
  * (instantiated via reflection).
- * 
+ *
  * @author HD_92 (BlueRiverInteractive)
  * @author noblemaster
  * @author alex-dorokhov
@@ -238,7 +236,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
         transaction.setOrderId(getOriginalTxID(t));
-        
+
         transaction.setPurchaseTime(t.getTransactionDate().toDate());
         if (product != null) {
             // if we didn't load product information, product will be 'null' (we only set if available)
@@ -255,7 +253,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
         transaction.setReversalTime(null);  // no refunds for iOS!
         transaction.setReversalText(null);
-        
+
         if (payment.getRequestData() != null) {
             final String transactionData;
             if (Foundation.getMajorSystemVersion() >= 7) {
@@ -268,14 +266,14 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         else {
             transaction.setTransactionData(null);
         }
-        
+
         // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9 & hopefully long there after :)
         String transactionDataSignature;
         try {
             NSData transactionReceipt = t.getTransactionReceipt();
             transactionDataSignature = transactionReceipt.toBase64EncodedString(NSDataBase64EncodingOptions.None);
         } catch (Throwable e) {
-          log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears broken (was deprecated starting iOS 7.0).", e);         
+          log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears broken (was deprecated starting iOS 7.0).", e);
           transactionDataSignature = null;
         }
         transaction.setTransactionDataSignature(transactionDataSignature);
@@ -283,13 +281,13 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         // return the transaction
         return transaction;
     }
-    
+
     private class AppleProductsDelegatePurchase extends SKProductsRequestDelegateAdapter {
       @Override
       public void didReceiveResponse (SKProductsRequest request, SKProductsResponse response) {
           // Received the registered products from AppStore.
           products = response.getProducts();
-          if (products.size() == 1) {        
+          if (products.size() == 1) {
             // Create a SKPayment from the product and start purchase flow
             SKProduct product = products.get(0);
             log(LOGTYPELOG, "Product info received/purchasing product " + product.getProductIdentifier() + " ...");
@@ -348,6 +346,12 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     }
 
     private class AppleTransactionObserver extends SKPaymentTransactionObserverAdapter {
+
+        @Override
+        public boolean shouldAddStorePayment(SKPaymentQueue queue, SKPayment payment, SKProduct product) {
+            return true;
+        }
+
         @Override
         public void updatedTransactions (SKPaymentQueue queue, NSArray<SKPaymentTransaction> transactions) {
             for (final SKPaymentTransaction transaction : transactions) {
@@ -364,7 +368,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
                     // Find transaction receipt if not set, i.e. t.setTransactionDataSignature() == null
                     // NOTE: - as long as SKPaymentTransaction.transactionReceipt is not removed but only deprecated, let's use it
-                    //       - FIXME: the function below sends ALL receipts, not just the one we need: we need to parse it out (does NOT work right now)! 
+                    //       - FIXME: the function below sends ALL receipts, not just the one we need: we need to parse it out (does NOT work right now)!
                     //       - FIXME: the function below should be added also to restore(): this only gets used for direct-purchases ONLY!
                     //       - parsing "NSBundle.getMainBundle().getAppStoreReceiptURL();": https://developer.apple.com/library/ios/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateLocally.html#//apple_ref/doc/uid/TP40010573-CH1-SW19
                     //         parsing is not for the faint of heart: lots of low-level coding :-/
@@ -426,7 +430,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                         // we are done: let's report!
                         log(LOGTYPELOG, "Transaction was completed: " + getOriginalTxID(transaction));
                         observer.handlePurchase(t);
-    
+
                         // Finish transaction.
                         SKPaymentQueue.getDefaultQueue().finishTransaction(transaction);
                     }
@@ -530,7 +534,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         }
         return Information.UNAVAILABLE;
     }
-    
+
     @Override
     public String toString () {
         return PurchaseManagerConfig.STORE_NAME_IOS_APPLE;				// FIXME: shouldnt this be PurchaseManagerConfig.STORE_NAME_IOS_APPLE or storeName() ??!!
