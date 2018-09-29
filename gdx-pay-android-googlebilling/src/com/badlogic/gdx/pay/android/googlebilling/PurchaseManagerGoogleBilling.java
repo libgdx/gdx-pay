@@ -40,11 +40,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesUpdatedListener {
     private static final String TAG = "GdxPay/GoogleBilling";
-    private final BillingClient mBillingClient;
     private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
     private final Activity activity;
     private boolean serviceConnected;
     private boolean installationComplete;
+    private BillingClient mBillingClient;
     private PurchaseObserver observer;
     private PurchaseManagerConfig config;
 
@@ -174,6 +174,10 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
             config = null;
             Gdx.app.log(TAG, "disposed observer and config");
         }
+        if (mBillingClient != null && mBillingClient.isReady()) {
+            mBillingClient.endConnection();
+            mBillingClient = null;
+        }
         installationComplete = false;
     }
 
@@ -205,6 +209,10 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     @Override
     public void onPurchasesUpdated(int responseCode, @Nullable List<Purchase> purchases) {
+        // check the edge case that the callback comes with a delay right after dispose() was called
+        if (observer == null)
+            return;
+
         if (responseCode == BillingClient.BillingResponse.OK && purchases != null) {
             handlePurchase(purchases, false);
         } else if (responseCode == BillingClient.BillingResponse.USER_CANCELED) {
