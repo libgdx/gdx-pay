@@ -1,5 +1,5 @@
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
+    gradleVersion = '4.6'
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
@@ -15,10 +15,10 @@ class Developer {
 }
 
 ext {
-    androidBuildToolsVersion = '26.1.1' // version also referenced in .travis.yml.
-    androidCompileSdkVersion = 24 // version also referenced in .travis.yml.
+    androidBuildToolsVersion = '28.0.3' // version also referenced in .travis.yml.
+    androidCompileSdkVersion = 27 // version also referenced in .travis.yml.
     androidMinimalSdkVersion = 9
-    androidTargetSdkVersion = 24
+    androidTargetSdkVersion = 27
     assertJVersion = '1.7.1'
     gdxVersion = '1.9.8'
     robolectricVersion = '4.3_r2-robolectric-0'
