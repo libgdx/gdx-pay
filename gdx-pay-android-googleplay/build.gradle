@@ -37,6 +37,9 @@ dependencies {
     compile libraries.jsr305
 
     compile libraries.support_v4
+
+    // dependency to android-all to use
+    unmock 'org.robolectric:android-all:4.3_r2-robolectric-0'
 }
 
 tasks.withType(Test) {
@@ -45,9 +48,6 @@ tasks.withType(Test) {
 }
 
 unMock {
-    // URI to download the android-all.jar from. e.g. https://oss.sonatype.org/content/groups/public/org/robolectric/android-all/
-    downloadFrom "https://oss.sonatype.org/content/groups/public/org/robolectric/android-all/${robolectricVersion}/android-all-${robolectricVersion}.jar"
-
     keep "android.widget.BaseAdapter"
     keep "android.widget.ArrayAdapter"
     keep "android.os.Bundle"
