@@ -18,6 +18,7 @@ import com.badlogic.gdx.pay.FetchItemInformationException;
 import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.ItemAlreadyOwnedException;
+import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.OfferType;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
@@ -251,7 +252,8 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 observer.handlePurchase(transaction);
 
             // CONSUMABLES need to get consumed
-            if (config.getOffer(purchase.getSku()).getType().equals(OfferType.CONSUMABLE)) {
+            Offer purchasedOffer = config.getOffer(purchase.getSku());
+            if (purchasedOffer != null && purchasedOffer.getType().equals(OfferType.CONSUMABLE)) {
                 mBillingClient.consumeAsync(purchase.getPurchaseToken(), new ConsumeResponseListener() {
                     @Override
                     public void onConsumeResponse(@BillingClient.BillingResponse int responseCode, String outToken) {
