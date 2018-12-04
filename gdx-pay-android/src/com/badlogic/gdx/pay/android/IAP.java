@@ -16,35 +16,24 @@
 
 package com.badlogic.gdx.pay.android;
 
-import java.lang.reflect.Method;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.LifecycleListener;
 import com.badlogic.gdx.backends.android.AndroidEventListener;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseSystem;
 
-/** The IAP system for Android supporting Android stores.
- * </ul>
- * <p>
- * To integrate into your Android project do the following:
- * <ul>
- * <li>1. add the jar-files to your project's lib directory as follows (IAP will work automatically once the files are present):
- * <ul>
- * <li>gdx-pay.jar: This goes into your "core"/lib project.
- * <li>gdx-pay-android.jar: ALWAYS include within your Android/lib directory to support the IAP systems below!
- * <li>gdx-pay-android-amazon | gdx-pay-android-googleplay | gdx-pay-android-googlebilling.jar</li>
- * </ul>
- * <li>2. AndroidManifest.xml: add the required permissions (i.e. "uses-permission...").
- * <li>3. proguard.cfg: add the required proguard settings for each store you want to support (see: TODO).
- * </ul>
- * Please note that no code changes for Android are necessary. As soon as you place the jar files everything will work out of the
- * box (instantiated via reflection).
- * 
- * @author noblemaster */
+import java.lang.reflect.Method;
+
+/**
+ * The IAP system for Android supporting Android stores.
+ *
+ * @author noblemaster
+ * @deprecated see {@link PurchaseSystem}
+ */
 public class IAP implements LifecycleListener, AndroidEventListener {
 
 	/** Debug tag for logging. */

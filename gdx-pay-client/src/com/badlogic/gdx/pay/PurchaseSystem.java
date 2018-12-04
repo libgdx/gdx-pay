@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 See AUTHORS file.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +21,16 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.reflect.ClassReflection;
 import com.badlogic.gdx.utils.reflect.Method;
 
-/** Our purchase system to make InApp payments.
- * 
- * @author noblemaster */
+/**
+ * Our purchase system to make InApp payments.
+ *
+ * @author noblemaster
+ * @deprecated This classes uses reflection and constant class names based on your platform to instantiate the needed
+ * purchase manager. This is broken if you obfuscate your code completely and the logic cannot decide if you want to
+ * use Amazon or Google on Android.
+ * It is recommended that you instantiate the needed PurchaseManager implementation in the launcher class, see the
+ * example project.
+ */
 public final class PurchaseSystem {
 
     private static final String TAG = "IAP";
@@ -168,7 +175,7 @@ public final class PurchaseSystem {
             dispose();
         }
     }
-    
+
 	/** Returns information about a product provided by the purchase manager.
 	 *
 	 * Note, you should set autoFetchInformation to true in {@link PurchaseSystem#install} to true to make this method work for all

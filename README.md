@@ -22,7 +22,7 @@ Click on the links to view the subproject's readme files for service-dependant i
 
 ### Installation
 
-The recommended way to use gdx-pay is via dependency management with Gradle or Maven. Artifacts are available in [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.badlogicgames.gdxpay%22). [Guide for using gdx-pay with Maven](https://github.com/libgdx/gdx-pay/wiki/Maven-Integration).
+The recommended way to use gdx-pay is via dependency management with Gradle or Maven. Artifacts are available in [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.badlogicgames.gdxpay%22).
 
 *project-root/build.gradle:*
 
@@ -125,35 +125,29 @@ for this:
   entitlements yourself, your paying users are not able to use their purchases offline.
  * `purchaseRestore()` might take some time to fetch its results 
 
+### Example project
+
+If you have questions or problems, take a look at the [example project](https://github.com/MrStahlfelge/gdx-pay-example) 
+demonstrating how to configure and use gdx-pay. 
+
 ### News & Community
 
 Check the [libGDX blog](http://www.badlogicgames.com/) for news and updates.
-You can get help on the [libGDX forum](http://www.badlogicgames.com/forum/) and talk to other users on the IRC channel #libgdx at irc.freenode.net.
+You can get help on the [libGDX forum](http://www.badlogicgames.com/forum/) and talk to other users on the 
+IRC channel #libgdx at irc.freenode.net or the 
+[libgdx discord](https://discord.gg/6pgDK9F).
 
 ### Reporting Issues
 
 Something not working quite as expected? Do you need a feature that has not been implemented yet? Check the [issue tracker](https://github.com/libgdx/gdx-pay/issues) and add a new one if your problem is not already listed. Please try to provide a detailed description of your problem, including the steps to reproduce it.
 
-### Using gdx-pay locally build binaries in a project
+### Building from source
 
-When Gradle is used to manage dependencies, gdx-pay locally build SNAPSHOT binaries can be used via the Maven local repository.
+To build from source, clone or download this repository, then open it in Android Studio. Perform the following command to compile and upload the library in your local repository:
 
-#### Install gdx-pay binaries in local Maven repository
-
-Build gdx-pay with the following command:
 `./gradlew assemble uploadArchives -PLOCAL`
 
-#### Use Maven local SNAPSHOT version in a project 
-
-1: add `mavenLocal()` as Gradle repository in the root `build.gradle`
-
-    allprojects {
-        repositories {
-           mavenLocal()
-        }
-    }
-
-2: change the version of gdx-pay dependencies to the `version` variable value found in gdx-pay/build.gradle
+See build.gradle file for current version to use in your dependencies.
 
 ### Contributing
 

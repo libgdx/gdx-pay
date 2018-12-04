@@ -17,14 +17,18 @@
 package com.badlogic.gdx.pay;
 
 /**
- * An IAP purchase manager (client). Items for purchase are referenced by an item identifier integer value. Make sure to register
- * the same identifier on all the IAP services desired for easy porting. The same identifier should be registered in the IAP item
- * setup screen of each IAP service (Google Play IAP, Amazon IAP, iOS IAP, Apple Mac Store IAP, Steam etc). For stores that
+ * An IAP purchase manager interface (client). Use this interface in your main game's class for referencing the
+ * actual, platform-dependant purchase system implementation.
+ * <p>
+ * Items for purchase are referenced by an item identifier integer value. Make sure to register the same identifier
+ * on all the IAP services desired for easy porting. The same identifier should be registered in the IAP item setup
+ * screen of each IAP service (Google Play IAP, Amazon IAP, iOS IAP, Apple Mac Store IAP, Steam etc). For stores that
  * support textual item identifiers (most of them except Steam) prefix a "item_" before the item identifier number.
  * <p>
- * Please note due to limitations by the various IAP services you need to manage identifiers on your own. It is not possible for
- * example to retrieve the IAP item list for all the stores. It is also not possible to store icons, downloadable content etc. in
- * some IAP services. Icons and downloadable content have to be either integrated into your application or served by a separate
+ * Please note due to limitations by the various IAP services you need to manage identifiers on your own. It is not
+ * possible for example to retrieve the IAP item list for all the stores. It is also not possible to store icons,
+ * downloadable content etc. in some IAP services. Icons and downloadable content have to be either integrated into
+ * your application or served by a separate
  * server that you setup. Your application is responsible to display the items for purchase.
  *
  * @author noblemaster

@@ -57,21 +57,8 @@ import apple.storekit.protocol.SKRequestDelegate;
 
 import static apple.foundation.c.Foundation.NSLocaleCurrencyCode;
 
-/** The purchase manager implementation for Apple's iOS IAP system.
- * 
- * <p>
- * To integrate into your iOS project do the following:
- * <ol>
- * <li>add the jar-files to your project's lib directory as follows (IAP will work automatically once the files are present):
- * <ul>
- * <li>gdx-pay.jar: This goes into your "core"/lib project.
- * <li>gdx-pay-client.jar: This goes into your "core"/lib project.
- * <li>gdx-pay-iosmoe.jar: This goes into your "iOS"/lib directory.
- * </ul>
- * </ol>
- * Please note that no code changes for iOS are necessary. As soon as you place the jar files everything will work out of the box
- * (instantiated via reflection).
- * 
+/** The purchase manager implementation for Apple's iOS IAP system (iOS-MOE).
+ *
  * @author HD_92 (BlueRiverInteractive)
  * @author noblemaster
  * @author alex-dorokhov

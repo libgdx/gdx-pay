@@ -34,7 +34,6 @@ dependencies {
     testCompile libraries.assertj_core
     compile libraries.libgdx_backend_android
     compile project(':gdx-pay-client')
-    compile libraries.jsr305
 
     compile libraries.support_v4
 }
