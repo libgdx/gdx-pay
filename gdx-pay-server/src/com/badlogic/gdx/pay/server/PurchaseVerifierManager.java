@@ -21,15 +21,7 @@ import java.util.Map;
 
 import com.badlogic.gdx.pay.Transaction;
 
-/** Verifies if a purchase is valid by e.g. doing a post-back validation on a server. Place the following two jar-files onto your
- * server (you won't need any other libGDX libraries on your server, all dependencies to libGDX have been removed for easy
- * integration):
- * <ul>
- * <li>gdx-pay.jar
- * <li>gdx-pay-server.jar
- * </ul>
- * <p>
- * How to integrate in your server:
+/** Verifies if a purchase is valid by e.g. doing a post-back validation on a server.
  * 
  * <pre>
  * // create a manager which returns "true" by default  

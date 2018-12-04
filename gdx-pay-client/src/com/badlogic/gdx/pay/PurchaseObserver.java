@@ -16,11 +16,12 @@
 
 package com.badlogic.gdx.pay;
 
-/** Observer to wait for the purchase manager to initialize as well as to handle restored/refunded transactions.
+/**
+ * Observer interface to wait for the purchase manager to initialize as well as to handle restored/refunded
+ * transactions.
+ * <p>Calling thread of callback methods might not be libGDX main loop thread!</p>
  *
  * @author noblemaster
- *
- * <p>Calling thread of callback methods might not be libGDX main loop thread!</p>
  */
 public interface PurchaseObserver {
 
