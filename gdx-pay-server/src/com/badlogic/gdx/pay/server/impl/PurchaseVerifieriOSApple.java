@@ -58,11 +58,9 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 	@Override
 	public boolean isValid (Transaction transaction) {
 		// the transaction data is our original == receipt!
-		String receipt = transaction.getTransactionData();
-		
-		// encode the data
-		final String receiptData = Base64Util.toBase64(receipt.getBytes());
-		final String jsonData = "{\"receipt-data\" : \"" + receiptData + "\"}";
+		String receipt = transaction.getTransactionDataSignature();
+
+		final String jsonData = "{\"receipt-data\" : \"" + receipt + "\"}";
 		try {
 			// send the data to Apple
 			final URL url = new URL(sandbox ? SANDBOX_URL : PRODUCTION_URL);
