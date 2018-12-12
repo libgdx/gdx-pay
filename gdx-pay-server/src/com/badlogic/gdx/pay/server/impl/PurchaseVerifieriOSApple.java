@@ -82,7 +82,16 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 			rd.close();
 			
 			// verify the response: something like {"status":21004} etc...
-			int status = Integer.parseInt(line.substring(line.indexOf(":") + 1, line.indexOf("}")));
+			final String search = "\"status\":";
+			int start = line.indexOf(search) + search.length();
+			while (Character.isWhitespace(line.charAt(start))) {
+				start++;
+			}
+			int end = start + 1;
+			while (Character.isDigit(line.charAt(end))) {
+				end++;
+			}
+			int status = Integer.parseInt(line.substring(start, end));
 			switch (status) {
 				case 0: return true;
 				case 21000: System.out.println(status + ": App store could not read"); return false;
@@ -101,7 +110,11 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 		} catch (IOException e) {
 			// I/O-error: let's assume bad news...
 			System.err.println("I/O error during verification: " + e);
-			e.printStackTrace();			
+			e.printStackTrace();
+			return false;
+		} catch (NumberFormatException e) {
+			System.err.println("Status extraction failed: " + e);
+			e.printStackTrace();
 			return false;
 		}
 	}
