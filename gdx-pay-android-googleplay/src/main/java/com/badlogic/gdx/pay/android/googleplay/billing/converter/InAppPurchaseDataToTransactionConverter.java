@@ -24,6 +24,10 @@ public class InAppPurchaseDataToTransactionConverter {
 
     // See http://developer.android.com/google/play/billing/billing_reference.html#purchase-data-table
     public static Transaction convertJSONPurchaseToTransaction(String inAppPurchaseData) throws JSONException {
+        if (inAppPurchaseData == null) {
+            // this can happen when purchase was cancelled, ie for test product id 'android.test.canceled'
+            throw new JSONException("inAppPurchaseData was null.");
+        }
         JSONObject object = new JSONObject(inAppPurchaseData);
 
         Transaction transaction = new Transaction();
