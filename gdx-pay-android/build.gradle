@@ -1,15 +1,37 @@
-apply plugin : 'java'
-apply from : '../publish_java.gradle'
+apply plugin: 'com.android.library'
+apply from : '../publish_android.gradle'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
-sourceSets {
-    main {
-        java {
-            srcDir 'src'
+android {
+    defaultPublishConfig "release"
+
+    compileSdkVersion androidCompileSdkVersion
+    buildToolsVersion androidBuildToolsVersion
+
+    defaultConfig {
+        minSdkVersion androidMinimalSdkVersion
+        targetSdkVersion androidTargetSdkVersion
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        testOptions {
+            unitTests.returnDefaultValues = true
         }
     }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java {
+                srcDir 'src'
+            }
+        }
+    }
+}
+
+configurations {
+    compileAndIncludeClassesInLibraryJar
+    compile.extendsFrom compileAndIncludeClassesInLibraryJar
 }
 
 dependencies {

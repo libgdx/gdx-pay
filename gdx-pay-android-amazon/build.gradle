@@ -35,7 +35,7 @@ configurations {
 }
 
 dependencies {
-    compile project(':gdx-pay-android')
+    compile project(':gdx-pay-client')
 
     compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
 }
