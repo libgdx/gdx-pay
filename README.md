@@ -127,7 +127,7 @@ for this:
 
 ### Example project
 
-If you have questions or problems, take a look at the [example project](https://github.com/MrStahlfelge/gdx-pay-example) 
+If you have questions or problems, take a look at the [example project](https://github.com/libgdx/gdx-pay-example) 
 demonstrating how to configure and use gdx-pay. 
 
 ### News & Community
