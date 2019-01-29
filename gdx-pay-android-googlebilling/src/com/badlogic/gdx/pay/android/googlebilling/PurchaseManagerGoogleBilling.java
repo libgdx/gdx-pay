@@ -122,6 +122,9 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                     new SkuDetailsResponseListener() {
                         @Override
                         public void onSkuDetailsResponse(int responseCode, List<SkuDetails> skuDetailsList) {
+                            if (observer == null || Gdx.app == null)
+                                return;
+
                             if (responseCode != BillingClient.BillingResponse.OK) {
                                 Gdx.app.error(TAG, "onSkuDetailsResponse failed, error code is " + responseCode);
                                 if (!installationComplete)
