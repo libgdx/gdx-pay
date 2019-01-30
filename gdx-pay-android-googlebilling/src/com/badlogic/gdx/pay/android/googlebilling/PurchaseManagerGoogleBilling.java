@@ -66,8 +66,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     }
 
     @Override
-    public void install(final PurchaseObserver observer, PurchaseManagerConfig config, final boolean
-            autoFetchInformation) {
+    public void install(PurchaseObserver observer, PurchaseManagerConfig config, final boolean autoFetchInformation) {
         this.observer = observer;
         this.config = config;
 
@@ -77,8 +76,13 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         startServiceConnection(new Runnable() {
             @Override
             public void run() {
+                // it might happen that this was already disposed until the service connection was established
+                if (PurchaseManagerGoogleBilling.this.observer == null)
+                    return;
+
                 if (!serviceConnected)
-                    observer.handleInstallError(new GdxPayException("Connection to Play Billing not possible"));
+                    PurchaseManagerGoogleBilling.this.observer.handleInstallError(
+                            new GdxPayException("Connection to Play Billing not possible"));
                 else if (autoFetchInformation) {
                     fetchOfferDetails();
                 } else
@@ -122,6 +126,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                     new SkuDetailsResponseListener() {
                         @Override
                         public void onSkuDetailsResponse(int responseCode, List<SkuDetails> skuDetailsList) {
+                            // it might happen that this was already disposed until the response comes back
                             if (observer == null || Gdx.app == null)
                                 return;
 
