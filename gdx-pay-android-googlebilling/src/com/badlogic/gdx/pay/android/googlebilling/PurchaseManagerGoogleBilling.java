@@ -251,6 +251,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
             transaction.setReversalTime(null);
             transaction.setReversalText(null);
             transaction.setTransactionData(purchase.getOriginalJson());
+            transaction.setTransactionDataSignature(purchase.getSignature());
 
             // if this is from restoring old transactions, we call handlePurchaseRestore with the complete list
             // from a direct purchase, we call handlePurchase directly
