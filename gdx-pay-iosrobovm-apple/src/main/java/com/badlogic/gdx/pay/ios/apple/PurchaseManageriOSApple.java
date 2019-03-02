@@ -23,6 +23,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.badlogic.gdx.pay.FetchItemInformationException;
+import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseManager;
@@ -109,7 +111,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             productsRequest.start();
         } else {
             log(LOGTYPEERROR, "Error setting up in-app-billing: Device not configured for purchases!");
-            observer.handleInstallError(new RuntimeException(
+            observer.handleInstallError(new GdxPayException(
                 "Error installing purchase observer: Device not configured for purchases!"));
         }
     }
@@ -285,15 +287,15 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             // wrong product count returned
             String errorMessage = "Error purchasing product (wrong product info count returned: " + products.size() + ")!";
             log(LOGTYPEERROR, errorMessage);
-            observer.handlePurchaseError(new RuntimeException(errorMessage));
+            observer.handlePurchaseError(new GdxPayException(errorMessage));
           }
       }
 
       @Override
       public void didFail (SKRequest request, NSError error) {
-          String errorMessage = "Error requesting product info to later purchase: " + (error != null ? error.toString() : "unknown");
+          String errorMessage = "Error requesting product info to later purchase: " + (error != null ? error.getLocalizedDescription() : "unknown");
           log(LOGTYPEERROR, errorMessage);
-          observer.handlePurchaseError(new RuntimeException(errorMessage));
+          observer.handlePurchaseError(new GdxPayException(errorMessage));
       }
   }
 
@@ -326,7 +328,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             log(LOGTYPEERROR, "Error requesting products: " + (error != null ? error.toString() : "unknown"));
 
             // Products request failed (likely due to insuficient network connection).
-            observer.handleInstallError(new RuntimeException("Error requesting products: "
+            observer.handleInstallError(new FetchItemInformationException("Error requesting products: "
                 + (error != null ? error.toString() : "unknown")));
 
         }
@@ -429,14 +431,14 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                     NSError error = transaction.getError();
                     if (error == null) {
                         log(LOGTYPEERROR, "Transaction failed but error-object is null: " + transaction);
-                        observer.handlePurchaseError(new RuntimeException("Transaction failed: " + transaction));
+                        observer.handlePurchaseError(new GdxPayException("Transaction failed: " + transaction));
                     }
                     else if (error.getCode() == SKErrorCode.PaymentCancelled.value()) {
                         log(LOGTYPEERROR, "Transaction was cancelled by user!");
                         observer.handlePurchaseCanceled();
                     } else {
                         log(LOGTYPEERROR, "Transaction failed: " + error.toString());
-                        observer.handlePurchaseError(new RuntimeException("Transaction failed: " + error.toString()));
+                        observer.handlePurchaseError(new GdxPayException("Transaction failed: " + error.getLocalizedDescription()));
                     }
 
                     // Finish transaction.
@@ -479,10 +481,10 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             // Decide if user cancelled or transaction failed.
             if (error.getCode() == SKErrorCode.PaymentCancelled.value()) {
                 log(LOGTYPEERROR, "Restoring of transactions was cancelled by user!");
-                observer.handleRestoreError(new RuntimeException("Restoring of purchases was cancelled by user!"));
+                observer.handleRestoreError(new GdxPayException("Restoring of purchases was cancelled by user!"));
             } else {
                 log(LOGTYPEERROR, "Restoring of transactions failed: " + error.toString());
-                observer.handleRestoreError(new RuntimeException("Restoring of purchases failed: " + error.toString()));
+                observer.handleRestoreError(new GdxPayException("Restoring of purchases failed: " + error.getLocalizedDescription()));
             }
         }
     }
