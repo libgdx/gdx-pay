@@ -309,10 +309,12 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             final SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
 
             // Create and register our apple transaction observer.
-            appleObserver = new AppleTransactionObserver();
-            defaultQueue.addTransactionObserver(appleObserver);
-            defaultQueue.addStrongRef(appleObserver);
-            log(LOGTYPELOG, "Purchase observer successfully installed!");
+            if (appleObserver == null) {
+                appleObserver = new AppleTransactionObserver();
+                defaultQueue.addTransactionObserver(appleObserver);
+                defaultQueue.addStrongRef(appleObserver);
+                log(LOGTYPELOG, "Purchase observer successfully installed!");
+            }
 
             // notify of success...
             observer.handleInstall();
