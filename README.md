@@ -80,7 +80,7 @@ When the PurchaseManager is sucessfully installed, your `PurchaseObserver` will 
  callback and `purchaseManager.installed()` will return `true`. That might take some seconds depending 
  on the payment service. You can now request information or purchase items.
  
-If you are completely done with the `PurchaseManager`, call its `dipose()` method.
+If you are completely done with the `PurchaseManager`, call its `dispose()` method.
  
 #### Request item information
 
