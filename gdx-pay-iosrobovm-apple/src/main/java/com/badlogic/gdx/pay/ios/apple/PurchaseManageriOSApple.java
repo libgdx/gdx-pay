@@ -114,8 +114,8 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                 // Installing intermediate observer to handle App Store promotions
                 startupTransactionObserver = new PromotionTransactionObserver();
                 final SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
-                defaultQueue.addTransactionObserver(appleObserver);
-                defaultQueue.addStrongRef(appleObserver);
+                defaultQueue.addTransactionObserver(startupTransactionObserver);
+                defaultQueue.addStrongRef(startupTransactionObserver);
                 log(LOGTYPELOG, "Startup purchase observer successfully installed!");
             }
 
