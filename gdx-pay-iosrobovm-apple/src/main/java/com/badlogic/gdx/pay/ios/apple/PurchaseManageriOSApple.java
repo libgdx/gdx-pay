@@ -74,10 +74,16 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     private PurchaseManagerConfig config;
 
     private AppleTransactionObserver appleObserver;
+    private PromotionTransactionObserver startupTransactionObserver;
     private SKProductsRequest productsRequest;
     private NSArray<SKProduct> products;
 
     private final List<Transaction> restoredTransactions = new ArrayList<Transaction>();
+
+    /**
+     * set to false if you don't accept payments that were initiated from Apple App Store Promotions
+     */
+    public static boolean addStorePayments = true;
 
     @Override
     public String storeName () {
@@ -102,6 +108,15 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             Set<String> productIdentifiers = new HashSet<String>(size);
             for (int i = 0; i < size; i++) {
                 productIdentifiers.add(config.getOffer(i).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE));
+            }
+
+            if (appleObserver == null) {
+                // Installing intermediate observer to handle App Store promotions
+                startupTransactionObserver = new PromotionTransactionObserver();
+                final SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
+                defaultQueue.addTransactionObserver(appleObserver);
+                defaultQueue.addStrongRef(appleObserver);
+                log(LOGTYPELOG, "Startup purchase observer successfully installed!");
             }
 
             // Request configured offers/products.
@@ -310,6 +325,12 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
             // Create and register our apple transaction observer.
             if (appleObserver == null) {
+                if (startupTransactionObserver != null) {
+                    defaultQueue.removeTransactionObserver(startupTransactionObserver);
+                    defaultQueue.removeStrongRef(startupTransactionObserver);
+                    startupTransactionObserver = null;
+                }
+
                 appleObserver = new AppleTransactionObserver();
                 defaultQueue.addTransactionObserver(appleObserver);
                 defaultQueue.addStrongRef(appleObserver);
@@ -336,11 +357,21 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         }
     }
 
+    // Transaction Observer for App Store promotions must be in place right after
+    // didFinishLaunching(). So this is installed at app start before our full
+    // AppleTransactionObserver is ready after fetching product information.
+    private class PromotionTransactionObserver extends SKPaymentTransactionObserverAdapter {
+        @Override
+        public boolean shouldAddStorePayment(SKPaymentQueue queue, SKPayment payment, SKProduct product) {
+            return addStorePayments;
+        }
+    }
+
     private class AppleTransactionObserver extends SKPaymentTransactionObserverAdapter {
 
         @Override
         public boolean shouldAddStorePayment(SKPaymentQueue queue, SKPayment payment, SKProduct product) {
-            return true;
+            return addStorePayments;
         }
 
         @Override
