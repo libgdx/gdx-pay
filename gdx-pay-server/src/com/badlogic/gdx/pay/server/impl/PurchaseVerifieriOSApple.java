@@ -16,10 +16,7 @@
 
 package com.badlogic.gdx.pay.server.impl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -74,23 +71,12 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 			wr.flush();
 
 			// obtain the response
-			final BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			String line = rd.readLine();
+			int status = extractStatus(conn.getInputStream());
+
 			wr.close();
-			rd.close();
 			
-			// verify the response: something like {"status":21004} etc...
-			final String search = "\"status\":";
-			int start = line.indexOf(search) + search.length();
-			while (Character.isWhitespace(line.charAt(start))) {
-				start++;
-			}
-			int end = start + 1;
-			while (Character.isDigit(line.charAt(end))) {
-				end++;
-			}
-			int status = Integer.parseInt(line.substring(start, end));
 			switch (status) {
+				case -1: System.out.println(status + ": Status extraction failed"); return false;
 				case 0: return true;
 				case 21000: System.out.println(status + ": App store could not read"); return false;
 				case 21002: System.out.println(status + ": Data was malformed"); return false;
@@ -115,6 +101,47 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	/**
+	 * Attempt to extract message from incoming json stream
+	 * The contents should be something along the lines of '{"status":21004}'
+	 * Override this method if you want to use more robust json parser
+	 *
+	 * @param inputStream input stream with json message
+	 * @return extracted status or -1 if not possible
+	 */
+	protected int extractStatus (InputStream inputStream) {
+		final BufferedReader rd = new BufferedReader(new InputStreamReader(inputStream));
+		int status = -1;
+		try {
+			String line = null;
+			while ((line = rd.readLine()) != null) {
+				// verify the response: something like {"status":21004} etc...
+				final String search = "\"status\":";
+				int indexOf = line.indexOf(search);
+				if (indexOf == -1) continue;
+				int start = indexOf + search.length();
+				while (Character.isWhitespace(line.charAt(start))) {
+					start++;
+				}
+				int end = start + 1;
+				while (Character.isDigit(line.charAt(end))) {
+					end++;
+				}
+				status = Integer.parseInt(line.substring(start, end));
+				break;
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			try {
+				rd.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return status;
 	}
 	
 	/** Just used for testing... */
