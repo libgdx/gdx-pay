@@ -16,10 +16,7 @@
 
 package com.badlogic.gdx.pay.server.impl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -58,11 +55,9 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 	@Override
 	public boolean isValid (Transaction transaction) {
 		// the transaction data is our original == receipt!
-		String receipt = transaction.getTransactionData();
-		
-		// encode the data
-		final String receiptData = Base64Util.toBase64(receipt.getBytes());
-		final String jsonData = "{\"receipt-data\" : \"" + receiptData + "\"}";
+		String receipt = transaction.getTransactionDataSignature();
+
+		final String jsonData = "{\"receipt-data\" : \"" + receipt + "\"}";
 		try {
 			// send the data to Apple
 			final URL url = new URL(sandbox ? SANDBOX_URL : PRODUCTION_URL);
@@ -76,14 +71,12 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 			wr.flush();
 
 			// obtain the response
-			final BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			String line = rd.readLine();
+			int status = extractStatus(conn.getInputStream());
+
 			wr.close();
-			rd.close();
 			
-			// verify the response: something like {"status":21004} etc...
-			int status = Integer.parseInt(line.substring(line.indexOf(":") + 1, line.indexOf("}")));
 			switch (status) {
+				case -1: System.out.println(status + ": Status extraction failed"); return false;
 				case 0: return true;
 				case 21000: System.out.println(status + ": App store could not read"); return false;
 				case 21002: System.out.println(status + ": Data was malformed"); return false;
@@ -101,9 +94,57 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 		} catch (IOException e) {
 			// I/O-error: let's assume bad news...
 			System.err.println("I/O error during verification: " + e);
-			e.printStackTrace();			
+			e.printStackTrace();
 			return false;
 		}
+	}
+
+	/**
+	 * Attempt to extract message from incoming json stream
+	 * The contents should be something along the lines of '{"status":21004}'
+	 * Override this method if you want to use more robust json parser
+	 *
+	 * @param inputStream input stream with json message
+	 * @return extracted status or -1 if not possible
+	 */
+	protected int extractStatus (InputStream inputStream) {
+		int status = -1;
+		BufferedReader rd = null;
+		try {
+			rd = new BufferedReader(new InputStreamReader(inputStream));
+			String line;
+			// verify the response: something like {"status":21004} etc...
+			final String search = "\"status\":";
+			while ((line = rd.readLine()) != null) {
+				int indexOf = line.indexOf(search);
+				if (indexOf == -1) continue;
+				int start = indexOf + search.length();
+				while (Character.isWhitespace(line.charAt(start))) {
+					start++;
+				}
+				int end = start + 1;
+				while (Character.isDigit(line.charAt(end))) {
+					end++;
+				}
+				status = Integer.parseInt(line.substring(start, end));
+				break;
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} catch (NumberFormatException ex) {
+			System.err.println("Status extraction failed: " + ex);
+			ex.printStackTrace();
+		} catch (IndexOutOfBoundsException ex) {
+			System.err.println("Status extraction failed: " + ex);
+			ex.printStackTrace();
+		} finally {
+			try {
+				if (rd != null) rd.close();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+		return status;
 	}
 	
 	/** Just used for testing... */
