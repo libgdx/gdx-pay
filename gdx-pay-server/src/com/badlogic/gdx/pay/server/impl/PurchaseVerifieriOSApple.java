@@ -96,10 +96,6 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 			System.err.println("I/O error during verification: " + e);
 			e.printStackTrace();
 			return false;
-		} catch (NumberFormatException e) {
-			System.err.println("Status extraction failed: " + e);
-			e.printStackTrace();
-			return false;
 		}
 	}
 
@@ -112,13 +108,14 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 	 * @return extracted status or -1 if not possible
 	 */
 	protected int extractStatus (InputStream inputStream) {
-		final BufferedReader rd = new BufferedReader(new InputStreamReader(inputStream));
 		int status = -1;
+		BufferedReader rd = null;
 		try {
-			String line = null;
+			rd = new BufferedReader(new InputStreamReader(inputStream));
+			String line;
+			// verify the response: something like {"status":21004} etc...
+			final String search = "\"status\":";
 			while ((line = rd.readLine()) != null) {
-				// verify the response: something like {"status":21004} etc...
-				final String search = "\"status\":";
 				int indexOf = line.indexOf(search);
 				if (indexOf == -1) continue;
 				int start = indexOf + search.length();
@@ -134,11 +131,17 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();
+		} catch (NumberFormatException ex) {
+			System.err.println("Status extraction failed: " + ex);
+			ex.printStackTrace();
+		} catch (IndexOutOfBoundsException ex) {
+			System.err.println("Status extraction failed: " + ex);
+			ex.printStackTrace();
 		} finally {
 			try {
-				rd.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+				if (rd != null) rd.close();
+			} catch (IOException ex) {
+				ex.printStackTrace();
 			}
 		}
 		return status;
