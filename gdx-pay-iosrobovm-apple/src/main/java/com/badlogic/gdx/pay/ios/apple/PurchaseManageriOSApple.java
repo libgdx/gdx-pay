@@ -80,11 +80,6 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
     private final List<Transaction> restoredTransactions = new ArrayList<Transaction>();
 
-    /**
-     * set to false if you don't accept payments that were initiated from Apple App Store Promotions
-     */
-    public static boolean addStorePayments = true;
-
     @Override
     public String storeName () {
         return PurchaseManagerConfig.STORE_NAME_IOS_APPLE;
@@ -110,7 +105,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                 productIdentifiers.add(config.getOffer(i).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE));
             }
 
-            if (appleObserver == null) {
+            if (appleObserver == null && startupTransactionObserver == null) {
                 // Installing intermediate observer to handle App Store promotions
                 startupTransactionObserver = new PromotionTransactionObserver();
                 final SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
@@ -363,15 +358,26 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     private class PromotionTransactionObserver extends SKPaymentTransactionObserverAdapter {
         @Override
         public boolean shouldAddStorePayment(SKPaymentQueue queue, SKPayment payment, SKProduct product) {
-            return addStorePayments;
+            return shouldProcessPromotionalStorePayment(queue, payment, product);
         }
+    }
+
+    /**
+     * ovrride this method in an own subclass if you need to change the default behaviour for promotional
+     * App Store payments. The default behaviour adds the store payment to the payment queue and processes
+     * it as soon as the product information is available.
+     *
+     * @return
+     */
+    protected boolean shouldProcessPromotionalStorePayment(SKPaymentQueue queue, SKPayment payment, SKProduct product) {
+        return true;
     }
 
     private class AppleTransactionObserver extends SKPaymentTransactionObserverAdapter {
 
         @Override
         public boolean shouldAddStorePayment(SKPaymentQueue queue, SKPayment payment, SKProduct product) {
-            return addStorePayments;
+            return shouldProcessPromotionalStorePayment(queue, payment, product);
         }
 
         @Override
