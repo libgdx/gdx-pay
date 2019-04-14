@@ -5,7 +5,7 @@
 
 
 This project aims to provide a **cross-platform API for InApp purchasing**.
-The gdx-pay project is a libGDX extension. Current release version is 0.11.3. Please use at least libGDX v1.9.6, Robovm 2.3.2 or multi-os-engine v1.3.8.
+The gdx-pay project is a libGDX extension. Current release version is 0.12.0. Please use at least libGDX v1.9.8, Robovm 2.3.5 or multi-os-engine v1.3.8.
 
 SNAPSHOT builds are published regularly on [https://oss.sonatype.org/content/repositories/snapshots/](https://oss.sonatype.org/content/repositories/snapshots/).
 
@@ -27,7 +27,7 @@ The recommended way to use gdx-pay is via dependency management with Gradle or M
 *project-root/build.gradle:*
 
     ext {
-        gdxPayVersion = '0.11.3'
+        gdxPayVersion = '0.12.0'
     }
 
 Add the following dependencies:
@@ -80,7 +80,7 @@ When the PurchaseManager is sucessfully installed, your `PurchaseObserver` will 
  callback and `purchaseManager.installed()` will return `true`. That might take some seconds depending 
  on the payment service. You can now request information or purchase items.
  
-If you are completely done with the `PurchaseManager`, call its `dipose()` method.
+If you are completely done with the `PurchaseManager`, call its `dispose()` method.
  
 #### Request item information
 
@@ -127,7 +127,7 @@ for this:
 
 ### Example project
 
-If you have questions or problems, take a look at the [example project](https://github.com/MrStahlfelge/gdx-pay-example) 
+If you have questions or problems, take a look at the [example project](https://github.com/libgdx/gdx-pay-example) 
 demonstrating how to configure and use gdx-pay. 
 
 ### News & Community

@@ -1,11 +1,11 @@
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.5.1'
+    gradleVersion = '4.6'
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
 allprojects {
     group = 'com.badlogicgames.gdxpay'
-    version = '0.11.4-SNAPSHOT'
+    version = '0.12.1-SNAPSHOT'
 }
 
 class Developer {
@@ -15,12 +15,12 @@ class Developer {
 }
 
 ext {
-    androidBuildToolsVersion = '25.0.2' // version also referenced in .travis.yml.
-    androidCompileSdkVersion = 24 // version also referenced in .travis.yml.
+    androidBuildToolsVersion = '28.0.3' // version also referenced in .travis.yml.
+    androidCompileSdkVersion = 27 // version also referenced in .travis.yml.
     androidMinimalSdkVersion = 9
-    androidTargetSdkVersion = 24
+    androidTargetSdkVersion = 27
     assertJVersion = '1.7.1'
-    gdxVersion = '1.9.6'
+    gdxVersion = '1.9.8'
     robolectricVersion = '4.3_r2-robolectric-0'
 
     developers = [
@@ -49,17 +49,18 @@ buildscript {
     ext {
         roboVMVersion = '2.3.4'
         moeVersion = '1.3.12'
-        unmockVersion = "0.3.6"
+        unmockVersion = "0.7.0"
     }
 
     repositories {
         mavenCentral()
         mavenLocal()
+        google()
         jcenter()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:2.3.3"
+        classpath "com.android.tools.build:gradle:3.2.0"
         classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${roboVMVersion}"
         classpath "org.multi-os-engine:moe-gradle:${moeVersion}"
         classpath "de.mobilej.unmock:UnMockPlugin:${unmockVersion}"
@@ -71,6 +72,8 @@ allprojects {
     
     repositories {
         mavenLocal()
+        google()
+        jcenter()
         mavenCentral()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }

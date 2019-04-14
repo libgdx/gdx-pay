@@ -39,4 +39,3 @@ Add this to your `AndroidLauncher`'s `onCreate` method:
 * Add your IAPs and mark them as active
 * Add testers to your closed alpha build so they see the new IAPs and also add these testers as "licensed testers" (Settings -> Account details -> Licsensed) so they are not being charged
 * Testers must join the alpha test channel and can test (in my experiences they can also test with a debug build)
-* Important you need a second account because you cannot buy IAPs yourself
