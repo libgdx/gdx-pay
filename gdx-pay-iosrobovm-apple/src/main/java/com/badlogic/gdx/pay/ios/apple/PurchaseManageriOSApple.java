@@ -23,15 +23,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.badlogic.gdx.pay.FetchItemInformationException;
-import com.badlogic.gdx.pay.GdxPayException;
-import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.Offer;
-import com.badlogic.gdx.pay.PurchaseManager;
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.Transaction;
-import libcore.io.Base64;
 import org.robovm.apple.foundation.Foundation;
 import org.robovm.apple.foundation.NSArray;
 import org.robovm.apple.foundation.NSBundle;
@@ -55,6 +46,17 @@ import org.robovm.apple.storekit.SKProductsResponse;
 import org.robovm.apple.storekit.SKReceiptRefreshRequest;
 import org.robovm.apple.storekit.SKRequest;
 import org.robovm.apple.storekit.SKRequestDelegateAdapter;
+
+import com.badlogic.gdx.pay.FetchItemInformationException;
+import com.badlogic.gdx.pay.GdxPayException;
+import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.Offer;
+import com.badlogic.gdx.pay.PurchaseManager;
+import com.badlogic.gdx.pay.PurchaseManagerConfig;
+import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.Transaction;
+
+import libcore.io.Base64;
 
 /** The purchase manager implementation for Apple's iOS IAP system (RoboVM).
  *
@@ -363,12 +365,11 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     }
 
     /**
-     * ovrride this method in an own subclass if you need to change the default behaviour for promotional
+     * Override this method in an own subclass if you need to change the default behaviour for promotional
      * App Store payments. The default behaviour adds the store payment to the payment queue and processes
      * it as soon as the product information is available.
-     *
-     * @return
      */
+    @SuppressWarnings("WeakerAccess")
     protected boolean shouldProcessPromotionalStorePayment(SKPaymentQueue queue, SKPayment payment, SKProduct product) {
         return true;
     }
