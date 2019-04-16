@@ -2,10 +2,9 @@
 
 Handles purchases and restores for non-consumable products.
 
-## Unique selling points
+## Deprecation
 
-* Detailed error reports: all exception messages contain as many details as possible in erroneous situations
-* High quality: developed using TDD practices, aiming to deliver a high quality Android payment module.
+Please note that this implementation is deprecated. Use [googlebilling](https://github.com/libgdx/gdx-pay/tree/master/gdx-pay-android-googlebilling) instead.
 
 ## Configuration
 
@@ -51,11 +50,3 @@ It implements only features the users have needed so far. The following features
 * No support for subscriptions (only supports non-consumable and consumable products currently).
 
 More details on [Status page](STATUS.md) 
-
-## Contributing
-
-We welcome contributions (bugfixes and new features).
-
-For bugfixes, provide a unit-test that reproduces the bug and verifies it is fixed.
-
-For new features, please provide unit tests for all scenarios that might occur.

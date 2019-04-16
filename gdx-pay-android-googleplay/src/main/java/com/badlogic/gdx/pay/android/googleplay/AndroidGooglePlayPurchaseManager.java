@@ -56,6 +56,7 @@ import static com.badlogic.gdx.pay.android.googleplay.billing.V3GoogleInAppBilli
  * The purchase manager implementation for Google Play (Android).
  *
  * @author noblemaster
+ * @deprecated Use gdx-pay-android-googlebilling
  */
 public class AndroidGooglePlayPurchaseManager implements PurchaseManager, PurchaseManagerTestSupport {
 

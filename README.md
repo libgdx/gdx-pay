@@ -11,8 +11,7 @@ SNAPSHOT builds are published regularly on [https://oss.sonatype.org/content/rep
 
 ### Supported  payment services
 
-* **Google Play (Android)**: There are two implementations for Google Play Billing available:
-[googlebilling](https://github.com/libgdx/gdx-pay/tree/master/gdx-pay-android-googlebilling) and [googleplay](https://github.com/libgdx/gdx-pay/tree/master/gdx-pay-android-googleplay)
+* **Google Play (Android)**: [googlebilling](https://github.com/libgdx/gdx-pay/tree/master/gdx-pay-android-googlebilling)
 
 * **Amazon IAP (Android)**: [amazon](https://github.com/libgdx/gdx-pay/tree/master/gdx-pay-android-amazon)
 
