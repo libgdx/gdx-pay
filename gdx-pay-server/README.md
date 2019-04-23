@@ -5,8 +5,8 @@ purchase is valid by e.g. doing a post-back validation on a server.
 Place the following two jar-files onto your server (you won't need any other libGDX
 libraries on your server, all dependencies to libGDX have been removed for easy integration):
 
-* [gdx-pay.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay/0.12.0/gdx-pay-0.12.0-library.jar)
-* [gdx-pay-server.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-server/0.12.0/gdx-pay-server-0.12.0-library.jar)
+* [gdx-pay.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay/0.12.1/gdx-pay-0.12.1-library.jar)
+* [gdx-pay-server.jar](https://oss.sonatype.org/content/repositories/releases/com/badlogicgames/gdxpay/gdx-pay-server/0.12.1/gdx-pay-server-0.12.1-library.jar)
 
 How to integrate in your server:
 ```
