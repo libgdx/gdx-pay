@@ -71,6 +71,11 @@ Typically, the configuration just passes the items you want to offer:
         pmc.addOffer(new Offer().setType(OfferType.CONSUMABLE).setIdentifier(YOUR_ITEM_SKU));
         pmc.addOffer(new Offer().setType(OfferType.SUBSCRIPTION).setIdentifier(YOUR_ITEM_SKU));
         // some payment services might need special parameters, see documentation
+        // e.g. for an correct iOS IAP setup you need to set following information on offer object
+        // new Offer()
+        //        .setType(OfferType.CONSUMABLE)
+        //        .setIdentifier(YOUR_ITEM_SKU)
+        //        .putIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE,<your_product_id>));
         pmc.addStoreParam(storename, param)
 
         purchaseManager.install(new MyPurchaseObserver(), pmc, true);
