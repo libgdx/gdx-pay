@@ -106,14 +106,17 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             for (int i = 0; i < size; i++) {
                 productIdentifiers.add(config.getOffer(i).getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE));
             }
-
-            if (appleObserver == null && startupTransactionObserver == null) {
-                // Installing intermediate observer to handle App Store promotions
-                startupTransactionObserver = new PromotionTransactionObserver();
-                final SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
-                defaultQueue.addTransactionObserver(startupTransactionObserver);
-                defaultQueue.addStrongRef(startupTransactionObserver);
-                log(LOGTYPELOG, "Startup purchase observer successfully installed!");
+            synchronized(this) {
+                if (appleObserver == null && startupTransactionObserver == null) {
+                    // Installing intermediate observer to handle App Store promotions
+                    synchronized(PurchaseManageriOSApple.this) {
+                        startupTransactionObserver = new PromotionTransactionObserver();
+                        final SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
+                        defaultQueue.addTransactionObserver(startupTransactionObserver);
+                        defaultQueue.addStrongRef(startupTransactionObserver);
+                    }
+                    log(LOGTYPELOG, "Startup purchase observer successfully installed!");
+                }
             }
 
             // Request configured offers/products.
@@ -322,10 +325,13 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
             // Create and register our apple transaction observer.
             if (appleObserver == null) {
-                if (startupTransactionObserver != null) {
-                    defaultQueue.removeTransactionObserver(startupTransactionObserver);
-                    defaultQueue.removeStrongRef(startupTransactionObserver);
-                    startupTransactionObserver = null;
+
+                synchronized (PurchaseManageriOSApple.this) {
+                    if (startupTransactionObserver != null) {
+                        defaultQueue.removeTransactionObserver(startupTransactionObserver);
+                        defaultQueue.removeStrongRef(startupTransactionObserver);
+                        startupTransactionObserver = null;
+                    }
                 }
 
                 appleObserver = new AppleTransactionObserver();
