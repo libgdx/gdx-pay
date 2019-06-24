@@ -324,7 +324,12 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             if (appleObserver == null) {
                 if (startupTransactionObserver != null) {
                     defaultQueue.removeTransactionObserver(startupTransactionObserver);
-                    defaultQueue.removeStrongRef(startupTransactionObserver);
+                    try {
+                        defaultQueue.removeStrongRef(startupTransactionObserver);
+                    } catch (IllegalArgumentException e) {
+                        // see issue #198
+                        log(LOGTYPEERROR, "No strong exists to startupTransactionObserver");
+                    }
                     startupTransactionObserver = null;
                 }
 
