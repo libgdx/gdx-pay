@@ -8,7 +8,6 @@ import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.ConsumeResponseListener;
 import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.PurchaseHistoryResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
@@ -201,18 +200,17 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     @Override
     public void purchaseRestore() {
-        mBillingClient.queryPurchaseHistoryAsync(BillingClient.SkuType.INAPP, new PurchaseHistoryResponseListener() {
-            @Override
-            public void onPurchaseHistoryResponse(int responseCode, List<Purchase> purchases) {
-                if (responseCode == BillingClient.BillingResponse.OK && purchases != null) {
-                    handlePurchase(purchases, true);
-                } else {
-                    Gdx.app.error(TAG, "onPurchaseHistoryResponse failed with responseCode " + responseCode);
-                    observer.handleRestoreError(new GdxPayException("onPurchaseHistoryResponse failed with " +
-                            "responseCode " + responseCode));
-                }
-            }
-        });
+        Purchase.PurchasesResult purchasesResult = mBillingClient.queryPurchases(BillingClient.SkuType.INAPP);
+        int responseCode = purchasesResult.getResponseCode();
+        List<Purchase> purchases = purchasesResult.getPurchasesList();
+
+        if (responseCode == BillingClient.BillingResponse.OK && purchases != null) {
+            handlePurchase(purchases, true);
+        } else {
+            Gdx.app.error(TAG, "queryPurchases failed with responseCode " + responseCode);
+            observer.handleRestoreError(new GdxPayException("queryPurchases failed with " +
+                    "responseCode " + responseCode));
+        }
 
     }
 
