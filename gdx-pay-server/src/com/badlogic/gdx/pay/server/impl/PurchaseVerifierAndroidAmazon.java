@@ -18,11 +18,10 @@ package com.badlogic.gdx.pay.server.impl;
 
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.Transaction;
-import com.badlogic.gdx.pay.server.PurchaseVerifier;
 
 /** Purchase verifier for Amazon. Return true if the purchase appears valid.
  * @author noblemaster */
-public class PurchaseVerifierAndroidAmazon implements PurchaseVerifier {
+public class PurchaseVerifierAndroidAmazon extends PurchaseVerifierBase {
 
 	private String developerSecret;
 	

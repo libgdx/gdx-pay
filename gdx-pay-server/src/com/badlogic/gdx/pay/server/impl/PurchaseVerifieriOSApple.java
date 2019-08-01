@@ -24,12 +24,10 @@ import javax.net.ssl.HttpsURLConnection;
 
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.Transaction;
-import com.badlogic.gdx.pay.server.PurchaseVerifier;
-import com.badlogic.gdx.pay.server.util.Base64Util;
 
 /** Purchase verifier for iOS/Apple. Return true if the purchase appears valid.
  * @author noblemaster */
-public class PurchaseVerifieriOSApple implements PurchaseVerifier {
+public class PurchaseVerifieriOSApple extends PurchaseVerifierBase {
 
 	// sandbox URL
 	private final static String SANDBOX_URL = "https://sandbox.itunes.apple.com/verifyReceipt";
@@ -76,25 +74,24 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 			wr.close();
 			
 			switch (status) {
-				case -1: System.out.println(status + ": Status extraction failed"); return false;
+				case -1: log(status + ": Status extraction failed"); return false;
 				case 0: return true;
-				case 21000: System.out.println(status + ": App store could not read"); return false;
-				case 21002: System.out.println(status + ": Data was malformed"); return false;
-				case 21003: System.out.println(status + ": Receipt not authenticated"); return false;
-				case 21004: System.out.println(status + ": Shared secret does not match"); return false;
-				case 21005: System.out.println(status + ": Receipt server unavailable"); return false;
-				case 21006: System.out.println(status + ": Receipt valid but sub expired"); return false;
-				case 21007: System.out.println(status + ": Sandbox receipt sent to Production environment"); return false;
-				case 21008: System.out.println(status + ": Production receipt sent to Sandbox environment"); return false;
+				case 21000: log(status + ": App store could not read"); return false;
+				case 21002: log(status + ": Data was malformed"); return false;
+				case 21003: log(status + ": Receipt not authenticated"); return false;
+				case 21004: log(status + ": Shared secret does not match"); return false;
+				case 21005: log(status + ": Receipt server unavailable"); return false;
+				case 21006: log(status + ": Receipt valid but sub expired"); return false;
+				case 21007: log(status + ": Sandbox receipt sent to Production environment"); return false;
+				case 21008: log(status + ": Production receipt sent to Sandbox environment"); return false;
 			   default:
 			   	// unknown error code (nevertheless a problem)
-			   	System.out.println("Unknown error: status code = " + status);
+			   	log("Unknown error: status code = " + status);
 			   	return false;
 			}
 		} catch (IOException e) {
 			// I/O-error: let's assume bad news...
-			System.err.println("I/O error during verification: " + e);
-			e.printStackTrace();
+			error("I/O error during verification: " + e, e);
 			return false;
 		}
 	}
@@ -130,18 +127,16 @@ public class PurchaseVerifieriOSApple implements PurchaseVerifier {
 				break;
 			}
 		} catch (IOException ex) {
-			ex.printStackTrace();
+			error("Status extraction failed: " + ex, ex);
 		} catch (NumberFormatException ex) {
-			System.err.println("Status extraction failed: " + ex);
-			ex.printStackTrace();
+			error("Status extraction failed: " + ex, ex);
 		} catch (IndexOutOfBoundsException ex) {
-			System.err.println("Status extraction failed: " + ex);
-			ex.printStackTrace();
+			error("Status extraction failed: " + ex, ex);
 		} finally {
 			try {
 				if (rd != null) rd.close();
 			} catch (IOException ex) {
-				ex.printStackTrace();
+				error("Close failed: ", ex);
 			}
 		}
 		return status;
