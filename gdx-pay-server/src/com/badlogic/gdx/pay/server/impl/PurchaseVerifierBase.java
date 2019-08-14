@@ -16,32 +16,18 @@
 
 package com.badlogic.gdx.pay.server.impl;
 
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.Transaction;
-
-import java.security.PublicKey;
+import com.badlogic.gdx.pay.server.PurchaseVerifier;
 
 /**
- * Purchase verifier for Google Play. Return true if the purchase appears valid.
- *
- * @author noblemaster
+ * Base class for purchase verifier implementations with some common useful functionality
  */
-public class PurchaseVerifierAndroidGoogle extends PurchaseVerifierBase {
-
-    private PublicKey publicKey;
-
-    public void setPublicKey(String publicKeyString) {
-        publicKey = Security.generatePublicKey(publicKeyString);
+public abstract class PurchaseVerifierBase implements PurchaseVerifier {
+    protected void log (String message) {
+        System.out.println(message);
     }
 
-    @Override
-    public String storeName() {
-        return PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE;
-    }
-
-    @Override
-    public boolean isValid(Transaction transaction) {
-        return Security.verify(publicKey, transaction.getTransactionData(),
-                transaction.getTransactionDataSignature());
+    protected void error (String message, Exception ex) {
+        System.err.println(message);
+        ex.printStackTrace();
     }
 }
