@@ -153,6 +153,14 @@ See build.gradle file for current version to use in your dependencies.
 Awesome! If you would like to contribute with a new feature or a bugfix, [fork this repo](https://help.github.com/articles/fork-a-repo) and [submit a pull request](https://help.github.com/articles/using-pull-requests).
 Also, before we can accept substantial code contributions, we need you to sign the [libGDX Contributor License Agreement](https://github.com/libgdx/libgdx/wiki/Contributing#contributor-license-agreement).
 
+### Apps that integrate with gdx-pay
+Please send a pull request to add your apps to this list.
+* [Minesweeper](https://play.google.com/store/apps/details?id=com.popoko.minesweeper)
+* [Chess](https://play.google.com/store/apps/details?id=com.popoko.chessru)
+* [Gomoku](https://play.google.com/store/apps/details?id=com.popoko.gomokukr)
+* [Tic Tac Toe ⑤](https://play.google.com/store/apps/details?id=com.popoko.gomokuvn) 
+* [Tic Tac Toe ⑤ for iOS](https://apps.apple.com/us/app/id1107349135)
+
 ### License
 
 The gdx-pay project is licensed under the [Apache 2 License](https://github.com/libgdx/gdx-pay/blob/master/LICENSE), meaning you can use it free of charge, without strings attached in commercial and non-commercial projects. We love to get (non-mandatory) credit in case you release a game or app using gdx-pay!
