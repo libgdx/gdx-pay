@@ -1,7 +1,10 @@
 package com.badlogic.gdx.pay.android.googlebilling;
 
-import android.app.Activity;
-import android.support.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
@@ -24,16 +27,13 @@ import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
 import com.badlogic.gdx.pay.Transaction;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import android.app.Activity;
+import android.support.annotation.Nullable;
 
 /**
  * The purchase manager implementation for Google Play (Android) using Google Billing Library
  * <p>
- * https://developer.android.com/google/play/billing/billing_java_kotlin
+ * <a href="https://developer.android.com/google/play/billing/billing_java_kotlin">Reference docs</a>
  * <p>
  * Created by Benjamin Schulte on 07.07.2018.
  */
@@ -110,45 +110,74 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         });
     }
 
+    private String getGlobalSkuTypeFromConfig() {
+        String skuType = null;
+        for (int z = 0; z < config.getOfferCount(); z++) {
+            String offerSkuType = mapOfferType(config.getOffer(z).getType());
+            if (skuType != null && !skuType.equals(offerSkuType)) {
+                throw new IllegalStateException("Cannot support OfferType Subscription and other types in the same app");
+            }
+            skuType = offerSkuType;
+        }
+
+        return skuType;
+    }
+
     private void fetchOfferDetails() {
         int offerSize = config.getOfferCount();
         List<String> skuList = new ArrayList<>(offerSize);
-        for (int z = 0; z < config.getOfferCount(); z++) {
+        for (int z = 0; z < offerSize; z++) {
             skuList.add(config.getOffer(z).getIdentifierForStore(storeName()));
         }
 
-        if (skuList.size() > 0) {
-
-            SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-            params.setSkusList(skuList).setType(BillingClient.SkuType.INAPP);
-            mBillingClient.querySkuDetailsAsync(params.build(),
-                    new SkuDetailsResponseListener() {
-                        @Override
-                        public void onSkuDetailsResponse(int responseCode, List<SkuDetails> skuDetailsList) {
-                            // it might happen that this was already disposed until the response comes back
-                            if (observer == null || Gdx.app == null)
-                                return;
-
-                            if (responseCode != BillingClient.BillingResponse.OK) {
-                                Gdx.app.error(TAG, "onSkuDetailsResponse failed, error code is " + responseCode);
-                                if (!installationComplete)
-                                    observer.handleInstallError(new FetchItemInformationException(
-                                            String.valueOf(responseCode)));
-
-                            } else {
-                                if (skuDetailsList != null) {
-                                    for (SkuDetails skuDetails : skuDetailsList) {
-                                        informationMap.put(skuDetails.getSku(), convertSkuDetailsToInformation
-                                                (skuDetails));
-                                    }
-                                }
-                                setInstalledAndNotifyObserver();
-                            }
-                        }
-                    });
-        } else
+        if (skuList.isEmpty()) {
+            Gdx.app.log(TAG, "No skus configured");
             setInstalledAndNotifyObserver();
+        }
 
+        mBillingClient.querySkuDetailsAsync(
+                SkuDetailsParams.newBuilder()
+                        .setSkusList(skuList)
+                        .setType(getGlobalSkuTypeFromConfig())
+                        .build(),
+                new SkuDetailsResponseListener() {
+                    @Override
+                    public void onSkuDetailsResponse(int responseCode, List<SkuDetails> skuDetailsList) {
+                        // it might happen that this was already disposed until the response comes back
+                        if (observer == null || Gdx.app == null)
+                            return;
+
+                        if (responseCode != BillingClient.BillingResponse.OK) {
+                            Gdx.app.error(TAG, "onSkuDetailsResponse failed, error code is " + responseCode);
+                            if (!installationComplete)
+                                observer.handleInstallError(new FetchItemInformationException(
+                                        String.valueOf(responseCode)));
+
+                        } else {
+                            if (skuDetailsList != null) {
+
+                                for (SkuDetails skuDetails : skuDetailsList) {
+                                    informationMap.put(skuDetails.getSku(), convertSkuDetailsToInformation
+                                            (skuDetails));
+                                }
+                            } else {
+                                Gdx.app.log(TAG,"skuDetailsList is null");
+                            }
+                            setInstalledAndNotifyObserver();
+                        }
+                    }
+                });
+    }
+
+    private String mapOfferType(OfferType type) {
+        switch (type) {
+        case CONSUMABLE:
+        case ENTITLEMENT:
+            return BillingClient.SkuType.INAPP;
+        case SUBSCRIPTION:
+            return BillingClient.SkuType.SUBS;
+        }
+        throw new IllegalStateException("Unsupported OfferType: " + type);
     }
 
     private Information convertSkuDetailsToInformation(SkuDetails skuDetails) {
@@ -193,14 +222,14 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     public void purchase(String identifier) {
         BillingFlowParams flowParams = BillingFlowParams.newBuilder()
                 .setSku(identifier)
-                .setType(BillingClient.SkuType.INAPP) // SkuType.SUB for subscription
+                .setType(mapOfferType(config.getOffer(identifier).getType()))
                 .build();
         int responseCode = mBillingClient.launchBillingFlow(activity, flowParams);
     }
 
     @Override
     public void purchaseRestore() {
-        Purchase.PurchasesResult purchasesResult = mBillingClient.queryPurchases(BillingClient.SkuType.INAPP);
+        Purchase.PurchasesResult purchasesResult = mBillingClient.queryPurchases(getGlobalSkuTypeFromConfig());
         int responseCode = purchasesResult.getResponseCode();
         List<Purchase> purchases = purchasesResult.getPurchasesList();
 
