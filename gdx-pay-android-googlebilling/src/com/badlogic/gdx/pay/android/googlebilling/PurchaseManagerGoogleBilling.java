@@ -133,6 +133,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         if (skuList.isEmpty()) {
             Gdx.app.log(TAG, "No skus configured");
             setInstalledAndNotifyObserver();
+            return;
         }
 
         mBillingClient.querySkuDetailsAsync(
