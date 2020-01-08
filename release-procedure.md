@@ -20,12 +20,12 @@ Correct the properties. Create a gpg key if you have not yet one.
    remove "-SNAPSHOT" from version.
 
 2. assemble local build with correct version as last final check:
-    cd to gdx-pay and run: "./gradlew clean && ./gradlew build"
+    cd to gdx-pay and run: `./gradlew clean && ./gradlew build`
 
 3. commit change of version number.
 
 4. upload archives via console:
-    cd to gdx-pay and run: "./gradlew -P RELEASE uploadArchives"
+    cd to gdx-pay and run: `./gradlew -P RELEASE uploadArchives`
 
 5. for RELEASE go to https://oss.sonatype.org --> "Staging Repositories"
    - select "Close", then "Release" to fully release (needs signing!)
