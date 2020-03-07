@@ -33,6 +33,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.pay.FetchItemInformationException;
 import com.badlogic.gdx.pay.GdxPayException;
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.InvalidItemException;
 import com.badlogic.gdx.pay.ItemAlreadyOwnedException;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
@@ -375,7 +376,7 @@ public class PurchaseManagerAndroidAmazon implements PurchaseManager, Purchasing
 
         case INVALID_SKU:
 			Gdx.app.error(TAG, "onPurchaseResponse: invalid SKU!  onProductDataResponse should have disabled buy button already.");
-        	observer.handlePurchaseError(new GdxPayException("onPurchaseResponse: INVALID_SKU"));
+        	observer.handlePurchaseError(new InvalidItemException());
             break;
 
         case FAILED:

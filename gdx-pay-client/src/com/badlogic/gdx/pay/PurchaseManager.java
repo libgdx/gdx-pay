@@ -70,7 +70,7 @@ public interface PurchaseManager extends InformationFinder {
     /**
      * Requests to purchase an item. The listener will always be called once the purchase has either completed or failed.
      * <p>
-     * Note: a GDX runtime exception if throw if you have not registered a purchase observer.
+     * Note: a GDX runtime exception is thrown if you have not registered a purchase observer.
      *
      * @param identifier The item to purchase.
      */
