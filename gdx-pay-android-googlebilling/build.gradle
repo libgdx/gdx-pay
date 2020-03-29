@@ -37,6 +37,6 @@ repositories {
 }
 
 dependencies {
-    compile project(':gdx-pay-client')
-    compile 'com.android.billingclient:billing:2.2.0'
+    api project(':gdx-pay-client')
+    api 'com.android.billingclient:billing:2.2.0'
 }

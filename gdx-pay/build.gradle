@@ -1,7 +1,7 @@
 apply plugin: 'java'
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 apply plugin : 'java'
 apply from : '../publish_java.gradle'

@@ -4,5 +4,5 @@
 
 ### Dependencies
 
-     compile "com.badlogicgames.gdxpay:gdx-pay-iosmoe-apple:$gdxPayVersion"
+     api "com.badlogicgames.gdxpay:gdx-pay-iosmoe-apple:$gdxPayVersion"
 

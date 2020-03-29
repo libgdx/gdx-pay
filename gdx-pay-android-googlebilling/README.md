@@ -20,7 +20,7 @@ to your Gradle file's repository paragraph.
 
 *android:*
 
-     compile "com.badlogicgames.gdxpay:gdx-pay-android-googlebilling:$gdxPayVersion"
+     api "com.badlogicgames.gdxpay:gdx-pay-android-googlebilling:$gdxPayVersion"
 
 
 ### ProGuard configuration

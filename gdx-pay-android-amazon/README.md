@@ -8,7 +8,7 @@ Handles purchases and restores for non-consumable and consumable products, will 
 
  *android:*
 
-     compile "com.badlogicgames.gdxpay:gdx-pay-android-amazon:$gdxPayVersion"
+     api "com.badlogicgames.gdxpay:gdx-pay-android-amazon:$gdxPayVersion"
 
 
 ### ProGuard configuration

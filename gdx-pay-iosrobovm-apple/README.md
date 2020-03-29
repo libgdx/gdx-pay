@@ -2,7 +2,7 @@
 
 ### Dependencies
 
-     compile "com.badlogicgames.gdxpay:gdx-pay-iosrobovm-apple:$gdxPayVersion"
+    api "com.badlogicgames.gdxpay:gdx-pay-iosrobovm-apple:$gdxPayVersion"
 
 ### Instantiation
 
