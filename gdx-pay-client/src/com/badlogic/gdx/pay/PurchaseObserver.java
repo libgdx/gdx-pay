@@ -16,6 +16,8 @@
 
 package com.badlogic.gdx.pay;
 
+import java.util.Map;
+
 /**
  * Observer interface to wait for the purchase manager to initialize as well as to handle restored/refunded
  * transactions.
@@ -78,4 +80,11 @@ public interface PurchaseObserver {
 	 * <p>Calling thread might not be libGDX main loop thread!</p>
 	 */
 	void handlePurchaseCanceled();
+
+	/** Called when a purchase, like a SUBSCRIPTION, is registered.
+	 *
+	 * <p>This is useful for if want to create visual recognition for a purchase in your game.</p>
+	 */
+    void handleRestore(Map<String, Boolean> dataPass);
+
 }
