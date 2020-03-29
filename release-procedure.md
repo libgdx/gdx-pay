@@ -20,16 +20,18 @@ Correct the properties. Create a gpg key if you have not yet one.
    remove "-SNAPSHOT" from version.
 
 2. assemble local build with correct version as last final check:
-    cd to gdx-pay and run: "./gradlew clean && ./gradlew build"
+    cd to gdx-pay and run: `./gradlew clean && ./gradlew build`
 
-3. upload archives via console:
-    cd to gdx-pay and run: "./gradlew -P RELEASE uploadArchives"
+3. commit change of version number.
 
-4. for RELEASE go to https://oss.sonatype.org --> "Staging Repositories"
+4. upload archives via console:
+    cd to gdx-pay and run: `./gradlew -P RELEASE uploadArchives`
+
+5. for RELEASE go to https://oss.sonatype.org --> "Staging Repositories"
    - select "Close", then "Release" to fully release (needs signing!)
    - signing: needs that sonatype key from above...
 
-5. update e.g. gdx-pay README.md --> search & replace version numbers!
+6. update e.g. gdx-pay README.md --> search & replace version numbers!
    update/tag git: e.g. v0.7.0
    update version to e.g. 0.8.0-SNAPSHOT in build.gradle
 

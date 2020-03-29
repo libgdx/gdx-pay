@@ -9,7 +9,7 @@ android {
     buildToolsVersion androidBuildToolsVersion
 
     defaultConfig {
-        minSdkVersion androidMinimalSdkVersion
+        minSdkVersion 14
         targetSdkVersion androidTargetSdkVersion
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
         testOptions {
@@ -38,5 +38,5 @@ repositories {
 
 dependencies {
     compile project(':gdx-pay-client')
-    compile 'com.android.billingclient:billing:1.1'
+    compile 'com.android.billingclient:billing:2.1.0'
 }

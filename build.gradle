@@ -5,7 +5,7 @@ task wrapper(type: Wrapper) {
 
 allprojects {
     group = 'com.badlogicgames.gdxpay'
-    version = '1.0.1-SNAPSHOT'
+    version = '1.2-SNAPSHOT'
 }
 
 class Developer {
@@ -17,7 +17,6 @@ class Developer {
 ext {
     androidBuildToolsVersion = '28.0.3' // version also referenced in .travis.yml.
     androidCompileSdkVersion = 27 // version also referenced in .travis.yml.
-    androidMinimalSdkVersion = 9
     androidTargetSdkVersion = 27
     assertJVersion = '1.7.1'
     gdxVersion = '1.9.8'

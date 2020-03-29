@@ -2,10 +2,8 @@
 [![Maven Central](http://maven-badges.herokuapp.com/maven-central/com.badlogicgames.gdxpay/gdx-pay/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.badlogicgames.gdxpay%22)
 [![Dependency Status](https://dependencyci.com/github/libgdx/gdx-pay/badge)](https://dependencyci.com/github/libgdx/gdx-pay)
 
-
-
 This project aims to provide a **cross-platform API for InApp purchasing**.
-The gdx-pay project is a libGDX extension. Current release version is 0.12.1. Please use at least libGDX v1.9.8, Robovm 2.3.5 or multi-os-engine v1.3.8.
+The gdx-pay project is a libGDX extension. Current release version is 1.1.0. Please use at least libGDX v1.9.8, Robovm 2.3.5 or multi-os-engine v1.3.8.
 
 SNAPSHOT builds are published regularly on [https://oss.sonatype.org/content/repositories/snapshots/](https://oss.sonatype.org/content/repositories/snapshots/).
 
@@ -26,7 +24,7 @@ The recommended way to use gdx-pay is via dependency management with Gradle or M
 *project-root/build.gradle:*
 
     ext {
-        gdxPayVersion = '0.12.1'
+        gdxPayVersion = '1.1.0'
     }
 
 Add the following dependencies:
@@ -66,14 +64,14 @@ Before using the PurchaseManager for payments, it needs to get installed:
 You need to provide a callback listener implementing the `PurchaseObserver` interface and a configuration. 
 Typically, the configuration just passes the items you want to offer: 
 
-        PurchaseManagerConfig pmc = new PurchaseManagerConfig();
-        pmc.addOffer(new Offer().setType(OfferType.ENTITLEMENT).setIdentifier(YOUR_ITEM_SKU));
-        pmc.addOffer(new Offer().setType(OfferType.CONSUMABLE).setIdentifier(YOUR_ITEM_SKU));
-        pmc.addOffer(new Offer().setType(OfferType.SUBSCRIPTION).setIdentifier(YOUR_ITEM_SKU));
-        // some payment services might need special parameters, see documentation
-        pmc.addStoreParam(storename, param)
-
-        purchaseManager.install(new MyPurchaseObserver(), pmc, true);
+    PurchaseManagerConfig pmc = new PurchaseManagerConfig();
+    pmc.addOffer(new Offer().setType(OfferType.ENTITLEMENT).setIdentifier(YOUR_ITEM_SKU));
+    pmc.addOffer(new Offer().setType(OfferType.CONSUMABLE).setIdentifier(YOUR_ITEM_SKU));
+    pmc.addOffer(new Offer().setType(OfferType.SUBSCRIPTION).setIdentifier(YOUR_ITEM_SKU));
+    // some payment services might need special parameters, see documentation
+    pmc.addStoreParam(storename, param)
+    
+    purchaseManager.install(new MyPurchaseObserver(), pmc, true);
 
 When the PurchaseManager is sucessfully installed, your `PurchaseObserver` will receive a
  callback and `purchaseManager.installed()` will return `true`. That might take some seconds depending 
@@ -144,7 +142,7 @@ Something not working quite as expected? Do you need a feature that has not been
 
 To build from source, clone or download this repository, then open it in Android Studio. Perform the following command to compile and upload the library in your local repository:
 
-`./gradlew assemble uploadArchives -PLOCAL`
+    ./gradlew assemble uploadArchives -PLOCAL
 
 See build.gradle file for current version to use in your dependencies.
 

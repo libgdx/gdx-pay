@@ -17,6 +17,7 @@
 package com.badlogic.gdx.pay.ios.apple;
 
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.InvalidItemException;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
@@ -161,7 +162,7 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
         Offer offer = config.getOffer(identifier);
         if (offer == null) {
             log(LOGTYPEERROR, "Invalid product identifier, " + identifier);
-            observer.handlePurchaseError(new RuntimeException("Invalid product identifier, " + identifier));
+            observer.handlePurchaseError(new InvalidItemException(identifier));
         } else {
             String identifierForStore = offer.getIdentifierForStore
                     (PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
