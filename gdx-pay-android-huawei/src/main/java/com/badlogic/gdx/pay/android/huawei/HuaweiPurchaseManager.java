@@ -15,7 +15,6 @@ import com.huawei.hmf.tasks.Task;
 import com.huawei.hms.iap.Iap;
 import com.huawei.hms.iap.IapApiException;
 import com.huawei.hms.iap.IapClient;
-import com.huawei.hms.iap.entity.ConsumeOwnedPurchaseReq;
 import com.huawei.hms.iap.entity.ConsumeOwnedPurchaseResult;
 import com.huawei.hms.iap.entity.InAppPurchaseData;
 import com.huawei.hms.iap.entity.IsEnvReadyResult;
@@ -25,16 +24,13 @@ import com.huawei.hms.iap.entity.OwnedPurchasesResult;
 import com.huawei.hms.iap.entity.ProductInfo;
 import com.huawei.hms.iap.entity.ProductInfoReq;
 import com.huawei.hms.iap.entity.ProductInfoResult;
-import com.huawei.hms.iap.entity.PurchaseIntentReq;
 import com.huawei.hms.iap.entity.PurchaseIntentResult;
 import com.huawei.hms.support.api.client.Status;
 
 import org.json.JSONException;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The purchase manager implementation for Huawei App Gallery (Android) using HMS IAP
@@ -47,18 +43,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HuaweiPurchaseManager implements PurchaseManager {
 
     private final Activity activity;
-    private boolean installationComplete;
-    private PurchaseObserver observer;
-    private IAPListener iapListener;
-    private ConcurrentHashMap<String, ProductInfo> productInfoMap = new ConcurrentHashMap<>();
-
-    private boolean hasToFetchEntetliments = false;
-    private boolean hasToFetchConsumables = false;
-    private boolean hasToFetchSubscriptions = false;
+    private final HuaweiPurchaseManagerConfig huaweiPurchaseManagerConfig = new HuaweiPurchaseManagerConfig();
+    private final HuaweiPurchaseManagerFlagWrapper huaweiPurchaseManagerFlagWrapper = new HuaweiPurchaseManagerFlagWrapper();
 
     public HuaweiPurchaseManager(Activity activity, IAPListener iapListener) {
         this.activity = activity;
-        this.iapListener = iapListener;
+        this.huaweiPurchaseManagerConfig.iapListener = iapListener;
     }
 
     private void checkIAPStatus(final PurchaseManagerConfig config, final boolean autoFetchInformation) {
@@ -77,15 +67,15 @@ public class HuaweiPurchaseManager implements PurchaseManager {
                     if (status.getStatusCode() == OrderStatusCode.ORDER_HWID_NOT_LOGIN) {
                         // Not logged in.
                         if (status.hasResolution()) {
-                            iapListener.onLoginRequired();
+                            huaweiPurchaseManagerConfig.iapListener.onLoginRequired();
                         } else {
-                            iapListener.onIAPError(apiException);
+                            huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
                         }
                     } else if (status.getStatusCode() == OrderStatusCode.ORDER_ACCOUNT_AREA_NOT_SUPPORTED) {
                         // The current region does not support HUAWEI IAP.
-                        iapListener.onRegionNotSupported();
+                        huaweiPurchaseManagerConfig.iapListener.onRegionNotSupported();
                     } else {
-                        iapListener.onError(e);
+                        huaweiPurchaseManagerConfig.iapListener.onError(e);
                     }
                 }
             }
@@ -97,28 +87,9 @@ public class HuaweiPurchaseManager implements PurchaseManager {
         return PurchaseManagerConfig.STORE_NAME_ANDROID_HUAWEI;
     }
 
-    private int getHuaweiPriceType(OfferType offerType) {
-        int type = -1;
-
-// priceType: 0: consumable; 1: non-consumable; 2: auto-renewable subscription
-        switch (offerType) {
-            case CONSUMABLE:
-                type = IapClient.PriceType.IN_APP_CONSUMABLE;
-                break;
-            case ENTITLEMENT:
-                type = IapClient.PriceType.IN_APP_NONCONSUMABLE;
-                break;
-            case SUBSCRIPTION:
-                type = IapClient.PriceType.IN_APP_SUBSCRIPTION;
-                break;
-        }
-
-        return type;
-    }
-
     @Override
     public void install(final PurchaseObserver observer, PurchaseManagerConfig config, boolean autoFetchInformation) {
-        this.observer = observer;
+        this.huaweiPurchaseManagerConfig.observer = observer;
 
         checkIAPStatus(config, autoFetchInformation);
     }
@@ -141,24 +112,24 @@ public class HuaweiPurchaseManager implements PurchaseManager {
         List<String> subscriptions = getProductListByType(config, OfferType.SUBSCRIPTION);
 
         if (!entitlements.isEmpty()) {
-            this.hasToFetchEntetliments = true;
+            this.huaweiPurchaseManagerFlagWrapper.hasToFetchEntetliments = true;
             fetchOffersForType(subscriptions, OfferType.ENTITLEMENT);
         }
 
         if (!consumables.isEmpty()) {
-            this.hasToFetchConsumables = true;
+            this.huaweiPurchaseManagerFlagWrapper.hasToFetchConsumables = true;
             fetchOffersForType(subscriptions, OfferType.CONSUMABLE);
         }
 
         if (!subscriptions.isEmpty()) {
-            this.hasToFetchSubscriptions = true;
+            this.huaweiPurchaseManagerFlagWrapper.hasToFetchSubscriptions = true;
             fetchOffersForType(subscriptions, OfferType.SUBSCRIPTION);
         }
     }
 
     private void fetchOffersForType(List<String> offers, OfferType offerType) {
         ProductInfoReq req = new ProductInfoReq();
-        req.setPriceType(getHuaweiPriceType(offerType));
+        req.setPriceType(HuaweiPurchaseManagerUtils.getHuaweiPriceType(offerType));
         req.setProductIds(offers);
 
         fetchOffersByReq(req);
@@ -174,7 +145,7 @@ public class HuaweiPurchaseManager implements PurchaseManager {
 
                 for (int i = 0; i < productInfoList.size(); i++) {
                     ProductInfo productInfo = productInfoList.get(i);
-                    productInfoMap.put(productInfo.getProductId(), productInfo);
+                    huaweiPurchaseManagerConfig.productInfoMap.put(productInfo.getProductId(), productInfo);
                 }
 
                 notifyInstallationAfterOffersCheck(productInfoReq.getPriceType());
@@ -182,16 +153,16 @@ public class HuaweiPurchaseManager implements PurchaseManager {
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(Exception e) {
-                resetFetchFlagByType(productInfoReq.getPriceType());
+                huaweiPurchaseManagerFlagWrapper.resetFetchFlagByType(productInfoReq.getPriceType());
 
                 if (e instanceof IapApiException) {
                     IapApiException apiException = (IapApiException) e;
-                    iapListener.onIAPError(apiException);
+                    huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
                 } else {
-                    iapListener.onError(e);
+                    huaweiPurchaseManagerConfig.iapListener.onError(e);
                 }
 
-                observer.handleInstallError(e);
+                huaweiPurchaseManagerConfig.observer.handleInstallError(e);
             }
         });
     }
@@ -210,64 +181,50 @@ public class HuaweiPurchaseManager implements PurchaseManager {
         return productIdList;
     }
 
-    private void resetFetchFlagByType(int offerType) {
-        switch (offerType) {
-            case IapClient.PriceType.IN_APP_CONSUMABLE:
-                this.hasToFetchConsumables = false;
-                break;
-            case IapClient.PriceType.IN_APP_NONCONSUMABLE:
-                this.hasToFetchEntetliments = false;
-                break;
-            case IapClient.PriceType.IN_APP_SUBSCRIPTION:
-                this.hasToFetchSubscriptions = false;
-                break;
-        }
-    }
-
     private void notifyInstallationAfterOffersCheck(int offerType) {
-        resetFetchFlagByType(offerType);
+        this.huaweiPurchaseManagerFlagWrapper.resetFetchFlagByType(offerType);
 
-        if (!this.hasToFetchConsumables && !this.hasToFetchEntetliments && !this.hasToFetchSubscriptions) {
+        if (this.huaweiPurchaseManagerFlagWrapper.hasFetchedAllProducts()) {
             notifyInstallation();
         }
     }
 
     private void notifyInstallation() {
-        if (!installationComplete) {
-            installationComplete = true;
-            observer.handleInstall();
+        if (!this.huaweiPurchaseManagerConfig.installationComplete) {
+            this.huaweiPurchaseManagerConfig.installationComplete = true;
+            this.huaweiPurchaseManagerConfig.observer.handleInstall();
         }
     }
 
     @Override
     public boolean installed() {
-        return this.installationComplete;
+        return this.huaweiPurchaseManagerConfig.installationComplete;
     }
 
     @Override
     public void dispose() {
-        if (this.observer != null) {
+        if (this.huaweiPurchaseManagerConfig.observer != null) {
             // remove observer and config as well
-            this.observer = null;
+            this.huaweiPurchaseManagerConfig.observer = null;
         }
 
-        this.installationComplete = false;
+        this.huaweiPurchaseManagerConfig.installationComplete = false;
     }
 
     @Override
     public void purchase(String identifier) {
-        ProductInfo productInfo = this.productInfoMap.get(identifier);
+        ProductInfo productInfo = this.huaweiPurchaseManagerConfig.productInfoMap.get(identifier);
 
         if (productInfo != null) {
             Task<PurchaseIntentResult> task = Iap.getIapClient(activity)
-                    .createPurchaseIntent(getPurchaseIntentRequest(productInfo));
+                    .createPurchaseIntent(HuaweiPurchaseManagerUtils.getPurchaseIntentRequest(productInfo));
             task.addOnSuccessListener(new OnSuccessListener<PurchaseIntentResult>() {
                 @Override
                 public void onSuccess(PurchaseIntentResult result) {
                     // Obtain the payment result.
                     Status status = result.getStatus();
                     if (status.hasResolution()) {
-                        iapListener.onPurchaseResult(result);
+                        huaweiPurchaseManagerConfig.iapListener.onPurchaseResult(result);
                     }
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -275,28 +232,19 @@ public class HuaweiPurchaseManager implements PurchaseManager {
                 public void onFailure(Exception e) {
                     if (e instanceof IapApiException) {
                         IapApiException apiException = (IapApiException) e;
-                        iapListener.onIAPError(apiException);
+                        huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
                     } else {
-                        iapListener.onError(e);
+                        huaweiPurchaseManagerConfig.iapListener.onError(e);
                     }
 
-                    observer.handlePurchaseError(e);
+                    huaweiPurchaseManagerConfig.observer.handlePurchaseError(e);
                 }
             });
         } else {
             Exception e = new ProductInfoNotFoundException();
-            iapListener.onError(e);
-            observer.handlePurchaseError(e);
+            huaweiPurchaseManagerConfig.iapListener.onError(e);
+            huaweiPurchaseManagerConfig.observer.handlePurchaseError(e);
         }
-    }
-
-    private PurchaseIntentReq getPurchaseIntentRequest(ProductInfo productInfo) {
-        PurchaseIntentReq req = new PurchaseIntentReq();
-        req.setProductId(productInfo.getProductId());
-        req.setPriceType(productInfo.getPriceType());
-        req.setDeveloperPayload("test");
-
-        return req;
     }
 
     @Override
@@ -321,12 +269,12 @@ public class HuaweiPurchaseManager implements PurchaseManager {
             public void onFailure(Exception e) {
                 if (e instanceof IapApiException) {
                     IapApiException apiException = (IapApiException) e;
-                    iapListener.onIAPError(apiException);
+                    huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
                 } else {
-                    iapListener.onError(e);
+                    huaweiPurchaseManagerConfig.iapListener.onError(e);
                 }
 
-                observer.handleRestoreError(e);
+                huaweiPurchaseManagerConfig.observer.handleRestoreError(e);
             }
         });
     }
@@ -338,105 +286,45 @@ public class HuaweiPurchaseManager implements PurchaseManager {
             try {
                 String originalData = ownedItems.get(i);
                 InAppPurchaseData inAppPurchaseData = new InAppPurchaseData(originalData);
-                transactions[i] = getTransactionFromPurchaseData(inAppPurchaseData, originalData);
+                transactions[i] = HuaweiPurchaseManagerUtils.getTransactionFromPurchaseData(inAppPurchaseData, originalData, storeName());
             } catch (JSONException ex) {
             }
 
         }
 
-        observer.handleRestore(transactions);
-    }
-
-    private Transaction getTransactionFromPurchaseData(InAppPurchaseData inAppPurchaseData, String originalData) {
-        Transaction transaction = null;
-
-        if (inAppPurchaseData != null) {
-            transaction.setIdentifier(inAppPurchaseData.getProductId());
-            transaction.setStoreName(storeName());
-            transaction.setPurchaseText("Purchased: " + inAppPurchaseData.getProductId());
-            transaction.setOrderId(inAppPurchaseData.getOrderID());
-            transaction.setRequestId(inAppPurchaseData.getPurchaseToken());
-            transaction.setPurchaseTime(new Date(inAppPurchaseData.getPurchaseTime()));
-            transaction.setTransactionData(originalData);
-            transaction.setReversalTime(null);
-            transaction.setReversalText(null);
-        }
-
-        return transaction;
+        huaweiPurchaseManagerConfig.observer.handleRestore(transactions);
     }
 
     @Override
     public Information getInformation(String identifier) {
-        ProductInfo productInfo = this.productInfoMap.get(identifier);
+        ProductInfo productInfo = this.huaweiPurchaseManagerConfig.productInfoMap.get(identifier);
 
         if (productInfo != null) {
-            return buildInformation(productInfo);
+            return HuaweiPurchaseManagerUtils.buildInformation(productInfo);
         }
 
         return null;
     }
 
-    private Information buildInformation(ProductInfo productInfo) {
-        String priceString = productInfo.getPrice();
-        return Information.newBuilder()
-                .localName(productInfo.getProductName())
-                .localDescription(productInfo.getProductDesc())
-                .localPricing(priceString)
-                .priceCurrencyCode(productInfo.getCurrency())
-                .priceInCents((int) (productInfo.getMicrosPrice() / 10000))
-                .build();
-    }
-
     public void consumeProduct(String inAppPurchaseData) {
         IapClient mClient = Iap.getIapClient(this.activity);
-        Task<ConsumeOwnedPurchaseResult> task = mClient.consumeOwnedPurchase(createConsumeOwnedPurchaseReq(inAppPurchaseData));
+        Task<ConsumeOwnedPurchaseResult> task = mClient.consumeOwnedPurchase(HuaweiPurchaseManagerUtils.createConsumeOwnedPurchaseReq(inAppPurchaseData));
         task.addOnSuccessListener(new OnSuccessListener<ConsumeOwnedPurchaseResult>() {
             @Override
             public void onSuccess(ConsumeOwnedPurchaseResult result) {
-                iapListener.onConsumedResult(result);
+                huaweiPurchaseManagerConfig.iapListener.onConsumedResult(result);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(Exception e) {
                 if (e instanceof IapApiException) {
                     IapApiException apiException = (IapApiException) e;
-                    iapListener.onIAPError(apiException);
+                    huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
                 } else {
-                    iapListener.onError(e);
+                    huaweiPurchaseManagerConfig.iapListener.onError(e);
                 }
             }
         });
-    }
-
-    private ConsumeOwnedPurchaseReq createConsumeOwnedPurchaseReq(String purchaseData) {
-        ConsumeOwnedPurchaseReq req = new ConsumeOwnedPurchaseReq();
-        // Parse purchaseToken from InAppPurchaseData in JSON format.
-
-        try {
-            InAppPurchaseData inAppPurchaseData = new InAppPurchaseData(purchaseData);
-            req.setPurchaseToken(inAppPurchaseData.getPurchaseToken());
-        } catch (JSONException e) {
-
-        }
-
-        return req;
-    }
-
-    interface IAPListener {
-        void onRegionNotSupported();
-
-        void onLoginRequired();
-
-        void onIAPError(IapApiException exception);
-
-        void onError(Exception exception);
-
-        void onPurchaseResult(PurchaseIntentResult result);
-
-        void onConsumedResult(ConsumeOwnedPurchaseResult result);
-    }
-
-    class ProductInfoNotFoundException extends Exception {
     }
 }
 
