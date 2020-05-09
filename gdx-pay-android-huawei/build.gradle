@@ -1,0 +1,44 @@
+apply plugin: 'com.android.library'
+
+apply from : '../publish_android.gradle'
+
+android {
+    defaultPublishConfig "release"
+
+    compileSdkVersion androidCompileSdkVersion
+    buildToolsVersion androidBuildToolsVersion
+
+    defaultConfig {
+        minSdkVersion 17
+        targetSdkVersion androidTargetSdkVersion
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        testOptions {
+            unitTests.returnDefaultValues = true
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java {
+                srcDir 'src'
+            }
+        }
+    }
+}
+
+configurations {
+    compileAndIncludeClassesInLibraryJar
+    compile.extendsFrom compileAndIncludeClassesInLibraryJar
+}
+
+repositories {
+    maven { url "https://jcenter.bintray.com" }
+    maven { url 'https://developer.huawei.com/repo/' } // HUAWEI Maven repository
+}
+
+dependencies {
+    implementation project(':gdx-pay-client')
+    implementation 'com.huawei.hms:iap:4.0.0.300'
+}
+
