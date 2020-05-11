@@ -113,12 +113,12 @@ public class HuaweiPurchaseManager implements PurchaseManager {
 
         if (!entitlements.isEmpty()) {
             this.huaweiPurchaseManagerFlagWrapper.hasToFetchEntetliments = true;
-            fetchOffersForType(subscriptions, OfferType.ENTITLEMENT);
+            fetchOffersForType(entitlements, OfferType.ENTITLEMENT);
         }
 
         if (!consumables.isEmpty()) {
             this.huaweiPurchaseManagerFlagWrapper.hasToFetchConsumables = true;
-            fetchOffersForType(subscriptions, OfferType.CONSUMABLE);
+            fetchOffersForType(consumables, OfferType.CONSUMABLE);
         }
 
         if (!subscriptions.isEmpty()) {

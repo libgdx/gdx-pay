@@ -4,7 +4,7 @@ import com.huawei.hms.iap.IapApiException;
 import com.huawei.hms.iap.entity.ConsumeOwnedPurchaseResult;
 import com.huawei.hms.iap.entity.PurchaseIntentResult;
 
-interface IAPListener {
+public interface IAPListener {
         void onRegionNotSupported();
 
         void onLoginRequired();

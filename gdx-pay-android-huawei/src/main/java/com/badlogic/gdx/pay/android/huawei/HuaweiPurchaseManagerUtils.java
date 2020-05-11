@@ -25,11 +25,12 @@ class HuaweiPurchaseManagerUtils {
     }
 
     static Transaction getTransactionFromPurchaseData(InAppPurchaseData inAppPurchaseData,
-                                                       String originalData,
-                                                       String storeName) {
+                                                      String originalData,
+                                                      String storeName) {
         Transaction transaction = null;
 
         if (inAppPurchaseData != null) {
+            transaction = new Transaction();
             transaction.setIdentifier(inAppPurchaseData.getProductId());
             transaction.setStoreName(storeName);
             transaction.setPurchaseText("Purchased: " + inAppPurchaseData.getProductId());
