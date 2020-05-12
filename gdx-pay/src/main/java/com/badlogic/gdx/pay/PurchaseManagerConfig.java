@@ -30,6 +30,7 @@ public class PurchaseManagerConfig {
 	// available store names (not even sure what all those are!?)
 	public static final String STORE_NAME_ANDROID_GOOGLE = "GooglePlay";
 	public static final String STORE_NAME_ANDROID_AMAZON = "Amazon";
+	public static final String STORE_NAME_ANDROID_HUAWEI = "Huawei";
 	public static final String STORE_NAME_ANDROID_SAMSUNG = "Samsung";
 	public static final String STORE_NAME_ANDROID_NOKIA = "Nokia";
 	public static final String STORE_NAME_ANDROID_SLIDEME = "SlideME";
