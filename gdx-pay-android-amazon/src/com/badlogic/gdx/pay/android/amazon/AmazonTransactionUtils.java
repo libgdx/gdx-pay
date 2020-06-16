@@ -16,9 +16,6 @@
 
 package com.badlogic.gdx.pay.android.amazon;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
-
 import com.amazon.device.iap.model.Product;
 import com.amazon.device.iap.model.Receipt;
 import com.amazon.device.iap.model.UserData;
@@ -26,6 +23,9 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.Transaction;
+
+import java.text.NumberFormat;
+import java.text.ParseException;
 
 /**
  * A set of utility methods for Amazon transaction handling.
@@ -73,12 +73,14 @@ public class AmazonTransactionUtils {
 	static Information convertProductToInformation(Product product) {
 		
 		String priceString = product.getPrice();
+		Float priceAsFloat = tryParsePrice(priceString);
 		return Information.newBuilder()
 				.localName(product.getTitle())
 				.localDescription(product.getDescription())
 				.localPricing(priceString)
 				.priceCurrencyCode(tryParseCurrency(priceString))
-				.priceInCents(tryParsePriceInCents(priceString))
+				.priceInCents(convertToPriceInCents(priceAsFloat))
+				.priceAsDouble(priceAsFloat == null ? null : priceAsFloat.doubleValue())
 				.build();
 	}
 
@@ -97,7 +99,11 @@ public class AmazonTransactionUtils {
 		return null;
 	}
 
-	static Integer tryParsePriceInCents(String priceString) {
+	static Integer convertToPriceInCents(Float priceAsFloat) {
+		return priceAsFloat == null ? null : MathUtils.ceilPositive(priceAsFloat * 100);
+	}
+
+	private static Float tryParsePrice(String priceString) {
 		if (priceString == null || priceString.length() == 0)
 			return null;
 		try {
@@ -106,8 +112,7 @@ public class AmazonTransactionUtils {
 			priceString = priceString.substring(1);
 
 			// Remaining should be parseable
-			float value = NumberFormat.getInstance().parse(priceString).floatValue();
-			return MathUtils.ceilPositive(value * 100);
+			return NumberFormat.getInstance().parse(priceString).floatValue();
 		} catch (ParseException exception) {
 			// Silenced
 		}

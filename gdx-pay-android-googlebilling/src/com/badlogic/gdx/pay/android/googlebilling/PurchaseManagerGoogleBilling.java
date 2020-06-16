@@ -1,41 +1,13 @@
 package com.badlogic.gdx.pay.android.googlebilling;
 
 import android.app.Activity;
-
-import com.android.billingclient.api.AcknowledgePurchaseParams;
-import com.android.billingclient.api.AcknowledgePurchaseResponseListener;
-import com.android.billingclient.api.BillingClient;
-import com.android.billingclient.api.BillingClientStateListener;
-import com.android.billingclient.api.BillingFlowParams;
-import com.android.billingclient.api.BillingResult;
-import com.android.billingclient.api.ConsumeParams;
-import com.android.billingclient.api.ConsumeResponseListener;
-import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.PurchasesUpdatedListener;
-import com.android.billingclient.api.SkuDetails;
-import com.android.billingclient.api.SkuDetailsParams;
-import com.android.billingclient.api.SkuDetailsResponseListener;
+import com.android.billingclient.api.*;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.pay.FetchItemInformationException;
-import com.badlogic.gdx.pay.GdxPayException;
-import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.InvalidItemException;
-import com.badlogic.gdx.pay.ItemAlreadyOwnedException;
-import com.badlogic.gdx.pay.Offer;
-import com.badlogic.gdx.pay.OfferType;
-import com.badlogic.gdx.pay.PurchaseManager;
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.Transaction;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.badlogic.gdx.pay.*;
 
 import javax.annotation.Nullable;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The purchase manager implementation for Google Play (Android) using Google Billing Library
@@ -200,7 +172,8 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 .localDescription(skuDetails.getDescription())
                 .localPricing(priceString)
                 .priceCurrencyCode(skuDetails.getPriceCurrencyCode())
-                .priceInCents((int) (skuDetails.getPriceAmountMicros() / 10000))
+                .priceInCents((int) (skuDetails.getPriceAmountMicros() / 10_000))
+                .priceAsDouble(skuDetails.getPriceAmountMicros() / 1_000_000.0)
                 .build();
     }
 
