@@ -16,47 +16,17 @@
 
 package com.badlogic.gdx.pay.ios.apple;
 
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.pay.*;
+import libcore.io.Base64;
+import org.robovm.apple.foundation.*;
+import org.robovm.apple.storekit.*;
+
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import org.robovm.apple.foundation.Foundation;
-import org.robovm.apple.foundation.NSArray;
-import org.robovm.apple.foundation.NSBundle;
-import org.robovm.apple.foundation.NSData;
-import org.robovm.apple.foundation.NSDataBase64EncodingOptions;
-import org.robovm.apple.foundation.NSError;
-import org.robovm.apple.foundation.NSNumberFormatter;
-import org.robovm.apple.foundation.NSNumberFormatterBehavior;
-import org.robovm.apple.foundation.NSNumberFormatterStyle;
-import org.robovm.apple.foundation.NSURL;
-import org.robovm.apple.storekit.SKErrorCode;
-import org.robovm.apple.storekit.SKPayment;
-import org.robovm.apple.storekit.SKPaymentQueue;
-import org.robovm.apple.storekit.SKPaymentTransaction;
-import org.robovm.apple.storekit.SKPaymentTransactionObserverAdapter;
-import org.robovm.apple.storekit.SKPaymentTransactionState;
-import org.robovm.apple.storekit.SKProduct;
-import org.robovm.apple.storekit.SKProductsRequest;
-import org.robovm.apple.storekit.SKProductsRequestDelegateAdapter;
-import org.robovm.apple.storekit.SKProductsResponse;
-import org.robovm.apple.storekit.SKReceiptRefreshRequest;
-import org.robovm.apple.storekit.SKRequest;
-import org.robovm.apple.storekit.SKRequestDelegateAdapter;
-
-import com.badlogic.gdx.pay.FetchItemInformationException;
-import com.badlogic.gdx.pay.GdxPayException;
-import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.Offer;
-import com.badlogic.gdx.pay.PurchaseManager;
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.Transaction;
-
-import libcore.io.Base64;
 
 /** The purchase manager implementation for Apple's iOS IAP system (RoboVM).
  *
@@ -562,6 +532,8 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                         .localDescription(p.getLocalizedDescription())
                         .localPricing(numberFormatter.format(p.getPrice()))
                         .priceCurrencyCode(p.getPriceLocale().getCurrencyCode())
+                        .priceInCents(MathUtils.ceilPositive(p.getPrice().floatValue() * 100))
+                        .priceAsDouble(p.getPrice().doubleValue())
                         .build();
                 }
             }

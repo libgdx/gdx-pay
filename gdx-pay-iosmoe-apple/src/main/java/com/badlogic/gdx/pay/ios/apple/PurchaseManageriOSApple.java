@@ -16,45 +16,23 @@
 
 package com.badlogic.gdx.pay.ios.apple;
 
-import com.badlogic.gdx.pay.Information;
-import com.badlogic.gdx.pay.InvalidItemException;
-import com.badlogic.gdx.pay.Offer;
-import com.badlogic.gdx.pay.PurchaseManager;
-import com.badlogic.gdx.pay.PurchaseManagerConfig;
-import com.badlogic.gdx.pay.PurchaseObserver;
-import com.badlogic.gdx.pay.Transaction;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import apple.foundation.NSArray;
-import apple.foundation.NSBundle;
-import apple.foundation.NSData;
-import apple.foundation.NSDate;
-import apple.foundation.NSError;
-import apple.foundation.NSLocale;
-import apple.foundation.NSMutableSet;
-import apple.foundation.NSNumberFormatter;
-import apple.foundation.NSURL;
+import apple.foundation.*;
 import apple.foundation.enums.NSNumberFormatterBehavior;
 import apple.foundation.enums.NSNumberFormatterStyle;
-import apple.storekit.SKPayment;
-import apple.storekit.SKPaymentQueue;
-import apple.storekit.SKPaymentTransaction;
-import apple.storekit.SKProduct;
-import apple.storekit.SKProductsRequest;
-import apple.storekit.SKProductsResponse;
-import apple.storekit.SKReceiptRefreshRequest;
-import apple.storekit.SKRequest;
+import apple.storekit.*;
 import apple.storekit.enums.SKErrorCode;
 import apple.storekit.enums.SKPaymentTransactionState;
 import apple.storekit.protocol.SKPaymentTransactionObserver;
 import apple.storekit.protocol.SKProductsRequestDelegate;
 import apple.storekit.protocol.SKRequestDelegate;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.pay.*;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 import static apple.foundation.c.Foundation.NSLocaleCurrencyCode;
 
@@ -408,6 +386,8 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
 
                             // p.priceLocale().currencyCode() is not supported on iOS 9
                             .priceCurrencyCode(String.valueOf(p.priceLocale().objectForKey("CurrencyCode")))
+                            .priceInCents(MathUtils.ceilPositive(p.price().floatValue() * 100))
+                            .priceAsDouble(p.price().doubleValue())
                             .build();
 
                 }

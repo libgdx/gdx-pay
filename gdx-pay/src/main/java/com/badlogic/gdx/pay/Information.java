@@ -1,6 +1,7 @@
 package com.badlogic.gdx.pay;
 
 import javax.annotation.Nullable;
+import java.util.Currency;
 
 /**
  * Information about a product that can be purchased provided by a purchase manager. Some methods
@@ -19,7 +20,13 @@ public final class Information {
     private String localDescription;
     private String localPricing;
 
+    /**
+     * @deprecated Not all currencies use cents. Currencies with no or more than 2 fractional
+     * digits exist. Use {@link #priceAsDouble} instead.
+     */
+    @Deprecated
     private Integer priceInCents;
+    private Double priceAsDouble;
 
     private String priceCurrencyCode;
 
@@ -34,6 +41,7 @@ public final class Information {
         localDescription = builder.localDescription;
         localPricing = builder.localPricing;
         priceInCents = builder.priceInCents;
+        priceAsDouble = builder.priceAsDouble;
         priceCurrencyCode = builder.priceCurrencyCode;
     }
 
@@ -44,10 +52,35 @@ public final class Information {
     /**
      * Price in cents.
      * <p>Caution: this field could be null, information is not always available! </p>
+     *
+     * @deprecated Not all currencies use cents. Currencies with no or more than 2 fractional
+     * digits exist. Use {@link #getPriceAsDouble()} instead.
      */
+    @Deprecated
     @Nullable
     public Integer getPriceInCents() {
         return priceInCents;
+    }
+
+    /**
+     * Price (as a double).
+     * <p>Caution: this field could be null, information is not always available! </p>
+     * <p>Use {@link Currency#getDefaultFractionDigits()} to format the price with the correct
+     * number of fraction digits for its currency:</p>
+     * <pre>
+     * NumberFormat priceFormat = NumberFormat.getCurrencyInstance(yourUsersLocale);
+     * Currency currency = Currency.getInstance(information.getCurrencyCode());
+     * priceFormat.setCurrency(currency);
+     * priceFormat.setMaximumFractionDigits(currency.getDefaultFractionDigits());
+     * priceFormat.setMinimumFractionDigits(currency.getDefaultFractionDigits());
+     * priceFormat.format(information.getPriceAsDouble());
+     * </pre>
+     * <p>Note that this will not always output the currency symbol (e.g. €), but use the
+     * currency code (e.g. EUR) instead.</p>
+     */
+    @Nullable
+    public Double getPriceAsDouble() {
+        return priceAsDouble;
     }
 
     /**
@@ -116,7 +149,13 @@ public final class Information {
         private String localName;
         private String localDescription;
         private String localPricing;
+        /**
+         * @deprecated Not all currencies use cents. Currencies with no or more than 2 fractional
+         * digits exist. Use {@link #priceAsDouble} instead.
+         */
+        @Deprecated
         private Integer priceInCents;
+        private Double priceAsDouble;
         private String priceCurrencyCode;
 
         private Builder() {
@@ -137,8 +176,18 @@ public final class Information {
             return this;
         }
 
+        /**
+         * @deprecated Not all currencies use cents. Currencies with no or more than 2 fractional
+         * digits exist. Use {@link #priceAsDouble(Double)} instead.
+         */
+        @Deprecated
         public Builder priceInCents(Integer val) {
             priceInCents = val;
+            return this;
+        }
+
+        public Builder priceAsDouble(Double val) {
+            priceAsDouble = val;
             return this;
         }
 
