@@ -3,7 +3,7 @@
 [![Dependency Status](https://dependencyci.com/github/libgdx/gdx-pay/badge)](https://dependencyci.com/github/libgdx/gdx-pay)
 
 This project aims to provide a **cross-platform API for InApp purchasing**.
-The gdx-pay project is a libGDX extension. Current release version is 1.1.0. Please use at least libGDX v1.9.8, Robovm 2.3.5 or multi-os-engine v1.3.8.
+The gdx-pay project is a libGDX extension. Current release version is 1.2.0. Please use at least libGDX v1.9.8, Robovm 2.3.5 or multi-os-engine v1.3.8.
 
 SNAPSHOT builds are published regularly on [https://oss.sonatype.org/content/repositories/snapshots/](https://oss.sonatype.org/content/repositories/snapshots/).
 
@@ -26,7 +26,7 @@ The recommended way to use gdx-pay is via dependency management with Gradle or M
 *project-root/build.gradle:*
 
     ext {
-        gdxPayVersion = '1.1.0'
+        gdxPayVersion = '1.2.0'
     }
 
 Add the following dependencies:
