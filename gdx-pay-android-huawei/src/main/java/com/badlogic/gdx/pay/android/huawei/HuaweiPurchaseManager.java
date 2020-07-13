@@ -1,6 +1,7 @@
 package com.badlogic.gdx.pay.android.huawei;
 
 import android.app.Activity;
+import android.content.IntentSender;
 
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
@@ -16,7 +17,6 @@ import com.huawei.hms.iap.Iap;
 import com.huawei.hms.iap.IapApiException;
 import com.huawei.hms.iap.IapClient;
 import com.huawei.hms.iap.entity.ConsumeOwnedPurchaseResult;
-import com.huawei.hms.iap.entity.InAppPurchaseData;
 import com.huawei.hms.iap.entity.IsEnvReadyResult;
 import com.huawei.hms.iap.entity.OrderStatusCode;
 import com.huawei.hms.iap.entity.OwnedPurchasesReq;
@@ -25,9 +25,8 @@ import com.huawei.hms.iap.entity.ProductInfo;
 import com.huawei.hms.iap.entity.ProductInfoReq;
 import com.huawei.hms.iap.entity.ProductInfoResult;
 import com.huawei.hms.iap.entity.PurchaseIntentResult;
+import com.huawei.hms.iap.entity.PurchaseResultInfo;
 import com.huawei.hms.support.api.client.Status;
-
-import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,13 +41,15 @@ import java.util.List;
 
 public class HuaweiPurchaseManager implements PurchaseManager {
 
+    public final int PURCHASE_STATUS_RESULT_CODE = 7265;
+    public final int NOT_LOGGED_IN_STATUS_RESULT_CODE = 7264;
+
     private final Activity activity;
     private final HuaweiPurchaseManagerConfig huaweiPurchaseManagerConfig = new HuaweiPurchaseManagerConfig();
     private final HuaweiPurchaseManagerFlagWrapper huaweiPurchaseManagerFlagWrapper = new HuaweiPurchaseManagerFlagWrapper();
 
-    public HuaweiPurchaseManager(Activity activity, IAPListener iapListener) {
+    public HuaweiPurchaseManager(Activity activity) {
         this.activity = activity;
-        this.huaweiPurchaseManagerConfig.iapListener = iapListener;
     }
 
     private void checkIAPStatus(final PurchaseManagerConfig config, final boolean autoFetchInformation) {
@@ -67,15 +68,19 @@ public class HuaweiPurchaseManager implements PurchaseManager {
                     if (status.getStatusCode() == OrderStatusCode.ORDER_HWID_NOT_LOGIN) {
                         // Not logged in.
                         if (status.hasResolution()) {
-                            huaweiPurchaseManagerConfig.iapListener.onLoginRequired();
+                            try {
+                                status.startResolutionForResult(activity, NOT_LOGGED_IN_STATUS_RESULT_CODE);
+                            } catch (IntentSender.SendIntentException ex) {
+                                huaweiPurchaseManagerConfig.observer.handleInstallError(apiException);
+                            }
                         } else {
-                            huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
+                            huaweiPurchaseManagerConfig.observer.handleInstallError(apiException);
                         }
                     } else if (status.getStatusCode() == OrderStatusCode.ORDER_ACCOUNT_AREA_NOT_SUPPORTED) {
                         // The current region does not support HUAWEI IAP.
-                        huaweiPurchaseManagerConfig.iapListener.onRegionNotSupported();
+                        huaweiPurchaseManagerConfig.observer.handleInstallError(new RegionNotSupportedException());
                     } else {
-                        huaweiPurchaseManagerConfig.iapListener.onError(e);
+                        huaweiPurchaseManagerConfig.observer.handleInstallError(e);
                     }
                 }
             }
@@ -154,14 +159,6 @@ public class HuaweiPurchaseManager implements PurchaseManager {
             @Override
             public void onFailure(Exception e) {
                 huaweiPurchaseManagerFlagWrapper.resetFetchFlagByType(productInfoReq.getPriceType());
-
-                if (e instanceof IapApiException) {
-                    IapApiException apiException = (IapApiException) e;
-                    huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
-                } else {
-                    huaweiPurchaseManagerConfig.iapListener.onError(e);
-                }
-
                 huaweiPurchaseManagerConfig.observer.handleInstallError(e);
             }
         });
@@ -224,27 +221,32 @@ public class HuaweiPurchaseManager implements PurchaseManager {
                     // Obtain the payment result.
                     Status status = result.getStatus();
                     if (status.hasResolution()) {
-                        huaweiPurchaseManagerConfig.iapListener.onPurchaseResult(result);
+                        try {
+                            result.getStatus().startResolutionForResult(activity, PURCHASE_STATUS_RESULT_CODE);
+                        } catch (IntentSender.SendIntentException e) {
+                            huaweiPurchaseManagerConfig.observer.handlePurchaseError(e);
+                        }
                     }
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(Exception e) {
-                    if (e instanceof IapApiException) {
-                        IapApiException apiException = (IapApiException) e;
-                        huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
-                    } else {
-                        huaweiPurchaseManagerConfig.iapListener.onError(e);
-                    }
-
                     huaweiPurchaseManagerConfig.observer.handlePurchaseError(e);
                 }
             });
         } else {
-            Exception e = new ProductInfoNotFoundException();
-            huaweiPurchaseManagerConfig.iapListener.onError(e);
-            huaweiPurchaseManagerConfig.observer.handlePurchaseError(e);
+            huaweiPurchaseManagerConfig.observer.handlePurchaseError(new ProductInfoNotFoundException());
         }
+    }
+
+    public void handlePurchase(PurchaseResultInfo purchaseResultInfo) {
+        Transaction transaction = HuaweiPurchaseManagerUtils.
+                getTransactionFromPurchaseData(purchaseResultInfo.getInAppPurchaseData(), purchaseResultInfo.getInAppDataSignature());
+        this.huaweiPurchaseManagerConfig.observer.handlePurchase(transaction);
+    }
+
+    public void handlePurchaseError(String message, int code) {
+        this.huaweiPurchaseManagerConfig.observer.handlePurchaseError(new PurchaseError(message, code));
     }
 
     @Override
@@ -262,34 +264,22 @@ public class HuaweiPurchaseManager implements PurchaseManager {
         task.addOnSuccessListener(new OnSuccessListener<OwnedPurchasesResult>() {
             @Override
             public void onSuccess(OwnedPurchasesResult result) {
-                handleRestoreTransactions(result.getInAppPurchaseDataList());
+                handleRestoreTransactions(result.getInAppPurchaseDataList(), result.getInAppSignature());
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(Exception e) {
-                if (e instanceof IapApiException) {
-                    IapApiException apiException = (IapApiException) e;
-                    huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
-                } else {
-                    huaweiPurchaseManagerConfig.iapListener.onError(e);
-                }
-
                 huaweiPurchaseManagerConfig.observer.handleRestoreError(e);
             }
         });
     }
 
-    private void handleRestoreTransactions(List<String> ownedItems) {
+    private void handleRestoreTransactions(List<String> ownedItems, List<String> signatures) {
         Transaction[] transactions = new Transaction[ownedItems.size()];
 
         for (int i = 0; i < ownedItems.size(); i++) {
-            try {
-                String originalData = ownedItems.get(i);
-                InAppPurchaseData inAppPurchaseData = new InAppPurchaseData(originalData);
-                transactions[i] = HuaweiPurchaseManagerUtils.getTransactionFromPurchaseData(inAppPurchaseData, originalData, storeName());
-            } catch (JSONException ex) {
-            }
-
+            String originalData = ownedItems.get(i);
+            transactions[i] = HuaweiPurchaseManagerUtils.getTransactionFromPurchaseData(originalData, signatures.get(i));
         }
 
         huaweiPurchaseManagerConfig.observer.handleRestore(transactions);
@@ -312,17 +302,12 @@ public class HuaweiPurchaseManager implements PurchaseManager {
         task.addOnSuccessListener(new OnSuccessListener<ConsumeOwnedPurchaseResult>() {
             @Override
             public void onSuccess(ConsumeOwnedPurchaseResult result) {
-                huaweiPurchaseManagerConfig.iapListener.onConsumedResult(result);
+                huaweiPurchaseManagerConfig.observer.handlePurchase(HuaweiPurchaseManagerUtils.getTransactionFromConsumableResult(result));
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(Exception e) {
-                if (e instanceof IapApiException) {
-                    IapApiException apiException = (IapApiException) e;
-                    huaweiPurchaseManagerConfig.iapListener.onIAPError(apiException);
-                } else {
-                    huaweiPurchaseManagerConfig.iapListener.onError(e);
-                }
+                huaweiPurchaseManagerConfig.observer.handlePurchaseError(e);
             }
         });
     }

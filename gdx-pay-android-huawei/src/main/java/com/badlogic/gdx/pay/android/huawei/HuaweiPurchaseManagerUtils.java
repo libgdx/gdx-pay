@@ -2,9 +2,11 @@ package com.badlogic.gdx.pay.android.huawei;
 
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.OfferType;
+import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.Transaction;
 import com.huawei.hms.iap.IapClient;
 import com.huawei.hms.iap.entity.ConsumeOwnedPurchaseReq;
+import com.huawei.hms.iap.entity.ConsumeOwnedPurchaseResult;
 import com.huawei.hms.iap.entity.InAppPurchaseData;
 import com.huawei.hms.iap.entity.ProductInfo;
 import com.huawei.hms.iap.entity.PurchaseIntentReq;
@@ -24,23 +26,36 @@ class HuaweiPurchaseManagerUtils {
         return req;
     }
 
-    static Transaction getTransactionFromPurchaseData(InAppPurchaseData inAppPurchaseData,
-                                                      String originalData,
-                                                      String storeName) {
-        Transaction transaction = null;
+    static Transaction getTransactionFromConsumableResult(ConsumeOwnedPurchaseResult result) {
+        return getTransactionFromPurchaseData(result.getConsumePurchaseData(), result.getDataSignature());
+    }
 
-        if (inAppPurchaseData != null) {
-            transaction = new Transaction();
+    static Transaction getTransactionFromPurchaseData(String inAppData, String dataSignature) {
+        Transaction transaction = new Transaction();
+        transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_HUAWEI);
+
+        try {
+            InAppPurchaseData inAppPurchaseData = new InAppPurchaseData(inAppData);
             transaction.setIdentifier(inAppPurchaseData.getProductId());
-            transaction.setStoreName(storeName);
-            transaction.setPurchaseText("Purchased: " + inAppPurchaseData.getProductId());
             transaction.setOrderId(inAppPurchaseData.getOrderID());
-            transaction.setRequestId(inAppPurchaseData.getPurchaseToken());
+            transaction.setRequestId(inAppPurchaseData.getLastOrderId());
             transaction.setPurchaseTime(new Date(inAppPurchaseData.getPurchaseTime()));
-            transaction.setTransactionData(originalData);
-            transaction.setReversalTime(null);
-            transaction.setReversalText(null);
+            transaction.setPurchaseText("Purchased: " + inAppPurchaseData.getProductName());
+            transaction.setPurchaseCost((int) inAppPurchaseData.getPrice());
+            transaction.setPurchaseCostCurrency(inAppPurchaseData.getCurrency());
+
+            if (inAppPurchaseData.getPurchaseState() == InAppPurchaseData.PurchaseState.CANCELED) {
+                transaction.setReversalTime(new Date(inAppPurchaseData.getCancellationTime()));
+            } else {
+                transaction.setReversalTime(null);
+                transaction.setReversalText(null);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+
+        transaction.setTransactionData(inAppData);
+        transaction.setTransactionDataSignature(dataSignature);
 
         return transaction;
     }

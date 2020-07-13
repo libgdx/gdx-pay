@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class HuaweiPurchaseManagerConfig {
     PurchaseObserver observer;
-    IAPListener iapListener;
     ConcurrentHashMap<String, ProductInfo> productInfoMap = new ConcurrentHashMap<>();
     boolean installationComplete;
 }
