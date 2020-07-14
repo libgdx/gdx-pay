@@ -1,8 +1,10 @@
 package com.badlogic.gdx.pay.android.huawei;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.IntentSender;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.OfferType;
@@ -17,6 +19,7 @@ import com.huawei.hms.iap.Iap;
 import com.huawei.hms.iap.IapApiException;
 import com.huawei.hms.iap.IapClient;
 import com.huawei.hms.iap.entity.ConsumeOwnedPurchaseResult;
+import com.huawei.hms.iap.entity.InAppPurchaseData;
 import com.huawei.hms.iap.entity.IsEnvReadyResult;
 import com.huawei.hms.iap.entity.OrderStatusCode;
 import com.huawei.hms.iap.entity.OwnedPurchasesReq;
@@ -28,8 +31,12 @@ import com.huawei.hms.iap.entity.PurchaseIntentResult;
 import com.huawei.hms.iap.entity.PurchaseResultInfo;
 import com.huawei.hms.support.api.client.Status;
 
+import org.json.JSONException;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.app.Activity.RESULT_OK;
 
 /**
  * The purchase manager implementation for Huawei App Gallery (Android) using HMS IAP
@@ -40,6 +47,7 @@ import java.util.List;
  */
 
 public class HuaweiPurchaseManager implements PurchaseManager {
+    private final String TAG = "HuaweiPurchaseManager";
 
     public final int PURCHASE_STATUS_RESULT_CODE = 7265;
     public final int NOT_LOGGED_IN_STATUS_RESULT_CODE = 7264;
@@ -310,6 +318,45 @@ public class HuaweiPurchaseManager implements PurchaseManager {
                 huaweiPurchaseManagerConfig.observer.handlePurchaseError(e);
             }
         });
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PURCHASE_STATUS_RESULT_CODE) {
+            if (resultCode == RESULT_OK) {
+                if (data == null) {
+                    Gdx.app.log(TAG, "onActivityResult - data is null");
+                    return;
+                }
+
+                PurchaseResultInfo purchaseResultInfo = Iap.getIapClient(activity).parsePurchaseResultInfoFromIntent(data);
+                switch (purchaseResultInfo.getReturnCode()) {
+                    case OrderStatusCode.ORDER_STATE_CANCEL:
+                        // User cancel payment.
+                        huaweiPurchaseManagerConfig.observer.handlePurchaseCanceled();
+                        break;
+                    case OrderStatusCode.ORDER_STATE_FAILED:
+                    case OrderStatusCode.ORDER_PRODUCT_OWNED:
+                        // to check if there exists undelivered products.
+                        handlePurchaseError(purchaseResultInfo.getErrMsg(), purchaseResultInfo.getReturnCode());
+                        break;
+                    case OrderStatusCode.ORDER_STATE_SUCCESS:
+                        // pay success.
+                        handlePurchase(purchaseResultInfo);
+
+                        String inAppPurchaseData = purchaseResultInfo.getInAppPurchaseData();
+                        try {
+                            //THE FOLLOWING LINES ARE TO CONSUME A CONSUMABLE PRODUCT
+                            InAppPurchaseData inAppPurchaseDataItem = new InAppPurchaseData(inAppPurchaseData);
+                            if (inAppPurchaseDataItem.getPurchaseType() == IapClient.PriceType.IN_APP_CONSUMABLE) {
+                                consumeProduct(inAppPurchaseData);
+                            }
+                        } catch (JSONException e) {
+                            Gdx.app.log(TAG, "onActivityResult - consume product error", e);
+                        }
+                        break;
+                }
+            }
+        }
     }
 }
 
