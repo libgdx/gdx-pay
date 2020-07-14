@@ -67,7 +67,6 @@ class HuaweiPurchaseManagerUtils {
                 .localDescription(productInfo.getProductDesc())
                 .localPricing(priceString)
                 .priceCurrencyCode(productInfo.getCurrency())
-                .priceInCents((int) (productInfo.getMicrosPrice() / 10_000))
                 .priceAsDouble(productInfo.getMicrosPrice() / 1_000_000.0)
                 .build();
     }
