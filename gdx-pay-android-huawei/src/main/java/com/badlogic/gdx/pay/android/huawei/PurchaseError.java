@@ -1,6 +1,8 @@
 package com.badlogic.gdx.pay.android.huawei;
 
-public class PurchaseError extends Error {
+import com.badlogic.gdx.pay.GdxPayException;
+
+public class PurchaseError extends GdxPayException {
     private int code;
 
     public PurchaseError(String message, int code) {

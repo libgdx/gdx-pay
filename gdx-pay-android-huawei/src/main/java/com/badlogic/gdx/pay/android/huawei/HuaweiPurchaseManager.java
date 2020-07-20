@@ -4,13 +4,18 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
 
+import com.badlogic.gdx.backends.android.AndroidApplication;
+import com.badlogic.gdx.backends.android.AndroidEventListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.pay.FetchItemInformationException;
 import com.badlogic.gdx.pay.Information;
+import com.badlogic.gdx.pay.LoginRequiredException;
 import com.badlogic.gdx.pay.Offer;
 import com.badlogic.gdx.pay.OfferType;
 import com.badlogic.gdx.pay.PurchaseManager;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.PurchaseObserver;
+import com.badlogic.gdx.pay.RegionNotSupportedException;
 import com.badlogic.gdx.pay.Transaction;
 import com.huawei.hmf.tasks.OnFailureListener;
 import com.huawei.hmf.tasks.OnSuccessListener;
@@ -46,7 +51,7 @@ import static android.app.Activity.RESULT_OK;
  * Created by Francesco Stranieri on 09.05.2020.
  */
 
-public class HuaweiPurchaseManager implements PurchaseManager {
+public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListener {
     private final String TAG = "HuaweiPurchaseManager";
 
     public final int PURCHASE_STATUS_RESULT_CODE = 7265;
@@ -58,6 +63,10 @@ public class HuaweiPurchaseManager implements PurchaseManager {
 
     public HuaweiPurchaseManager(Activity activity) {
         this.activity = activity;
+
+        if (activity instanceof AndroidApplication) {
+            ((AndroidApplication) activity).addAndroidEventListener(this);
+        }
     }
 
     private void checkIAPStatus(final PurchaseManagerConfig config, final boolean autoFetchInformation) {
@@ -79,10 +88,10 @@ public class HuaweiPurchaseManager implements PurchaseManager {
                             try {
                                 status.startResolutionForResult(activity, NOT_LOGGED_IN_STATUS_RESULT_CODE);
                             } catch (IntentSender.SendIntentException ex) {
-                                huaweiPurchaseManagerConfig.observer.handleInstallError(apiException);
+                                huaweiPurchaseManagerConfig.observer.handleInstallError(ex);
                             }
                         } else {
-                            huaweiPurchaseManagerConfig.observer.handleInstallError(apiException);
+                            huaweiPurchaseManagerConfig.observer.handleInstallError(new LoginRequiredException());
                         }
                     } else if (status.getStatusCode() == OrderStatusCode.ORDER_ACCOUNT_AREA_NOT_SUPPORTED) {
                         // The current region does not support HUAWEI IAP.
@@ -243,7 +252,7 @@ public class HuaweiPurchaseManager implements PurchaseManager {
                 }
             });
         } else {
-            huaweiPurchaseManagerConfig.observer.handlePurchaseError(new ProductInfoNotFoundException());
+            huaweiPurchaseManagerConfig.observer.handlePurchaseError(new FetchItemInformationException());
         }
     }
 
