@@ -51,7 +51,7 @@ It manages purchases, restores and consumption for consumable, non-consumable an
 
 ### How To use the HuaweiPurchaseManager
 
-* Into your Activity (extending AndroidApplication), You have to instantiate the HuaweiPurchaseManager;
+* Into your AndroidApplication, You have to instantiate the HuaweiPurchaseManager;
     `HuaweiPurchaseManager huaweiPurchaseManager = new HuaweiPurchaseManager(this);`
 * Then, You need to set the HuaweiPurchaseManager as GdxGame's PurchaseManager:
     `game.purchaseManager = huaweiPurchaseManager;`

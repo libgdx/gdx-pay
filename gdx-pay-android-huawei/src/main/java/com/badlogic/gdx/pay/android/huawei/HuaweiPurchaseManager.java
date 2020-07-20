@@ -1,6 +1,5 @@
 package com.badlogic.gdx.pay.android.huawei;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
 
@@ -57,16 +56,13 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
     public final int PURCHASE_STATUS_RESULT_CODE = 7265;
     public final int NOT_LOGGED_IN_STATUS_RESULT_CODE = 7264;
 
-    private final Activity activity;
+    private final AndroidApplication activity;
     private final HuaweiPurchaseManagerConfig huaweiPurchaseManagerConfig = new HuaweiPurchaseManagerConfig();
     private final HuaweiPurchaseManagerFlagWrapper huaweiPurchaseManagerFlagWrapper = new HuaweiPurchaseManagerFlagWrapper();
 
-    public HuaweiPurchaseManager(Activity activity) {
+    public HuaweiPurchaseManager(AndroidApplication activity) {
         this.activity = activity;
-
-        if (activity instanceof AndroidApplication) {
-            ((AndroidApplication) activity).addAndroidEventListener(this);
-        }
+        this.activity.addAndroidEventListener(this);
     }
 
     private void checkIAPStatus(final PurchaseManagerConfig config, final boolean autoFetchInformation) {
