@@ -51,13 +51,10 @@ It manages purchases, restores and consumption for consumable, non-consumable an
 
 ### How To use the HuaweiPurchaseManager
 
-* As PurchaseManager you have to instantiate the HuaweiPurchaseManager also passing a IAPListener;
-* Into your Activity, in `onPurchaseResult(PurchaseIntentResult result)` write the following code:
-    `result.getStatus().startResolutionForResult(this, ANY_RESOLUTION_CODE);`
-* Into your Activity, override the `onActivityResult(int requestCode, int resultCode, Intent data)` to get the intent result (ref: https://developer.huawei.com/consumer/en/codelab/HMSInAppPurchase/index.html#6)
-* Optional: to consume a consumable product, after received the purchase result into your `onActivityResult`, there is a method into HuaweiPurchaseManager to manage it: 
-    `consumeProduct(String inAppPurchaseData)`
-     result -> `onConsumedResult(ConsumeOwnedPurchaseResult result)`
+* Into your AndroidApplication, You have to instantiate the HuaweiPurchaseManager;
+    `HuaweiPurchaseManager huaweiPurchaseManager = new HuaweiPurchaseManager(this);`
+* Then, You need to set the HuaweiPurchaseManager as GdxGame's PurchaseManager:
+    `game.purchaseManager = huaweiPurchaseManager;`
 
 ## Testing
 * Sandbox testing: https://developer.huawei.com/consumer/en/doc/development/HMS-Guides/iap-sandbox-testing-v4
