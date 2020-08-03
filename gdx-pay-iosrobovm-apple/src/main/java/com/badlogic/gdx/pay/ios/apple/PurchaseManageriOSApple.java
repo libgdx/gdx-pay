@@ -207,8 +207,8 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
         transaction.setOrderId(getOriginalTxID(t));
-	    
-	NSDate date = t.getTransactionDate();
+
+        NSDate date = t.getTransactionDate();
         if (date == null) {
             // According to https://developer.apple.com/documentation/storekit/skpaymenttransaction/1411273-transactiondate
             // transaction date cannot be undefined/null for purchased or restored items
