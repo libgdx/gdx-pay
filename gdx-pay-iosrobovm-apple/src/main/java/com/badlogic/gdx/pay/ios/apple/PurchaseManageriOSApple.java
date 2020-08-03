@@ -207,8 +207,18 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
         transaction.setOrderId(getOriginalTxID(t));
+	    
+	NSDate date = t.getTransactionDate();
+        if (date == null) {
+            // According to https://developer.apple.com/documentation/storekit/skpaymenttransaction/1411273-transactiondate
+            // transaction date cannot be undefined/null for purchased or restored items
+            // In my experience date is null only for hacked transactions so considering them as invalid seems to be the right approach
+            // Prior to this change the app would just crash if date is null which could lead to bad reviews (yeah, how dare it to crash for hackers...)
+            System.err.println("Product date is null, this is likely a hacker: " + productIdentifier);
+            return null;
+        }
 
-        transaction.setPurchaseTime(t.getTransactionDate().toDate());
+        transaction.setPurchaseTime(date.toDate());
         if (product != null) {
             // if we didn't load product information, product will be 'null' (we only set if available)
             transaction.setPurchaseText("Purchased: " + product.getLocalizedTitle());
