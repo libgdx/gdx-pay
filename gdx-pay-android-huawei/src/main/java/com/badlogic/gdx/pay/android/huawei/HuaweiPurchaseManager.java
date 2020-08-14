@@ -293,6 +293,14 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
         for (int i = 0; i < ownedItems.size(); i++) {
             String originalData = ownedItems.get(i);
             transactions[i] = HuaweiPurchaseManagerUtils.getTransactionFromPurchaseData(originalData, signatures.get(i));
+            try  {
+                InAppPurchaseData inAppPurchaseDataItem = new InAppPurchaseData(originalData);
+                if (inAppPurchaseDataItem.getPurchaseType() == IapClient.PriceType.IN_APP_CONSUMABLE) {
+                    consumeProduct(originalData, true);
+                }
+            } catch (JSONException e) {
+                Gdx.app.log(TAG, "handleRestoreTransactions - consume product error", e);
+            }
         }
 
         huaweiPurchaseManagerConfig.observer.handleRestore(transactions);
@@ -309,18 +317,20 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
         return null;
     }
 
-    public void consumeProduct(String inAppPurchaseData) {
+    public void consumeProduct(String inAppPurchaseData, final boolean fromRestore) {
         IapClient mClient = Iap.getIapClient(this.activity);
         Task<ConsumeOwnedPurchaseResult> task = mClient.consumeOwnedPurchase(HuaweiPurchaseManagerUtils.createConsumeOwnedPurchaseReq(inAppPurchaseData));
         task.addOnSuccessListener(new OnSuccessListener<ConsumeOwnedPurchaseResult>() {
             @Override
             public void onSuccess(ConsumeOwnedPurchaseResult result) {
-                huaweiPurchaseManagerConfig.observer.handlePurchase(HuaweiPurchaseManagerUtils.getTransactionFromConsumableResult(result));
+                if(!fromRestore)
+                    huaweiPurchaseManagerConfig.observer.handlePurchase(HuaweiPurchaseManagerUtils.getTransactionFromConsumableResult(result));
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(Exception e) {
-                huaweiPurchaseManagerConfig.observer.handlePurchaseError(e);
+                if(!fromRestore)
+                    huaweiPurchaseManagerConfig.observer.handlePurchaseError(e);
             }
         });
     }
@@ -353,7 +363,7 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
                             //THE FOLLOWING LINES ARE TO CONSUME A CONSUMABLE PRODUCT
                             InAppPurchaseData inAppPurchaseDataItem = new InAppPurchaseData(inAppPurchaseData);
                             if (inAppPurchaseDataItem.getPurchaseType() == IapClient.PriceType.IN_APP_CONSUMABLE) {
-                                consumeProduct(inAppPurchaseData);
+                                consumeProduct(inAppPurchaseData,false);
                             }
                         } catch (JSONException e) {
                             Gdx.app.log(TAG, "onActivityResult - consume product error", e);
