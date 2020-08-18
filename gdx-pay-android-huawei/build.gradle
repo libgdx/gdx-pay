@@ -39,7 +39,7 @@ repositories {
 
 dependencies {
     implementation project(':gdx-pay-client')
-    implementation 'com.huawei.hms:iap:4.0.4.301'
+    implementation 'com.huawei.hms:iap:5.0.1.300'
     implementation libraries.libgdx_backend_android
 }
 
