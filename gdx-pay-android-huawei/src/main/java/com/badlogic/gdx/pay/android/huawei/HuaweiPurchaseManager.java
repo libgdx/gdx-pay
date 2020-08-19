@@ -294,8 +294,8 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
             String originalData = ownedItems.get(i);
             transactions[i] = HuaweiPurchaseManagerUtils.getTransactionFromPurchaseData(originalData, signatures.get(i));
             try  {
-                InAppPurchaseData inAppPurchaseDataItem = new InAppPurchaseData(originalData);
-                if (inAppPurchaseDataItem.getPurchaseType() == IapClient.PriceType.IN_APP_CONSUMABLE) {
+                InAppPurchaseData inAppPurchaseData = new InAppPurchaseData(originalData);
+                if (inAppPurchaseData.getKind() == IapClient.PriceType.IN_APP_CONSUMABLE) {
                     consumeProduct(originalData, true);
                 }
             } catch (JSONException e) {
@@ -358,12 +358,12 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
                         // pay success.
                         handlePurchase(purchaseResultInfo);
 
-                        String inAppPurchaseData = purchaseResultInfo.getInAppPurchaseData();
+                        String inAppPurchaseDataString = purchaseResultInfo.getInAppPurchaseData();
                         try {
                             //THE FOLLOWING LINES ARE TO CONSUME A CONSUMABLE PRODUCT
-                            InAppPurchaseData inAppPurchaseDataItem = new InAppPurchaseData(inAppPurchaseData);
-                            if (inAppPurchaseDataItem.getPurchaseType() == IapClient.PriceType.IN_APP_CONSUMABLE) {
-                                consumeProduct(inAppPurchaseData,false);
+                            InAppPurchaseData inAppPurchaseData = new InAppPurchaseData(inAppPurchaseDataString);
+                            if (inAppPurchaseData.getKind() == IapClient.PriceType.IN_APP_CONSUMABLE) {
+                                consumeProduct(inAppPurchaseDataString,false);
                             }
                         } catch (JSONException e) {
                             Gdx.app.log(TAG, "onActivityResult - consume product error", e);
