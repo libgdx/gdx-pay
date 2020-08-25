@@ -4,7 +4,6 @@ import com.badlogic.gdx.pay.FreeTrialPeriod;
 import com.badlogic.gdx.pay.FreeTrialPeriod.PeriodUnit;
 import org.junit.Test;
 
-import static com.badlogic.gdx.pay.android.googlebilling.Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod;
 import static org.junit.Assert.*;
 
 public class Iso8601DurationStringToFreeTrialPeriodConverterTest {
@@ -12,37 +11,37 @@ public class Iso8601DurationStringToFreeTrialPeriodConverterTest {
     @Test
     public void convertsStringWithFewDays() {
 
-        final FreeTrialPeriod duration = convertToFreeTrialPeriod("P3D");
+        final FreeTrialPeriod period = Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod("P3D");
 
-        assertEquals(3, duration.getNumberOfUnits());
-        assertEquals(PeriodUnit.DAY, duration.getUnit());
+        assertEquals(3, period.getNumberOfUnits());
+        assertEquals(PeriodUnit.DAY, period.getUnit());
     }
 
     @Test
     public void convertsStringWithMoreThenTenDays() {
 
-        final FreeTrialPeriod duration = convertToFreeTrialPeriod("P14D");
+        final FreeTrialPeriod period = Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod("P14D");
 
-        assertEquals(14, duration.getNumberOfUnits());
-        assertEquals(PeriodUnit.DAY, duration.getUnit());
+        assertEquals(14, period.getNumberOfUnits());
+        assertEquals(PeriodUnit.DAY, period.getUnit());
     }
 
     @Test
     public void convertsStringWitSixMonths() {
 
-        final FreeTrialPeriod duration = convertToFreeTrialPeriod("P6M");
+        final FreeTrialPeriod period = Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod("P6M");
 
-        assertEquals(6, duration.getNumberOfUnits());
-        assertEquals(PeriodUnit.MONTH, duration.getUnit());
+        assertEquals(6, period.getNumberOfUnits());
+        assertEquals(PeriodUnit.MONTH, period.getUnit());
     }
 
     @Test
     public void convertsStringWithOneYear() {
 
-        final FreeTrialPeriod duration = convertToFreeTrialPeriod("P1Y");
+        final FreeTrialPeriod period = Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod("P1Y");
 
-        assertEquals(1, duration.getNumberOfUnits());
-        assertEquals(PeriodUnit.YEAR, duration.getUnit());
+        assertEquals(1, period.getNumberOfUnits());
+        assertEquals(PeriodUnit.YEAR, period.getUnit());
     }
 
 

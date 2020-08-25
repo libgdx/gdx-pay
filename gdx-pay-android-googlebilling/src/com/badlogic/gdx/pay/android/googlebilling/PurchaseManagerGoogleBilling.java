@@ -10,8 +10,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.badlogic.gdx.pay.android.googlebilling.Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod;
-
 /**
  * The purchase manager implementation for Google Play (Android) using Google Billing Library
  * <p>
@@ -172,7 +170,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         String priceString = skuDetails.getPrice();
         return Information.newBuilder()
                 .localName(skuDetails.getTitle())
-                .freeTrialPeriod(parseFreeTrial(skuDetails.getFreeTrialPeriod()))
+                .freeTrialPeriod(convertToFreeTrialPeriod(skuDetails.getFreeTrialPeriod()))
                 .localDescription(skuDetails.getDescription())
                 .localPricing(priceString)
                 .priceCurrencyCode(skuDetails.getPriceCurrencyCode())
@@ -185,13 +183,13 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
      * @param iso8601Duration in ISO 8601 format.
      */
     @Nullable
-    private FreeTrialPeriod parseFreeTrial(@Nullable  String iso8601Duration) {
+    private FreeTrialPeriod convertToFreeTrialPeriod(@Nullable  String iso8601Duration) {
         if (iso8601Duration == null || iso8601Duration.isEmpty()) {
             return null;
         }
 
         try {
-            return convertToFreeTrialPeriod(iso8601Duration);
+            return Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod(iso8601Duration);
         } catch(RuntimeException e) {
             Gdx.app.error(TAG, "Failed to parse iso8601Duration: " + iso8601Duration, e);
             return null;
