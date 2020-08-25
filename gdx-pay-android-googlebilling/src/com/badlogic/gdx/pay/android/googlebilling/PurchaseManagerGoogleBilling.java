@@ -5,9 +5,12 @@ import com.android.billingclient.api.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.pay.*;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.badlogic.gdx.pay.android.googlebilling.Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod;
 
 /**
  * The purchase manager implementation for Google Play (Android) using Google Billing Library
@@ -21,7 +24,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     private static final String TAG = "GdxPay/GoogleBilling";
     private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
     private final Activity activity;
-    private Map<String, SkuDetails> skuDetailsMap = new HashMap<>();
+    private final Map<String, SkuDetails> skuDetailsMap = new HashMap<>();
     private boolean serviceConnected;
     private boolean installationComplete;
     private BillingClient mBillingClient;
@@ -72,7 +75,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     private void startServiceConnection(final Runnable excecuteOnSetupFinished) {
         mBillingClient.startConnection(new BillingClientStateListener() {
             @Override
-            public void onBillingSetupFinished(BillingResult result) {
+            public void onBillingSetupFinished(@Nonnull BillingResult result) {
                 int billingResponseCode = result.getResponseCode();
 
                 Gdx.app.debug(TAG, "Setup finished. Response code: " + billingResponseCode);
@@ -125,7 +128,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                         .build(),
                 new SkuDetailsResponseListener() {
                     @Override
-                    public void onSkuDetailsResponse(BillingResult result, List<SkuDetails> skuDetailsList) {
+                    public void onSkuDetailsResponse(@Nonnull  BillingResult result, List<SkuDetails> skuDetailsList) {
                         int responseCode = result.getResponseCode();
                         // it might happen that this was already disposed until the response comes back
                         if (observer == null || Gdx.app == null)
@@ -169,12 +172,30 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         String priceString = skuDetails.getPrice();
         return Information.newBuilder()
                 .localName(skuDetails.getTitle())
+                .freeTrialPeriod(parseFreeTrial(skuDetails.getFreeTrialPeriod()))
                 .localDescription(skuDetails.getDescription())
                 .localPricing(priceString)
                 .priceCurrencyCode(skuDetails.getPriceCurrencyCode())
                 .priceInCents((int) (skuDetails.getPriceAmountMicros() / 10_000))
                 .priceAsDouble(skuDetails.getPriceAmountMicros() / 1_000_000.0)
                 .build();
+    }
+
+    /**
+     * @param iso8601Duration in ISO 8601 format.
+     */
+    @Nullable
+    private FreeTrialPeriod parseFreeTrial(@Nullable  String iso8601Duration) {
+        if (iso8601Duration == null || iso8601Duration.isEmpty()) {
+            return null;
+        }
+
+        try {
+            return convertToFreeTrialPeriod(iso8601Duration);
+        } catch(RuntimeException e) {
+            Gdx.app.error(TAG, "Failed to parse iso8601Duration: " + iso8601Duration, e);
+            return null;
+        }
     }
 
     private void setInstalledAndNotifyObserver() {
@@ -294,7 +315,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                             mBillingClient.consumeAsync(ConsumeParams.newBuilder().setPurchaseToken(purchase.getPurchaseToken()).build(),
                                     new ConsumeResponseListener() {
                                         @Override
-                                        public void onConsumeResponse(BillingResult result, String outToken) {
+                                        public void onConsumeResponse(@Nonnull BillingResult result, @Nonnull String outToken) {
                                             if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                                                 // handlepurchase is done before item is consumed for compatibility with other
                                                 // gdx-pay implementations
@@ -309,7 +330,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                                 mBillingClient.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.getPurchaseToken()).build(),
                                         new AcknowledgePurchaseResponseListener() {
                                             @Override
-                                            public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
+                                            public void onAcknowledgePurchaseResponse(@Nonnull BillingResult billingResult) {
                                                 // payment is acknowledged
                                             }
                                         });
@@ -321,6 +342,6 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         }
 
         if (fromRestore)
-            observer.handleRestore(transactions.toArray(new Transaction[transactions.size()]));
+            observer.handleRestore(transactions.toArray(new Transaction[0]));
     }
 }

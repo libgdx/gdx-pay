@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.badlogic.gdx.pay.ios.apple.SKProductPeriodUnitToPeriodUnitConverter.convertToPeriodUnit;
+
 /** The purchase manager implementation for Apple's iOS IAP system (RoboVM).
  *
  * @author HD_92 (BlueRiverInteractive)
@@ -534,6 +536,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                         .priceCurrencyCode(p.getPriceLocale().getCurrencyCode())
                         .priceInCents(MathUtils.ceilPositive(p.getPrice().floatValue() * 100))
                         .priceAsDouble(p.getPrice().doubleValue())
+                        .freeTrialPeriod(freeTrialPeriod(p))
                         .build();
                 }
             }
@@ -541,8 +544,23 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         return Information.UNAVAILABLE;
     }
 
+    private FreeTrialPeriod freeTrialPeriod(SKProduct product) {
+        final SKProductDiscount introductoryPrice = product.getIntroductoryPrice();
+        if (introductoryPrice == null || introductoryPrice.getSubscriptionPeriod() == null || introductoryPrice.getSubscriptionPeriod().getNumberOfUnits() == 0) {
+            return null;
+        }
+
+        if (introductoryPrice.getPrice() != null && introductoryPrice.getPrice().doubleValue() > 0f) {
+            // in that case, it is not a free trial. We do not yet support reduced price introductory offers.
+            return null;
+        }
+
+        final SKProductSubscriptionPeriod subscriptionPeriod = introductoryPrice.getSubscriptionPeriod();
+        return new FreeTrialPeriod( (int) subscriptionPeriod.getNumberOfUnits(), convertToPeriodUnit(subscriptionPeriod.getUnit()));
+    }
+
     @Override
     public String toString () {
-        return PurchaseManagerConfig.STORE_NAME_IOS_APPLE;				// FIXME: shouldnt this be PurchaseManagerConfig.STORE_NAME_IOS_APPLE or storeName() ??!!
+        return PurchaseManagerConfig.STORE_NAME_IOS_APPLE;
     }
 }
