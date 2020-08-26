@@ -17,6 +17,7 @@
 package com.badlogic.gdx.pay.ios.apple;
 
 import apple.foundation.*;
+import apple.foundation.c.Foundation;
 import apple.foundation.enums.NSNumberFormatterBehavior;
 import apple.foundation.enums.NSNumberFormatterStyle;
 import apple.storekit.*;
@@ -33,8 +34,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-
-import static apple.foundation.c.Foundation.NSLocaleCurrencyCode;
 
 /** The purchase manager implementation for Apple's iOS IAP system (iOS-MOE).
  *
@@ -234,7 +233,7 @@ public class PurchaseManageriOSApple implements PurchaseManager, SKPaymentTransa
             transaction.setPurchaseText("Purchased: " + product.localizedTitle());
             transaction.setPurchaseCost((int) Math.round(product.price().doubleValue() * 100));
             NSLocale locale = product.priceLocale();
-            transaction.setPurchaseCostCurrency((String) locale.objectForKey(NSLocaleCurrencyCode()));
+            transaction.setPurchaseCostCurrency((String) locale.objectForKey(Foundation.NSLocaleCurrencyCode()));
         } else {
             // product information was empty (not loaded or product didn't exist)
             transaction.setPurchaseText("Purchased: " + productIdentifier);

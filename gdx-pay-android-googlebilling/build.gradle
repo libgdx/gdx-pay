@@ -24,6 +24,11 @@ android {
                 srcDir 'src'
             }
         }
+        test {
+            java {
+                srcDir 'test'
+            }
+        }
     }
 }
 
@@ -39,4 +44,6 @@ repositories {
 dependencies {
     compile project(':gdx-pay-client')
     compile 'com.android.billingclient:billing:3.0.0'
+
+    testCompile libraries.junit
 }

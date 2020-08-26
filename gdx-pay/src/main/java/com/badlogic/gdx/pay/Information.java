@@ -16,9 +16,9 @@ public final class Information {
      */
     public static final Information UNAVAILABLE = new Information(null, null, null);
 
-    private String localName;
-    private String localDescription;
-    private String localPricing;
+    private final String localName;
+    private final String localDescription;
+    private final String localPricing;
 
     /**
      * @deprecated Not all currencies use cents. Currencies with no or more than 2 fractional
@@ -29,6 +29,9 @@ public final class Information {
     private Double priceAsDouble;
 
     private String priceCurrencyCode;
+
+    @Nullable
+    private FreeTrialPeriod freeTrialPeriod;
 
     public Information(String localName, String localDescription, String localPricing) {
         this.localName = localName;
@@ -43,6 +46,7 @@ public final class Information {
         priceInCents = builder.priceInCents;
         priceAsDouble = builder.priceAsDouble;
         priceCurrencyCode = builder.priceCurrencyCode;
+        freeTrialPeriod = builder.freeTrialPeriod;
     }
 
     public static Builder newBuilder() {
@@ -60,6 +64,15 @@ public final class Information {
     @Nullable
     public Integer getPriceInCents() {
         return priceInCents;
+    }
+
+    /**
+     *
+     * @return null if there is no free trial or the implementation does not support free trials.
+     */
+    @Nullable
+    public FreeTrialPeriod getFreeTrialPeriod() {
+        return freeTrialPeriod;
     }
 
     /**
@@ -157,6 +170,7 @@ public final class Information {
         private Integer priceInCents;
         private Double priceAsDouble;
         private String priceCurrencyCode;
+        private FreeTrialPeriod freeTrialPeriod;
 
         private Builder() {
         }
@@ -168,6 +182,11 @@ public final class Information {
 
         public Builder localDescription(String val) {
             localDescription = val;
+            return this;
+        }
+
+        public Builder freeTrialPeriod(FreeTrialPeriod val) {
+            freeTrialPeriod = val;
             return this;
         }
 

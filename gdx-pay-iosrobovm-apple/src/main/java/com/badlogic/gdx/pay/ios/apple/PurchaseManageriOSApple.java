@@ -534,6 +534,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                         .priceCurrencyCode(p.getPriceLocale().getCurrencyCode())
                         .priceInCents(MathUtils.ceilPositive(p.getPrice().floatValue() * 100))
                         .priceAsDouble(p.getPrice().doubleValue())
+                        .freeTrialPeriod(convertToFreeTrialPeriod(p))
                         .build();
                 }
             }
@@ -541,8 +542,26 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         return Information.UNAVAILABLE;
     }
 
+    private FreeTrialPeriod convertToFreeTrialPeriod(SKProduct product) {
+        final SKProductDiscount introductoryPrice = product.getIntroductoryPrice();
+        if (introductoryPrice == null || introductoryPrice.getSubscriptionPeriod() == null || introductoryPrice.getSubscriptionPeriod().getNumberOfUnits() == 0) {
+            return null;
+        }
+
+        if (introductoryPrice.getPrice() != null && introductoryPrice.getPrice().doubleValue() > 0D) {
+            // in that case, it is not a free trial. We do not yet support reduced price introductory offers.
+            return null;
+        }
+
+        final SKProductSubscriptionPeriod subscriptionPeriod = introductoryPrice.getSubscriptionPeriod();
+        return new FreeTrialPeriod(
+                (int) subscriptionPeriod.getNumberOfUnits(),
+                SKProductPeriodUnitToPeriodUnitConverter.convertToPeriodUnit(subscriptionPeriod.getUnit())
+        );
+    }
+
     @Override
     public String toString () {
-        return PurchaseManagerConfig.STORE_NAME_IOS_APPLE;				// FIXME: shouldnt this be PurchaseManagerConfig.STORE_NAME_IOS_APPLE or storeName() ??!!
+        return PurchaseManagerConfig.STORE_NAME_IOS_APPLE;
     }
 }
