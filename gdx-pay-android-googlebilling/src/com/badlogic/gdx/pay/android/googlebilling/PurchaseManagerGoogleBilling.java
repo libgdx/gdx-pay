@@ -29,6 +29,18 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     private PurchaseObserver observer;
     private PurchaseManagerConfig config;
 
+    /**
+     * Set this field to help detect fraud before it happens.
+     * See https://developer.android.com/google/play/billing/security#fraud
+     */
+    private String obfuscatedAccountId;
+
+    /**
+     * Set this field to help detect fraud before it happens.
+     * See https://developer.android.com/google/play/billing/security#fraud
+     */
+    private String obfuscatedProfileId;
+
     public PurchaseManagerGoogleBilling(Activity activity) {
         this.activity = activity;
         mBillingClient = BillingClient.newBuilder(activity).setListener(this)
@@ -68,6 +80,14 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                     fetchOfferDetails();
             }
         });
+    }
+
+    public void setObfuscatedAccountId(String obfuscatedAccountId) {
+        this.obfuscatedAccountId = obfuscatedAccountId;
+    }
+
+    public void setObfuscatedProfileId(String obfuscatedProfileId) {
+        this.obfuscatedProfileId = obfuscatedProfileId;
     }
 
     private void startServiceConnection(final Runnable excecuteOnSetupFinished) {
@@ -229,13 +249,18 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
         if (skuDetails == null) {
             observer.handlePurchaseError(new InvalidItemException(identifier));
-        } else {
-
-            BillingFlowParams flowParams = BillingFlowParams.newBuilder()
-                    .setSkuDetails(skuDetails)
-                    .build();
-            mBillingClient.launchBillingFlow(activity, flowParams);
+            return;
         }
+
+        BillingFlowParams.Builder flowParamsBuilder = BillingFlowParams.newBuilder()
+            .setSkuDetails(skuDetails);
+        if (obfuscatedAccountId != null) {
+            flowParamsBuilder.setObfuscatedAccountId(obfuscatedAccountId);
+        }
+        if (obfuscatedProfileId != null) {
+            flowParamsBuilder.setObfuscatedProfileId(obfuscatedProfileId);
+        }
+        mBillingClient.launchBillingFlow(activity, flowParamsBuilder.build());
     }
 
     @Override
