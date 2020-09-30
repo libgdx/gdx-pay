@@ -29,16 +29,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     private PurchaseObserver observer;
     private PurchaseManagerConfig config;
 
-    /**
-     * Set this field to help detect fraud before it happens.
-     * See https://developer.android.com/google/play/billing/security#fraud
-     */
     private String obfuscatedAccountId;
-
-    /**
-     * Set this field to help detect fraud before it happens.
-     * See https://developer.android.com/google/play/billing/security#fraud
-     */
     private String obfuscatedProfileId;
 
     public PurchaseManagerGoogleBilling(Activity activity) {
@@ -82,10 +73,18 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         });
     }
 
+    /**
+     * Sets the obfuscated account ID to help detect fraud before it happens.
+     * See https://developer.android.com/google/play/billing/security#fraud
+     */
     public void setObfuscatedAccountId(String obfuscatedAccountId) {
         this.obfuscatedAccountId = obfuscatedAccountId;
     }
 
+    /**
+     * Sets the obfuscated profile ID to help detect fraud before it happens.
+     * See https://developer.android.com/google/play/billing/security#fraud
+     */
     public void setObfuscatedProfileId(String obfuscatedProfileId) {
         this.obfuscatedProfileId = obfuscatedProfileId;
     }
