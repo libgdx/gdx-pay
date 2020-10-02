@@ -29,9 +29,6 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     private PurchaseObserver observer;
     private PurchaseManagerConfig config;
 
-    private String obfuscatedAccountId;
-    private String obfuscatedProfileId;
-
     public PurchaseManagerGoogleBilling(Activity activity) {
         this.activity = activity;
         mBillingClient = BillingClient.newBuilder(activity).setListener(this)
@@ -71,22 +68,6 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                     fetchOfferDetails();
             }
         });
-    }
-
-    /**
-     * Sets the obfuscated account ID to help detect fraud before it happens.
-     * See https://developer.android.com/google/play/billing/security#fraud
-     */
-    public void setObfuscatedAccountId(String obfuscatedAccountId) {
-        this.obfuscatedAccountId = obfuscatedAccountId;
-    }
-
-    /**
-     * Sets the obfuscated profile ID to help detect fraud before it happens.
-     * See https://developer.android.com/google/play/billing/security#fraud
-     */
-    public void setObfuscatedProfileId(String obfuscatedProfileId) {
-        this.obfuscatedProfileId = obfuscatedProfileId;
     }
 
     private void startServiceConnection(final Runnable excecuteOnSetupFinished) {
@@ -248,18 +229,19 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
         if (skuDetails == null) {
             observer.handlePurchaseError(new InvalidItemException(identifier));
-            return;
+        } else {
+            mBillingClient.launchBillingFlow(activity, getBillingFlowParams(skuDetails));
         }
+    }
 
-        BillingFlowParams.Builder flowParamsBuilder = BillingFlowParams.newBuilder()
-            .setSkuDetails(skuDetails);
-        if (obfuscatedAccountId != null) {
-            flowParamsBuilder.setObfuscatedAccountId(obfuscatedAccountId);
-        }
-        if (obfuscatedProfileId != null) {
-            flowParamsBuilder.setObfuscatedProfileId(obfuscatedProfileId);
-        }
-        mBillingClient.launchBillingFlow(activity, flowParamsBuilder.build());
+    /**
+     * @param skuDetails SKU details to set in the billing flow params.
+     * @return The params to be used while launching the billing flow.
+     */
+    protected BillingFlowParams getBillingFlowParams(SkuDetails skuDetails) {
+        return BillingFlowParams.newBuilder()
+            .setSkuDetails(skuDetails)
+            .build();
     }
 
     @Override
