@@ -230,18 +230,16 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         if (skuDetails == null) {
             observer.handlePurchaseError(new InvalidItemException(identifier));
         } else {
-            mBillingClient.launchBillingFlow(activity, getBillingFlowParams(skuDetails));
+            mBillingClient.launchBillingFlow(activity, getBillingFlowParams(skuDetails).build());
         }
     }
 
     /**
      * @param skuDetails SKU details to set in the billing flow params.
-     * @return The params to be used while launching the billing flow.
+     * @return The params builder to be used while launching the billing flow.
      */
-    protected BillingFlowParams getBillingFlowParams(SkuDetails skuDetails) {
-        return BillingFlowParams.newBuilder()
-            .setSkuDetails(skuDetails)
-            .build();
+    protected BillingFlowParams.Builder getBillingFlowParams(SkuDetails skuDetails) {
+        return BillingFlowParams.newBuilder().setSkuDetails(skuDetails);
     }
 
     @Override
