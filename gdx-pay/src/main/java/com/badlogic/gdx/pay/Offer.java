@@ -83,4 +83,8 @@ public class Offer {
 				", identifierForStores=" + identifierForStores +
 				'}';
 	}
+
+	public boolean isSubscription() {
+		return this.type == OfferType.SUBSCRIPTION;
+	}
 }

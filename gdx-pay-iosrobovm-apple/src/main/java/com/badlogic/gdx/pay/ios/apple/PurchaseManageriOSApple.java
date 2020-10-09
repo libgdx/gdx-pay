@@ -22,11 +22,9 @@ import libcore.io.Base64;
 import org.robovm.apple.foundation.*;
 import org.robovm.apple.storekit.*;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /** The purchase manager implementation for Apple's iOS IAP system (RoboVM).
  *
@@ -36,9 +34,9 @@ import java.util.Set;
  * */
 public class PurchaseManageriOSApple implements PurchaseManager {
     private static final String TAG = "GdxPay/AppleIOS";
-    private static final boolean LOGDEBUG = true;
-    private static final int LOGTYPELOG = 0;
-    private static final int LOGTYPEERROR = 1;
+    static final boolean LOGDEBUG = true;
+    static final int LOGTYPELOG = 0;
+    static final int LOGTYPEERROR = 1;
 
     private static NSNumberFormatter numberFormatter;
 
@@ -185,72 +183,112 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
     /** Converts a purchase to our transaction object. */
     @Nullable
-    Transaction transaction (SKPaymentTransaction t) {
-        SKPayment payment = t.getPayment();
+    Transaction convertTransaction(SKPaymentTransaction iosTransaction) {
+        SKPayment payment = iosTransaction.getPayment();
         String productIdentifier = payment.getProductIdentifier();
-        SKProduct product = getProductByStoreIdentifier(productIdentifier);
-        if (product == null) {
-            // if we didn't request product information -OR- it's not in iTunes, it will be null
-            System.err.println("gdx-pay: product not registered/loaded: " + productIdentifier);
-        }
-
-        // Build the transaction from the payment transaction object.
-        Transaction transaction = new Transaction();
 
         Offer offerForStore = config.getOfferForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE, productIdentifier);
         if (offerForStore == null) {
             System.err.println("Product not configured in PurchaseManagerConfig: " + productIdentifier + ", skipping transaction.");
             return null;
         }
+        final SKProduct product = getProductByStoreIdentifier(productIdentifier);
 
-        transaction.setIdentifier(offerForStore.getIdentifier());
+        return new TransactionConverterWorker(iosTransaction, offerForStore,  product).transaction;
+    }
 
-        transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
-        transaction.setOrderId(getOriginalTxID(t));
+    /**
+     * Converts {@link SKPaymentTransaction} to gdx {@link Transaction} using the worker pattern.
+     */
+    class TransactionConverterWorker {
+        private final SKPaymentTransaction iosTransaction;
+        private final Offer offer;
+        private final SKProduct product;
+        private final Transaction transaction;
+        private final String productIdentifier;
+        private final SKPayment payment;
 
-        transaction.setPurchaseTime(t.getTransactionDate().toDate());
-        if (product != null) {
-            // if we didn't load product information, product will be 'null' (we only set if available)
-            transaction.setPurchaseText("Purchased: " + product.getLocalizedTitle());
-            transaction.setPurchaseCost((int) Math.round(product.getPrice().doubleValue() * 100));
-            transaction.setPurchaseCostCurrency(product.getPriceLocale().getCurrencyCode());
-        }
-        else {
-            // product information was empty (not loaded or product didn't exist)
-            transaction.setPurchaseText("Purchased: " + productIdentifier);
-            transaction.setPurchaseCost(0);
-            transaction.setPurchaseCostCurrency(null);
-        }
+        public TransactionConverterWorker(
+                @Nonnull
+                SKPaymentTransaction iosTransaction,
+                @Nonnull
+                Offer offer,
+                @Nullable
+                SKProduct product) {
+            this.iosTransaction = iosTransaction;
+            this.offer = offer;
+            this.product = product;
+            this.transaction = new Transaction();
+            payment = iosTransaction.getPayment();
+            productIdentifier = payment.getProductIdentifier();
 
-        transaction.setReversalTime(null);  // no refunds for iOS!
-        transaction.setReversalText(null);
-
-        if (payment.getRequestData() != null) {
-            final String transactionData;
-            if (IosVersion.isIos_7_0_orAbove()) {
-                transactionData = payment.getRequestData().toBase64EncodedString(NSDataBase64EncodingOptions.None);
-            } else {
-                transactionData = Base64.encode(payment.getRequestData().getBytes());
+            if (product == null) {
+                // if we didn't request product information -OR- it's not in iTunes, it will be null
+                System.err.println("gdx-pay: product not registered/loaded: " + productIdentifier);
             }
-            transaction.setTransactionData(transactionData);
-        }
-        else {
-            transaction.setTransactionData(null);
+
+            convertCommonFields();
+            convertPurchaseTextAndCost();
+            convertReversalInformation();
+            convertTransactionData();
+            convertTransactionDataSignature();
         }
 
-        // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9 & hopefully long there after :)
-        String transactionDataSignature;
-        try {
-            NSData transactionReceipt = t.getTransactionReceipt();
-            transactionDataSignature = transactionReceipt.toBase64EncodedString(NSDataBase64EncodingOptions.None);
-        } catch (Throwable e) {
-          log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears broken (was deprecated starting iOS 7.0).", e);
-          transactionDataSignature = null;
+        private void convertCommonFields() {
+            transaction.setIdentifier(offer.getIdentifier());
+            transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
+            transaction.setOrderId(getOriginalTxID(iosTransaction));
+            transaction.setPurchaseTime(iosTransaction.getTransactionDate().toDate());
+            transaction.setInformation(getInformation(offer.getIdentifierForStore(PurchaseManagerConfig.STORE_NAME_IOS_APPLE)));
         }
-        transaction.setTransactionDataSignature(transactionDataSignature);
 
-        // return the transaction
-        return transaction;
+        private void convertTransactionDataSignature() {
+            // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9 & hopefully long there after :)
+            String transactionDataSignature;
+            try {
+                NSData transactionReceipt = iosTransaction.getTransactionReceipt();
+                transactionDataSignature = transactionReceipt.toBase64EncodedString(NSDataBase64EncodingOptions.None);
+            } catch (Throwable e) {
+                log(LOGTYPELOG, "SKPaymentTransaction.transactionReceipt appears broken (was deprecated starting iOS 7.0).", e);
+                transactionDataSignature = null;
+            }
+            transaction.setTransactionDataSignature(transactionDataSignature);
+        }
+
+        private void convertTransactionData() {
+            if (payment.getRequestData() != null) {
+                final String transactionData;
+                if (IosVersion.is_7_0_orAbove()) {
+                    transactionData = payment.getRequestData().toBase64EncodedString(NSDataBase64EncodingOptions.None);
+                } else {
+                    transactionData = Base64.encode(payment.getRequestData().getBytes());
+                }
+                transaction.setTransactionData(transactionData);
+            }
+            else {
+                transaction.setTransactionData(null);
+            }
+        }
+
+        private void convertReversalInformation() {
+            transaction.setReversalTime(null);  // no refunds for iOS!
+            transaction.setReversalText(null);
+        }
+
+        private void convertPurchaseTextAndCost() {
+            if (product != null) {
+                // if we didn't load product information, product will be 'null' (we only set if available)
+                transaction.setPurchaseText("Purchased: " + product.getLocalizedTitle());
+                transaction.setPurchaseCost((int) Math.round(product.getPrice().doubleValue() * 100));
+                transaction.setPurchaseCostCurrency(product.getPriceLocale().getCurrencyCode());
+            }
+            else {
+                // product information was empty (not loaded or product didn't exist)
+                transaction.setPurchaseText("Purchased: " + productIdentifier);
+                transaction.setPurchaseCost(0);
+                transaction.setPurchaseCostCurrency(null);
+            }
+        }
     }
 
     private class AppleProductsDelegatePurchase extends SKProductsRequestDelegateAdapter {
@@ -365,7 +403,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                     // Product was successfully purchased.
 
                     // Parse transaction data.
-                    final Transaction t = transaction(transaction);
+                    final Transaction t = convertTransaction(transaction);
                     if (t == null) {
                         break;
                     }
@@ -463,7 +501,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                     // A product has been restored.
 
                     // Parse transaction data.
-                    Transaction ta = transaction(transaction);
+                    Transaction ta = convertTransaction(transaction);
                     if (ta == null)
                         break;
 
@@ -534,7 +572,8 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                         .priceCurrencyCode(p.getPriceLocale().getCurrencyCode())
                         .priceInCents(MathUtils.ceilPositive(p.getPrice().floatValue() * 100))
                         .priceAsDouble(p.getPrice().doubleValue())
-                        .freeTrialPeriod(convertToFreeTrialPeriod(p))
+                        .freeTrialPeriod(convertSubscriptionPeriod(p))
+                        .subscriptionPeriod(convertToFreeTrialPeriod(p))
                         .build();
                 }
             }
@@ -542,7 +581,25 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         return Information.UNAVAILABLE;
     }
 
-    private FreeTrialPeriod convertToFreeTrialPeriod(SKProduct product) {
+    private SubscriptionPeriod convertSubscriptionPeriod(SKProduct product) {
+        if (!IosVersion.is_11_2_OrAbove()) {
+            // introductoryPrice is introduced in ios 11.2
+            return null;
+        }
+
+        final SKProductSubscriptionPeriod subscriptionPeriod = product.getSubscriptionPeriod();
+
+        if (subscriptionPeriod == null) {
+            return null;
+        }
+
+        return new SubscriptionPeriod(
+                (int) subscriptionPeriod.getNumberOfUnits(),
+                SKProductPeriodUnitToPeriodUnitConverter.convertToPeriodUnit(subscriptionPeriod.getUnit())
+        );
+    }
+
+    private SubscriptionPeriod convertToFreeTrialPeriod(SKProduct product) {
         if (!IosVersion.is_11_2_OrAbove()) {
             // introductoryPrice is introduced in ios 11.2
             return null;
@@ -559,7 +616,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         }
 
         final SKProductSubscriptionPeriod subscriptionPeriod = introductoryPrice.getSubscriptionPeriod();
-        return new FreeTrialPeriod(
+        return new SubscriptionPeriod(
                 (int) subscriptionPeriod.getNumberOfUnits(),
                 SKProductPeriodUnitToPeriodUnitConverter.convertToPeriodUnit(subscriptionPeriod.getUnit())
         );

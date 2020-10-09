@@ -19,24 +19,28 @@ public final class Information {
     private final String localName;
     private final String localDescription;
     private final String localPricing;
+    private final SubscriptionPeriod subscriptionPeriod;
 
     /**
      * @deprecated Not all currencies use cents. Currencies with no or more than 2 fractional
      * digits exist. Use {@link #priceAsDouble} instead.
      */
     @Deprecated
-    private Integer priceInCents;
-    private Double priceAsDouble;
+    private final Integer priceInCents;
+    private final Double priceAsDouble;
 
-    private String priceCurrencyCode;
+    private final String priceCurrencyCode;
 
     @Nullable
-    private FreeTrialPeriod freeTrialPeriod;
+    private final SubscriptionPeriod freeTrialPeriod;
 
     public Information(String localName, String localDescription, String localPricing) {
-        this.localName = localName;
-        this.localDescription = localDescription;
-        this.localPricing = localPricing;
+        this(
+                new Information.Builder()
+                .localName(localName)
+                .localDescription(localDescription)
+                .localPricing(localPricing)
+        );
     }
 
     private Information(Builder builder) {
@@ -47,6 +51,7 @@ public final class Information {
         priceAsDouble = builder.priceAsDouble;
         priceCurrencyCode = builder.priceCurrencyCode;
         freeTrialPeriod = builder.freeTrialPeriod;
+        subscriptionPeriod = builder.subscriptionPeriod;
     }
 
     public static Builder newBuilder() {
@@ -71,7 +76,7 @@ public final class Information {
      * @return null if there is no free trial or the implementation does not support free trials.
      */
     @Nullable
-    public FreeTrialPeriod getFreeTrialPeriod() {
+    public SubscriptionPeriod getFreeTrialPeriod() {
         return freeTrialPeriod;
     }
 
@@ -99,7 +104,6 @@ public final class Information {
     /**
      * Price currency code.
      * <p>Caution:Note that not all PurchaseManagers set this field!</p>
-     * @return
      */
     public String getPriceCurrencyCode() {
         return priceCurrencyCode;
@@ -124,6 +128,11 @@ public final class Information {
      */
     public String getLocalPricing() {
         return localPricing;
+    }
+
+    @Nullable
+    public SubscriptionPeriod getSubscriptionPeriod() {
+        return subscriptionPeriod;
     }
 
     @Override
@@ -162,6 +171,8 @@ public final class Information {
         private String localName;
         private String localDescription;
         private String localPricing;
+        private SubscriptionPeriod subscriptionPeriod;
+
         /**
          * @deprecated Not all currencies use cents. Currencies with no or more than 2 fractional
          * digits exist. Use {@link #priceAsDouble} instead.
@@ -170,7 +181,7 @@ public final class Information {
         private Integer priceInCents;
         private Double priceAsDouble;
         private String priceCurrencyCode;
-        private FreeTrialPeriod freeTrialPeriod;
+        private SubscriptionPeriod freeTrialPeriod;
 
         private Builder() {
         }
@@ -185,7 +196,12 @@ public final class Information {
             return this;
         }
 
-        public Builder freeTrialPeriod(FreeTrialPeriod val) {
+        public Builder subscriptionPeriod(SubscriptionPeriod val) {
+            subscriptionPeriod = val;
+            return this;
+        }
+
+        public Builder freeTrialPeriod(SubscriptionPeriod val) {
             freeTrialPeriod = val;
             return this;
         }

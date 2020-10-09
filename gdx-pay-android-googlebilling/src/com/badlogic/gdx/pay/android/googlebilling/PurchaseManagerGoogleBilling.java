@@ -170,7 +170,8 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         String priceString = skuDetails.getPrice();
         return Information.newBuilder()
                 .localName(skuDetails.getTitle())
-                .freeTrialPeriod(convertToFreeTrialPeriod(skuDetails.getFreeTrialPeriod()))
+                .freeTrialPeriod(convertToSubscriptionPeriod(skuDetails.getFreeTrialPeriod()))
+                .subscriptionPeriod(convertToSubscriptionPeriod(skuDetails.getSubscriptionPeriod()))
                 .localDescription(skuDetails.getDescription())
                 .localPricing(priceString)
                 .priceCurrencyCode(skuDetails.getPriceCurrencyCode())
@@ -183,7 +184,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
      * @param iso8601Duration in ISO 8601 format.
      */
     @Nullable
-    private FreeTrialPeriod convertToFreeTrialPeriod(@Nullable  String iso8601Duration) {
+    private SubscriptionPeriod convertToSubscriptionPeriod(@Nullable  String iso8601Duration) {
         if (iso8601Duration == null || iso8601Duration.isEmpty()) {
             return null;
         }
@@ -293,6 +294,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE);
                 transaction.setPurchaseTime(new Date(purchase.getPurchaseTime()));
                 transaction.setPurchaseText("Purchased: " + purchase.getSku());
+                transaction.setInformation(getInformation(purchase.getSku()));
                 transaction.setReversalTime(null);
                 transaction.setReversalText(null);
                 transaction.setTransactionData(purchase.getOriginalJson());

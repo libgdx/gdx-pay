@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
  *
  * <p>Subscriptions in App Store and Google Play can have a free trial period before starting the billing for the subscription.</p>
  */
-public final class FreeTrialPeriod {
+public final class SubscriptionPeriod {
 
     private final int numberOfUnits;
 
@@ -36,7 +36,7 @@ public final class FreeTrialPeriod {
         }
     }
 
-    public FreeTrialPeriod(int numberOfUnits, PeriodUnit unit) {
+    public SubscriptionPeriod(int numberOfUnits, PeriodUnit unit) {
         this.numberOfUnits = numberOfUnits;
         this.unit = unit;
     }
@@ -55,7 +55,7 @@ public final class FreeTrialPeriod {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        FreeTrialPeriod that = (FreeTrialPeriod) o;
+        SubscriptionPeriod that = (SubscriptionPeriod) o;
 
         if (numberOfUnits != that.numberOfUnits) return false;
         return unit == that.unit;

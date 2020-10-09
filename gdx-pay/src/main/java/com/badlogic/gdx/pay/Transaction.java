@@ -16,6 +16,9 @@
 
 package com.badlogic.gdx.pay;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Calendar;
 import java.util.Date;
 
 /** An transaction for an item purchased via libGDX In-App payment system (IAP).
@@ -56,6 +59,8 @@ public final class Transaction {
 	private String transactionData;
 	/** A signature for the purchase data string for validation of the data (or null for unknown). */
 	private String transactionDataSignature;
+
+	private Information information = Information.UNAVAILABLE;
 
 	/** The item identifier/SKU that matches our item id in the IAP service. */
 	public String getIdentifier () {
@@ -103,7 +108,25 @@ public final class Transaction {
 	public void setUserId (String userId) {
 		this.userId = userId;
 	}
-	
+
+	/**
+	 *
+	 * @return the associated instance, or {@link Information#UNAVAILABLE} if it is not available or not set by
+	 * the purchase manager.
+	 */
+	@Nonnull
+	public Information getInformation() {
+		return information;
+	}
+
+	public void setInformation(Information information) {
+		if (information == null) {
+			this.information = Information.UNAVAILABLE;
+		} else {
+			this.information = information;
+		}
+	}
+
 	/** Returns true if the order is considered valid, i.e. in purchased state (non-refunded/cancelled). */
 	public boolean isPurchased () {
 		return reversalTime == null;
@@ -203,5 +226,46 @@ public final class Transaction {
 				", transactionData='" + transactionData + '\'' +
 				", transactionDataSignature='" + transactionDataSignature + '\'' +
 				'}';
+	}
+
+	/**
+	 * Calculate the subscription end date, based on the purchaseStartTime.
+	 *
+	 * <p>Not thoroughly tested!</p>
+	 *
+	 * @return the end date, null if not a subscription or when fetching {@link Information}has failed.
+	 */
+	@Nullable
+	public Date calculateSubscriptionEndDate(int billingGracePeriodInDays) {
+		if (purchaseTime == null || information.getSubscriptionPeriod() == null) {
+			return null;
+		}
+
+		final SubscriptionPeriod subscriptionPeriod = information.getSubscriptionPeriod();
+
+		final Calendar instance = Calendar.getInstance();
+		instance.setTime(purchaseTime);
+
+		final int amount = subscriptionPeriod.getNumberOfUnits();
+		switch(subscriptionPeriod.getUnit()) {
+			case DAY:
+				instance.add(Calendar.DAY_OF_YEAR, amount);
+				break;
+			case WEEK:
+				instance.add(Calendar.WEEK_OF_YEAR, amount);
+				break;
+			case MONTH:
+				instance.add(Calendar.MONTH, amount);
+				break;
+			case YEAR:
+				instance.add(Calendar.YEAR, amount);
+			default:
+				System.err.println("Unsupported enum constant: " + subscriptionPeriod.getUnit());
+				return null;
+		}
+
+		instance.add(Calendar.DAY_OF_YEAR, billingGracePeriodInDays);
+
+		return instance.getTime();
 	}
 }

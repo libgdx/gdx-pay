@@ -5,7 +5,7 @@ import org.robovm.apple.foundation.Foundation;
 enum IosVersion {
     ;
 
-    static boolean isIos_7_0_orAbove() {
+    static boolean is_7_0_orAbove() {
         return Foundation.getMajorSystemVersion() >= 7;
     }
 
