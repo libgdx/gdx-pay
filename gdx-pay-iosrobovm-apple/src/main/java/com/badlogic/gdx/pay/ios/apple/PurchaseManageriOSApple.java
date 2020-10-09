@@ -227,7 +227,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
         if (payment.getRequestData() != null) {
             final String transactionData;
-            if (IosVersion.isIos_7_0_orAbove()) {
+            if (IosVersion.is_7_0_orAbove()) {
                 transactionData = payment.getRequestData().toBase64EncodedString(NSDataBase64EncodingOptions.None);
             } else {
                 transactionData = Base64.encode(payment.getRequestData().getBytes());
@@ -543,7 +543,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     }
 
     private FreeTrialPeriod convertToFreeTrialPeriod(SKProduct product) {
-        if (!IosVersion.is_11_2_OrAbove()) {
+        if (!IosVersion.is_11_2_orAbove()) {
             // introductoryPrice is introduced in ios 11.2
             return null;
         }
