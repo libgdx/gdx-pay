@@ -54,7 +54,6 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
     private final String TAG = "HuaweiPurchaseManager";
 
     private final int PURCHASE_STATUS_RESULT_CODE = 7265;
-    private final int NOT_LOGGED_IN_STATUS_RESULT_CODE = 7264;
 
     private final AndroidApplication activity;
     private final HuaweiPurchaseManagerConfig huaweiPurchaseManagerConfig = new HuaweiPurchaseManagerConfig();
@@ -79,18 +78,8 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
                     IapApiException apiException = (IapApiException) e;
                     Status status = apiException.getStatus();
                     if (status.getStatusCode() == OrderStatusCode.ORDER_HWID_NOT_LOGIN) {
-                        // Not logged in.
-                        if (status.hasResolution()) {
-                            try {
-                                status.startResolutionForResult(activity, NOT_LOGGED_IN_STATUS_RESULT_CODE);
-                            } catch (IntentSender.SendIntentException ex) {
-                                huaweiPurchaseManagerConfig.observer.handleInstallError(ex);
-                            }
-                        } else {
                             huaweiPurchaseManagerConfig.observer.handleInstallError(new LoginRequiredException());
-                        }
                     } else if (status.getStatusCode() == OrderStatusCode.ORDER_ACCOUNT_AREA_NOT_SUPPORTED) {
-                        // The current region does not support HUAWEI IAP.
                         huaweiPurchaseManagerConfig.observer.handleInstallError(new RegionNotSupportedException());
                     } else {
                         huaweiPurchaseManagerConfig.observer.handleInstallError(e);
