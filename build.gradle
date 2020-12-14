@@ -3,11 +3,6 @@ task wrapper(type: Wrapper) {
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
-allprojects {
-    group = 'com.badlogicgames.gdxpay'
-    version = '1.3.2-SNAPSHOT'
-}
-
 class Developer {
     String id
     String name
@@ -42,6 +37,36 @@ ext {
             support_v4                              : "com.android.support:support-v4:25.0.0"
     ]
 
+    isReleaseBuild = {
+        return project.hasProperty("RELEASE")
+    }
+
+    isLocalBuild = {
+        return project.hasProperty("LOCAL")
+    }
+
+    getLocalRepositoryUrl = {
+        return project.hasProperty('LOCAL_REPOSITORY_URL') ? LOCAL_REPOSITORY_URL
+                : 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+    }
+
+    getReleaseRepositoryUrl = {
+        return project.hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
+                : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+    }
+
+    getSnapshotRepositoryUrl = {
+        return project.hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
+                : "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+
+    getRepositoryUsername = {
+        return project.hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : "$System.env.NEXUS_USERNAME"
+    }
+
+    getRepositoryPassword = {
+        return project.hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : "$System.env.NEXUS_PASSWORD"
+    }
 }
 
 buildscript {
@@ -67,8 +92,8 @@ buildscript {
 }
 
 allprojects {
-	  apply plugin: "eclipse"
-    
+    apply plugin: "eclipse"
+
     repositories {
         mavenLocal()
         google()
@@ -77,6 +102,8 @@ allprojects {
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
     }
+
+    version project.getProperty('version') + (isReleaseBuild() ? "" : "-SNAPSHOT")
 }
 
 if (JavaVersion.current().isJava8Compatible()) {

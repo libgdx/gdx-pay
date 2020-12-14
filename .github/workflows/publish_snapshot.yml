@@ -1,10 +1,10 @@
 # This workflow will build a Java project with Gradle
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
 
-name: Compile and publish local
+name: Compile and publish snapshot
 
 on:
-  pull_request:
+  push:
     branches: [ master ]
 
 jobs:
@@ -22,5 +22,10 @@ jobs:
       run: chmod +x gradlew
     - name: Setup Android build environment
       uses: android-actions/setup-android@v2.0.2
-    - name: Local install
-      run: ./gradlew clean uploadArchives -PLOCAL=true
+    - name: Compile
+      run: ./gradlew uploadArchives -PLOCAL=true
+    - name: Publish snapshot
+      env:
+        NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+        NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+      run: ./gradlew uploadArchives
