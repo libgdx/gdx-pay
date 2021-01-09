@@ -104,6 +104,10 @@ allprojects {
     }
 
     version project.getProperty('version') + (isReleaseBuild() ? "" : "-SNAPSHOT")
+
+    tasks.withType(Sign) {
+        onlyIf { isReleaseBuild() }
+    }
 }
 
 if (JavaVersion.current().isJava8Compatible()) {
