@@ -11,12 +11,6 @@ Handles purchases and restores for non-consumable and consumable products, subsc
      compile "com.badlogicgames.gdxpay:gdx-pay-android-googlebilling:$gdxPayVersion"
 
 
-Hint: Probably you have to add
-
-         maven { url "https://jcenter.bintray.com" }
-
-to your Gradle file's repository paragraph.
-
 ### ProGuard configuration
 Just one line:
 

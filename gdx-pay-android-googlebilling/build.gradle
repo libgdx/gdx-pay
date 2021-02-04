@@ -37,10 +37,6 @@ configurations {
     compile.extendsFrom compileAndIncludeClassesInLibraryJar
 }
 
-repositories {
-    maven { url "https://jcenter.bintray.com" }
-}
-
 dependencies {
     compile project(':gdx-pay-client')
     compile 'com.android.billingclient:billing:3.0.1'

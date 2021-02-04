@@ -33,7 +33,6 @@ configurations {
 }
 
 repositories {
-    maven { url "https://jcenter.bintray.com" }
     maven { url "https://developer.huawei.com/repo/" } // HUAWEI Maven repository
 }
 
