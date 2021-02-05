@@ -15,7 +15,7 @@ SNAPSHOT builds are published regularly on [https://oss.sonatype.org/content/rep
 
 * **Huawei (Android)**: [huawei](https://github.com/libgdx/gdx-pay/tree/master/gdx-pay-android-huawei)
 
-* **Apple (iOS)**: Two implementations available for [ios-moe](https://github.com/libgdx/gdx-pay/tree/master/gdx-pay-iosmoe-apple) and [RoboVM](https://github.com/libgdx/gdx-pay/tree/master/gdx-pay-iosrobovm-apple)
+* **Apple (iOS)**: [RoboVM](https://github.com/libgdx/gdx-pay/tree/master/gdx-pay-iosrobovm-apple)
 
 Click on the links to view the subproject's readme files for service-dependant information and artifacts.
 

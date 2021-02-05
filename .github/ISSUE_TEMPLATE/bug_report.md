@@ -24,5 +24,5 @@ _Please provide the version(s) affected._
 - [ ] Amazon
 - [ ] googlebilling
 - [ ] googlepay
-- [ ] apple iosmoe
 - [ ] apple robovm
+- [ ] Huawei
