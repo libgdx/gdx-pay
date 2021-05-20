@@ -208,7 +208,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
         transaction.setOrderId(getOriginalTxID(t));
 
-        transaction.setPurchaseTime(t.getTransactionDate().toDate());
+        transaction.setPurchaseTime(t.getTransactionDate() != null ? t.getTransactionDate().toDate() : new Date());
         if (product != null) {
             // if we didn't load product information, product will be 'null' (we only set if available)
             transaction.setPurchaseText("Purchased: " + product.getLocalizedTitle());
