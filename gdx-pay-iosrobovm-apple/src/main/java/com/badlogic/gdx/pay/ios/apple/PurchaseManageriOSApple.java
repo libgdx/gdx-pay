@@ -24,6 +24,7 @@ import org.robovm.apple.storekit.*;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -208,7 +209,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
         transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_IOS_APPLE);
         transaction.setOrderId(getOriginalTxID(t));
 
-        transaction.setPurchaseTime(t.getTransactionDate().toDate());
+        transaction.setPurchaseTime(t.getTransactionDate() != null ? t.getTransactionDate().toDate() : new Date());
         if (product != null) {
             // if we didn't load product information, product will be 'null' (we only set if available)
             transaction.setPurchaseText("Purchased: " + product.getLocalizedTitle());
