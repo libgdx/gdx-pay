@@ -29,7 +29,7 @@ public class Security {
      */
     public static PublicKey generatePublicKey(String encodedPublicKey) {
         try {
-            byte[] decodedKey = Base64Util.fromBase64(encodedPublicKey);
+            byte[] decodedKey = Base64Util.decode(encodedPublicKey);
             KeyFactory keyFactory = KeyFactory.getInstance(KEY_FACTORY_ALGORITHM);
             return keyFactory.generatePublic(new X509EncodedKeySpec(decodedKey));
         } catch (NoSuchAlgorithmException e) {
@@ -66,7 +66,7 @@ public class Security {
     public static boolean verify(PublicKey publicKey, String signedData, String signature, SecurityLogger logger) {
         byte[] signatureBytes;
         try {
-            signatureBytes = Base64Util.fromBase64(signature);
+            signatureBytes = Base64Util.decode(signature);
             Signature sig = Signature.getInstance(SIGNATURE_ALGORITHM);
             sig.initVerify(publicKey);
             sig.update(signedData.getBytes());
