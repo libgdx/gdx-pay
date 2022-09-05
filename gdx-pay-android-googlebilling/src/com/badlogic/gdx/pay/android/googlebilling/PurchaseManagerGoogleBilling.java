@@ -22,7 +22,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     private static final String TAG = "GdxPay/GoogleBilling";
     private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
     private final Activity activity;
-    private final Map<String, SkuDetails> skuDetailsMap = new HashMap<>();
+    private final Map<String, ProductDetails> productDetailsMap = new HashMap<>();
     private boolean serviceConnected;
     private boolean installationComplete;
     private BillingClient mBillingClient;
@@ -106,76 +106,79 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     }
 
     private void fetchOfferDetails() {
-        skuDetailsMap.clear();
+        productDetailsMap.clear();
         int offerSize = config.getOfferCount();
-        List<String> skuList = new ArrayList<>(offerSize);
+
+        List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
+
         for (int z = 0; z < offerSize; z++) {
-            skuList.add(config.getOffer(z).getIdentifierForStore(storeName()));
+            productList.add(QueryProductDetailsParams.Product.newBuilder()
+                    .setProductId(config.getOffer(z).getIdentifierForStore(storeName()))
+                    .setProductType(BillingClient.ProductType.INAPP)
+                    .build());
         }
 
-        if (skuList.isEmpty()) {
+        if (productList.isEmpty()) {
             Gdx.app.log(TAG, "No skus configured");
             setInstalledAndNotifyObserver();
             return;
         }
 
-        mBillingClient.querySkuDetailsAsync(
-                SkuDetailsParams.newBuilder()
-                        .setSkusList(skuList)
-                        .setType(getGlobalSkuTypeFromConfig())
-                        .build(),
-                new SkuDetailsResponseListener() {
-                    @Override
-                    public void onSkuDetailsResponse(@Nonnull  BillingResult result, List<SkuDetails> skuDetailsList) {
-                        int responseCode = result.getResponseCode();
+        QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
+                .setProductList(productList)
+                .build();
+
+        mBillingClient.queryProductDetailsAsync(
+                params,
+                new ProductDetailsResponseListener() {
+                    public void onProductDetailsResponse(@Nonnull BillingResult billingResult, @Nonnull List<ProductDetails> productDetailsList) {
+                        int responseCode = billingResult.getResponseCode();
                         // it might happen that this was already disposed until the response comes back
                         if (observer == null || Gdx.app == null)
                             return;
 
                         if (responseCode != BillingClient.BillingResponseCode.OK) {
-                            Gdx.app.error(TAG, "onSkuDetailsResponse failed, error code is " + responseCode);
-                            if (!installationComplete)
-                                observer.handleInstallError(new FetchItemInformationException(
-                                        String.valueOf(responseCode)));
+                            Gdx.app.error(TAG, "onProductDetailsResponse failed, error code is " + responseCode);
+                            if (!installationComplete) {
+                                observer.handleInstallError(new FetchItemInformationException(String.valueOf(responseCode)));
+                            }
 
                         } else {
-                            if (skuDetailsList != null) {
-
-                                for (SkuDetails skuDetails : skuDetailsList) {
-                                    informationMap.put(skuDetails.getSku(), convertSkuDetailsToInformation
-                                            (skuDetails));
-                                    skuDetailsMap.put(skuDetails.getSku(), skuDetails);
-                                }
-                            } else {
-                                Gdx.app.log(TAG, "skuDetailsList is null");
+                            for (ProductDetails productDetails : productDetailsList) {
+                                informationMap.put(productDetails.getProductId(), convertSkuDetailsToInformation
+                                        (productDetails));
+                                productDetailsMap.put(productDetails.getProductId(), productDetails);
                             }
+
                             setInstalledAndNotifyObserver();
                         }
                     }
-                });
+                }
+        );
     }
 
     private String mapOfferType(OfferType type) {
         switch (type) {
             case CONSUMABLE:
             case ENTITLEMENT:
-                return BillingClient.SkuType.INAPP;
+                return BillingClient.ProductType.INAPP;
             case SUBSCRIPTION:
-                return BillingClient.SkuType.SUBS;
+                return BillingClient.ProductType.SUBS;
         }
         throw new IllegalStateException("Unsupported OfferType: " + type);
     }
 
-    private Information convertSkuDetailsToInformation(SkuDetails skuDetails) {
-        String priceString = skuDetails.getPrice();
+    private Information convertSkuDetailsToInformation(ProductDetails productDetails) {
+        String priceString = productDetails.getOneTimePurchaseOfferDetails().getFormattedPrice();
         return Information.newBuilder()
-                .localName(skuDetails.getTitle())
-                .freeTrialPeriod(convertToFreeTrialPeriod(skuDetails.getFreeTrialPeriod()))
-                .localDescription(skuDetails.getDescription())
+                .localName(productDetails.getTitle())
+                //TODO Removed - Dont know if this is applied in some other form
+                //.freeTrialPeriod(convertToFreeTrialPeriod(productDetails.getFreeTrialPeriod()))
+                .localDescription(productDetails.getDescription())
                 .localPricing(priceString)
-                .priceCurrencyCode(skuDetails.getPriceCurrencyCode())
-                .priceInCents((int) (skuDetails.getPriceAmountMicros() / 10_000))
-                .priceAsDouble(skuDetails.getPriceAmountMicros() / 1_000_000.0)
+                .priceCurrencyCode(productDetails.getOneTimePurchaseOfferDetails().getPriceCurrencyCode())
+                .priceInCents((int) (productDetails.getOneTimePurchaseOfferDetails().getPriceAmountMicros() / 10_000))
+                .priceAsDouble(productDetails.getOneTimePurchaseOfferDetails().getPriceAmountMicros() / 1_000_000.0)
                 .build();
     }
 
@@ -225,37 +228,49 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     @Override
     public void purchase(String identifier) {
-        SkuDetails skuDetails = skuDetailsMap.get(identifier);
+        ProductDetails productDetails = productDetailsMap.get(identifier);
 
-        if (skuDetails == null) {
+        if (productDetails == null) {
             observer.handlePurchaseError(new InvalidItemException(identifier));
         } else {
-            mBillingClient.launchBillingFlow(activity, getBillingFlowParams(skuDetails).build());
+            BillingResult billingResult = mBillingClient.launchBillingFlow(activity, getBillingFlowParams(productDetails).build());
+            //billingResult.getResponseCode()
         }
     }
 
     /**
-     * @param skuDetails SKU details to set in the billing flow params.
+     * @param productDetails SKU details to set in the billing flow params.
      * @return The params builder to be used while launching the billing flow.
      */
-    protected BillingFlowParams.Builder getBillingFlowParams(SkuDetails skuDetails) {
-        return BillingFlowParams.newBuilder().setSkuDetails(skuDetails);
+    protected BillingFlowParams.Builder getBillingFlowParams(ProductDetails productDetails) {
+        List<BillingFlowParams.ProductDetailsParams> productDetailsParamsList =
+                Collections.singletonList(
+                        BillingFlowParams.ProductDetailsParams.newBuilder()
+                                .setProductDetails(productDetails)
+                                .build()
+                );
+
+        return BillingFlowParams.newBuilder().setProductDetailsParamsList(productDetailsParamsList);
     }
 
     @Override
     public void purchaseRestore() {
-        Purchase.PurchasesResult purchasesResult = mBillingClient.queryPurchases(getGlobalSkuTypeFromConfig());
-        int responseCode = purchasesResult.getResponseCode();
-        List<Purchase> purchases = purchasesResult.getPurchasesList();
+        mBillingClient.queryPurchasesAsync(
+                QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(),
 
-        if (responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            handlePurchase(purchases, true);
-        } else {
-            Gdx.app.error(TAG, "queryPurchases failed with responseCode " + responseCode);
-            observer.handleRestoreError(new GdxPayException("queryPurchases failed with " +
-                    "responseCode " + responseCode));
-        }
-
+                new PurchasesResponseListener() {
+                    @Override
+                    public void onQueryPurchasesResponse(BillingResult billingResult, List<Purchase> list) {
+                        int responseCode = billingResult.getResponseCode();
+                        if (responseCode == BillingClient.BillingResponseCode.OK && list != null) {
+                            handlePurchase(list, true);
+                        } else {
+                            Gdx.app.error(TAG, "queryPurchases failed with responseCode " + responseCode);
+                            observer.handleRestoreError(new GdxPayException("queryPurchases failed with " +
+                                    "responseCode " + responseCode));
+                        }
+                    }
+                });
     }
 
     @Override
@@ -288,15 +303,17 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         for (Purchase purchase : purchases) {
             // ignore pending purchases, just return successful purchases to the client
             if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                //TODO - Only handling one product per purchase. This can be changed at Play Store - In app Product Settings
+                String product = purchase.getProducts().get(0);
 
                 // build the transaction from the purchase object
                 Transaction transaction = new Transaction();
-                transaction.setIdentifier(purchase.getSku());
+                transaction.setIdentifier(product);
                 transaction.setOrderId(purchase.getOrderId());
                 transaction.setRequestId(purchase.getPurchaseToken());
                 transaction.setStoreName(PurchaseManagerConfig.STORE_NAME_ANDROID_GOOGLE);
                 transaction.setPurchaseTime(new Date(purchase.getPurchaseTime()));
-                transaction.setPurchaseText("Purchased: " + purchase.getSku());
+                transaction.setPurchaseText("Purchased: " + product);
                 transaction.setReversalTime(null);
                 transaction.setReversalText(null);
                 transaction.setTransactionData(purchase.getOriginalJson());
@@ -309,7 +326,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 else
                     observer.handlePurchase(transaction);
 
-                Offer purchasedOffer = config.getOffer(purchase.getSku());
+                Offer purchasedOffer = config.getOffer(product);
                 if (purchasedOffer != null) {
                     // CONSUMABLES need to get consumed, ENTITLEMENTS/SUBSCRIPTIONS need to geed acknowledged
                     switch (purchasedOffer.getType()) {
