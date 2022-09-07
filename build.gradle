@@ -1,5 +1,5 @@
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.6'
+tasks.named('wrapper') {
+    gradleVersion = '7.5.1'
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
@@ -10,9 +10,9 @@ class Developer {
 }
 
 ext {
-    androidBuildToolsVersion = '28.0.3'
-    androidCompileSdkVersion = 27
-    androidTargetSdkVersion = 27
+    androidBuildToolsVersion = '33.0.0'
+    androidCompileSdkVersion = 33
+    androidTargetSdkVersion = 33
     assertJVersion = '1.7.1'
     gdxVersion = '1.9.8'
     robolectricVersion = '4.3_r2-robolectric-0'
@@ -83,7 +83,7 @@ buildscript {
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:3.2.0"
+        classpath "com.android.tools.build:gradle:7.2.2"
         classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${roboVMVersion}"
         classpath "de.mobilej.unmock:UnMockPlugin:${unmockVersion}"
     }

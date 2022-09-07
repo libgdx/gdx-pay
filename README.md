@@ -144,7 +144,7 @@ Something not working quite as expected? Do you need a feature that has not been
 
 To build from source, clone or download this repository, then open it in Android Studio. Perform the following command to compile and upload the library in your local repository:
 
-    ./gradlew assemble uploadArchives -PLOCAL
+    ./gradlew publishToMavenLocal
 
 See build.gradle file for current version to use in your dependencies.
 

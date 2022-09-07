@@ -1,12 +1,10 @@
 apply plugin: 'com.android.library'
 apply from : '../publish_android.gradle'
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 android {
-    defaultPublishConfig "release"
-
     compileSdkVersion androidCompileSdkVersion
     buildToolsVersion androidBuildToolsVersion
 
@@ -31,11 +29,11 @@ android {
 
 configurations {
     compileAndIncludeClassesInLibraryJar
-    compile.extendsFrom compileAndIncludeClassesInLibraryJar
+    api.extendsFrom compileAndIncludeClassesInLibraryJar
 }
 
 dependencies {
-    compile project(':gdx-pay-client')
+    api project(':gdx-pay-client')
 
     compileAndIncludeClassesInLibraryJar fileTree(dir: 'lib', include: ['*.jar'])
 }
