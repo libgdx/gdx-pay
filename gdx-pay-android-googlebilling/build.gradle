@@ -3,8 +3,6 @@ apply plugin: 'com.android.library'
 apply from : '../publish_android.gradle'
 
 android {
-    defaultPublishConfig "release"
-
     compileSdkVersion androidCompileSdkVersion
     buildToolsVersion androidBuildToolsVersion
 
@@ -34,12 +32,12 @@ android {
 
 configurations {
     compileAndIncludeClassesInLibraryJar
-    compile.extendsFrom compileAndIncludeClassesInLibraryJar
+    api.extendsFrom compileAndIncludeClassesInLibraryJar
 }
 
 dependencies {
-    compile project(':gdx-pay-client')
-    implementation "com.android.billingclient:billing:5.0.0"
+    api project(':gdx-pay-client')
+    api 'com.android.billingclient:billing:5.0.0'
 
-    testCompile libraries.junit
+    testImplementation libraries.junit
 }

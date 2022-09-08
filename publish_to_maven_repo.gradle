@@ -1,51 +1,63 @@
-afterEvaluate { project ->
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
-                if (isLocalBuild()) {
-                    repository(url: getLocalRepositoryUrl())
-                } else if (isReleaseBuild()) {
-                    repository(url: getReleaseRepositoryUrl()) {
-                        authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
-                    }
+afterEvaluate { project ->
+    publishing {
+        publications {
+            release(MavenPublication) {
+                if (project.plugins.findPlugin("com.android.library")) {
+                    from components.release
                 } else {
-                    snapshotRepository(url: getSnapshotRepositoryUrl()) {
-                        authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
-                    }
+                    from components.java
                 }
 
-                pom.project {
-                    name POM_NAME
+                pom {
+                    name = POM_NAME
                     if (project.hasProperty('POM_PACKAGING')) {
-                        packaging POM_PACKAGING
+                        packaging = POM_PACKAGING
                     }
-                    description POM_DESCRIPTION
-                    url POM_URL
-
-                    scm {
-                        url POM_SCM_URL
-                        connection POM_SCM_CONNECTION
-                        developerConnection POM_SCM_DEV_CONNECTION
-                    }
-
+                    description = POM_DESCRIPTION
+                    url = POM_URL
                     licenses {
                         license {
-                            name POM_LICENCE_NAME
-                            url POM_LICENCE_URL
-                            distribution POM_LICENCE_DIST
+                            name = POM_LICENCE_NAME
+                            url = POM_LICENCE_URL
+                            distribution = POM_LICENCE_DIST
                         }
                     }
-
                     developers {
                         rootProject.developers.each { dev ->
                             developer {
-                                id dev.id
-                                name dev.name
-                                url dev.url
+                                id = dev.id
+                                name = dev.name
+                                url = dev.url
                             }
                         }
+                    }
+                    scm {
+                        url = POM_SCM_URL
+                        connection = POM_SCM_CONNECTION
+                        developerConnection = POM_SCM_DEV_CONNECTION
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                if (isLocalBuild()) {
+                    url = getLocalRepositoryUrl()
+                } else if (isReleaseBuild()) {
+                    url = getReleaseRepositoryUrl()
+                    credentials {
+                        username = getRepositoryUsername()
+                        password = getRepositoryPassword()
+                    }
+                } else {
+                    url = getSnapshotRepositoryUrl()
+                    credentials {
+                        username = getRepositoryUsername()
+                        password = getRepositoryPassword()
                     }
                 }
             }
@@ -57,6 +69,6 @@ afterEvaluate { project ->
             useGpgCmd()
         }
         required { isReleaseBuild() }
-        sign configurations.archives
+        sign publishing.publications
     }
 }

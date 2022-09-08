@@ -1,30 +1,8 @@
-apply plugin: 'maven'
-apply plugin: 'signing'
 apply from: rootProject.file('publish_to_maven_repo.gradle')
 
 afterEvaluate { project ->
-    task libraryJar(type: Jar, dependsOn:classes) {
-        from sourceSets.main.output.classesDir
-        if (configurations.findByName('compileAndIncludeClassesInLibraryJar') != null) {
-            from configurations.compileAndIncludeClassesInLibraryJar.collect { it.isDirectory() ? it : zipTree(it) }
-        }
-        classifier = 'library'
+    java {
+        withJavadocJar()
+        withSourcesJar()
     }
-
-    task sourcesJar(type: Jar, dependsOn:classes) {
-        from sourceSets.main.allSource
-        classifier = 'sources'
-    }
-
-    task javadocJar(type: Jar, dependsOn:javadoc) {
-        from javadoc.destinationDir
-        classifier = 'javadoc'
-    }
-
-    artifacts {
-        archives libraryJar
-        archives sourcesJar
-        archives javadocJar
-    }
-
 }

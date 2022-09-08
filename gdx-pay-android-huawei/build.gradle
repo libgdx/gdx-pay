@@ -3,8 +3,6 @@ apply plugin: 'com.android.library'
 apply from : '../publish_android.gradle'
 
 android {
-    defaultPublishConfig "release"
-
     compileSdkVersion androidCompileSdkVersion
     buildToolsVersion androidBuildToolsVersion
 
@@ -29,7 +27,7 @@ android {
 
 configurations {
     compileAndIncludeClassesInLibraryJar
-    compile.extendsFrom compileAndIncludeClassesInLibraryJar
+    api.extendsFrom compileAndIncludeClassesInLibraryJar
 }
 
 repositories {

@@ -1,14 +1,13 @@
-apply plugin: 'java'
+apply plugin: 'java-library'
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
-apply plugin : 'java'
 apply from : '../publish_java.gradle'
 
 dependencies {
-    compile libraries.jsr305
+    api libraries.jsr305
 
-    testCompile libraries.junit
-    testCompile libraries.assertj_core
+    testImplementation libraries.junit
+    testImplementation libraries.assertj_core
 }
