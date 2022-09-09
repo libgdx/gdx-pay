@@ -6,8 +6,8 @@
 
         <!-- IAP -->
         <receiver
-            android:name="com.amazon.device.iap.ResponseReceiver"
-            tools:ignore="ExportedReceiver,InvalidPermission">
+                android:name="com.amazon.device.iap.ResponseReceiver"
+                tools:ignore="ExportedReceiver,InvalidPermission" android:exported="false">
             <intent-filter>
                 <action
                     android:name="com.amazon.inapp.purchasing.NOTIFY"
