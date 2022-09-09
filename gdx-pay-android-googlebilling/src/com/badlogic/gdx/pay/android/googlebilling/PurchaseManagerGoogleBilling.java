@@ -169,16 +169,17 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     }
 
     private Information convertSkuDetailsToInformation(ProductDetails productDetails) {
-        String priceString = productDetails.getOneTimePurchaseOfferDetails().getFormattedPrice();
+        ProductDetails.OneTimePurchaseOfferDetails oneTimePurchaseDetails = productDetails.getOneTimePurchaseOfferDetails();
+        String priceString = oneTimePurchaseDetails.getFormattedPrice();
         return Information.newBuilder()
                 .localName(productDetails.getTitle())
                 //TODO Removed - Dont know if this is applied in some other form
                 //.freeTrialPeriod(convertToFreeTrialPeriod(productDetails.getFreeTrialPeriod()))
                 .localDescription(productDetails.getDescription())
                 .localPricing(priceString)
-                .priceCurrencyCode(productDetails.getOneTimePurchaseOfferDetails().getPriceCurrencyCode())
-                .priceInCents((int) (productDetails.getOneTimePurchaseOfferDetails().getPriceAmountMicros() / 10_000))
-                .priceAsDouble(productDetails.getOneTimePurchaseOfferDetails().getPriceAmountMicros() / 1_000_000.0)
+                .priceCurrencyCode(oneTimePurchaseDetails.getPriceCurrencyCode())
+                .priceInCents((int) (oneTimePurchaseDetails.getPriceAmountMicros() / 10_000))
+                .priceAsDouble(oneTimePurchaseDetails.getPriceAmountMicros() / 1_000_000.0)
                 .build();
     }
 
