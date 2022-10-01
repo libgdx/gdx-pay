@@ -2,36 +2,20 @@
 
 ## First release
 
-You need a Nexus OSS account and a GPG key in order to generate required `.asc` files.
-
-In ~/.gradle/gradle.properties, define the following properties:
-
-NEXUS_USERNAME=(username)
-NEXUS_PASSWORD=(password)
-signing.keyId=(gpg1 key id, or last 8 chars of gpg2 key)
-signing.password=gpg password
-signing.secretKeyRingFile=/Users/username/.gnupg/secring.gpg
-
-Correct the properties. Create a gpg key if you have not yet one.
+You need a Nexus OSS account to publish the release with access to gdx-pay. Get in touch with one of the other maintainers to get one.
 
 ## Every release
 
-1. edit project/build.gradle version
-   remove "-SNAPSHOT" from version.
+1. Draft a new release from https://github.com/libgdx/gdx-pay/releases
 
-2. assemble local build with correct version as last final check:
-    cd to gdx-pay and run: `./gradlew clean && ./gradlew build`
+2. Wait until the GitHub action completes.
 
-3. commit change of version number.
-
-4. upload archives via console:
-    cd to gdx-pay and run: `./gradlew -P RELEASE uploadArchives`
-
-5. for RELEASE go to https://oss.sonatype.org --> "Staging Repositories"
+3. Go to https://oss.sonatype.org --> "Staging Repositories"
+   - wait until gdx-pay release appears here.
    - select "Close", then "Release" to fully release (needs signing!)
-   - signing: needs that sonatype key from above...
 
-6. update e.g. gdx-pay README.md --> search & replace version numbers!
-   update/tag git: e.g. v0.7.0
-   update version to e.g. 0.8.0-SNAPSHOT in build.gradle
+4. Update gdx-pay README.md --> search & replace version numbers!
+   update/tag git: e.g. v1.3.3
 
+5. Update gdx-pay gradle.properties
+   update version to the next development version.
