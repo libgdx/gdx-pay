@@ -37,7 +37,7 @@ configurations {
 
 dependencies {
     api project(':gdx-pay-client')
-    api 'com.android.billingclient:billing:3.0.1'
+    api 'com.android.billingclient:billing:5.0.0'
 
     testImplementation libraries.junit
 }
