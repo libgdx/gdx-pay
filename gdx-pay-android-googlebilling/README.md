@@ -1,6 +1,8 @@
 # InApp purchasing implementation for Google Play Billing
 
-Handles purchases and restores for non-consumable and consumable products, subscriptions support is work in progress and PRs are welcome.
+Handles purchases and restores for non-consumable and consumable products.
+
+Subscriptions are supported with some limitations: the first `SubscriptionOfferDetails` in the list of offers in `ProductDetails` is used.
 
 ## Usage
 
@@ -30,5 +32,5 @@ Google Billing allows multiple products in the same purchase. You can change thi
 ## Testing
 * Upload your compile build with this lib included as an closed alpha build first. This is needed to even being able to add IAPs in the console.
 * Add your IAPs and mark them as active
-* Add testers to your closed alpha build so they see the new IAPs and also add these testers as "licensed testers" (Settings -> Account details -> Licsensed) so they are not being charged
+* Add testers to your closed alpha build so they see the new IAPs and also add these testers as "licensed testers" (Settings -> Account details -> Licensed) so they are not being charged
 * Testers must join the alpha test channel and can test (in my experiences they can also test with a debug build)

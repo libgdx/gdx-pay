@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2011 See AUTHORS file.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -70,6 +70,15 @@ public class PurchaseManagerConfig {
 		return null;
 	}
 
+	public synchronized boolean hasAnyOfferWithType(OfferType offerType) {
+		for(Offer offer : offers) {
+			if (offer.getType() == offerType) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public synchronized Offer getOfferForStore (String storeName, String identifierForStore) {
         // search matching offer and return it
         for (int i = 0; i < offers.size(); i++) {
@@ -77,11 +86,11 @@ public class PurchaseManagerConfig {
                 return offers.get(i);
             }
         }
-	    
+
 	    // no matching offer found
 	    return null;
 	}
-	
+
 	public synchronized Offer getOffer (int index) {
 		return offers.get(index);
 	}
@@ -91,7 +100,7 @@ public class PurchaseManagerConfig {
 	}
 
 	/** Adds a parameter for a store.
-	 * 
+	 *
 	 * @param storeName The name of the store.
 	 * @param param The store parameters to use. This could be a string or byte-array etc. depending on what that store needs to
 	 *           initialize. */
@@ -100,7 +109,7 @@ public class PurchaseManagerConfig {
 	}
 
 	/** Returns parameters for a store.
-	 * 
+	 *
 	 * @param storeName The name of the store.
 	 * @return The store parameters or null if there where none. This could be a string or byte-array etc. depending on what that
 	 *         store needs to initialize. */
