@@ -112,7 +112,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         }
 
         if (productList.isEmpty()) {
-            Gdx.app.log(TAG, "No skus configured");
+            Gdx.app.debug(TAG, "No products configured");
             setInstalledAndNotifyObserver();
             return;
         }
@@ -164,7 +164,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     }
 
     private Information convertProductDetailsToInformation(ProductDetails productDetails) {
-        Gdx.app.log(TAG, "Converting productDetails: \n" + productDetails);
+        Gdx.app.debug(TAG, "Converting productDetails: \n" + productDetails);
 
         Information.Builder builder = Information.newBuilder()
                 .localName(productDetails.getTitle())
@@ -292,7 +292,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
             // remove observer and config as well
             observer = null;
             config = null;
-            Gdx.app.log(TAG, "disposed observer and config");
+            Gdx.app.debug(TAG, "disposed observer and config");
         }
         if (mBillingClient != null && mBillingClient.isReady()) {
             mBillingClient.endConnection();
@@ -314,7 +314,6 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     }
 
     /**
-     * @param productDetails SKU details to set in the billing flow params.
      * @return The params builder to be used while launching the billing flow.
      */
     protected BillingFlowParams.Builder getBillingFlowParams(ProductDetails productDetails) {
