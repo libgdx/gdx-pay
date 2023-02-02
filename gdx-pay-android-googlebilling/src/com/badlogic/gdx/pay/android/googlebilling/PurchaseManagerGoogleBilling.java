@@ -206,7 +206,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         ProductDetails.PricingPhase freeTrialSubscriptionPhase = getFreeTrialSubscriptionPhase(details.getPricingPhases());
 
         if (freeTrialSubscriptionPhase != null) {
-            builder.freeTrialPeriod(convertToFreeTrialPeriod(freeTrialSubscriptionPhase.getBillingPeriod()));
+            builder.freeTrialPeriod(convertToFreeTrialPeriod(freeTrialSubscriptionPhase.getBillingPeriod(), freeTrialSubscriptionPhase.getBillingCycleCount()));
         }
     }
 
@@ -241,11 +241,14 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
 
     /**
-     * TODO test that we can find free trial phase actually like this. Normally is non-recurring and free.
+     * Free trial periods come in two ways:
+     * RecurrenceMode.NON_RECURRING (detected before 2023, android 10)
+     * RecurrenceMode.FINITE_RECURRING with billingCycleCount of 1 (detected in january 2023)
+     *
      */
     private static boolean isFreeTrialSubscriptionPhase(ProductDetails.PricingPhase phase) {
-        return phase.getRecurrenceMode() == ProductDetails.RecurrenceMode.NON_RECURRING && phase.getPriceAmountMicros() == 0L;
-
+        return phase.getPriceAmountMicros() == 0L &&
+                (phase.getRecurrenceMode() == ProductDetails.RecurrenceMode.NON_RECURRING  || phase.getRecurrenceMode() == ProductDetails.RecurrenceMode.FINITE_RECURRING);
     }
 
     private static void convertOneTimeProductToInformation(Information.Builder builder, ProductDetails.OneTimePurchaseOfferDetails oneTimePurchaseDetails) {
@@ -259,15 +262,20 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     /**
      * @param iso8601Duration in ISO 8601 format.
+     * @param billingCycleCount the number of billing cycles. When testing it, we found value 1 for FINITE_RECURRING cycles
      */
     @Nullable
-    private FreeTrialPeriod convertToFreeTrialPeriod(@Nullable  String iso8601Duration) {
+    private FreeTrialPeriod convertToFreeTrialPeriod(@Nullable  String iso8601Duration, int billingCycleCount) {
         if (iso8601Duration == null || iso8601Duration.isEmpty()) {
             return null;
         }
 
         try {
-            return Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod(iso8601Duration);
+            FreeTrialPeriod freeTrialPeriod = Iso8601DurationStringToFreeTrialPeriodConverter.convertToFreeTrialPeriod(iso8601Duration);
+            if (billingCycleCount > 1) {
+                freeTrialPeriod = new FreeTrialPeriod(freeTrialPeriod.getNumberOfUnits() * billingCycleCount, freeTrialPeriod.getUnit());
+            }
+            return freeTrialPeriod;
         } catch(RuntimeException e) {
             Gdx.app.error(TAG, "Failed to parse iso8601Duration: " + iso8601Duration, e);
             return null;
