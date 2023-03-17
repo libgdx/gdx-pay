@@ -15,7 +15,7 @@ You need a Nexus OSS account to publish the release with access to gdx-pay. Get 
    - select "Close", then "Release" to fully release (needs signing!)
 
 4. Update gdx-pay README.md --> search & replace version numbers!
-   update/tag git: e.g. v1.3.3
+   update/tag git: e.g. v1.3.4
 
 5. Update gdx-pay gradle.properties
    update version to the next development version.
