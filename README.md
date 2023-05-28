@@ -33,12 +33,12 @@ Add the following dependencies:
 
 *core:*
 
-        compile "com.badlogicgames.gdxpay:gdx-pay-client:$gdxPayVersion"
+        implementation "com.badlogicgames.gdxpay:gdx-pay-client:$gdxPayVersion"
 
 *html:*
 
-        compile "com.badlogicgames.gdxpay:gdx-pay:$gdxPayVersion:sources"
-        compile "com.badlogicgames.gdxpay:gdx-pay-client:$gdxPayVersion:sources"
+        implementation "com.badlogicgames.gdxpay:gdx-pay:$gdxPayVersion:sources"
+        implementation "com.badlogicgames.gdxpay:gdx-pay-client:$gdxPayVersion:sources"
 
 You also need to add the following file to your GdxDefinition.gwt.xml in your html project:
 

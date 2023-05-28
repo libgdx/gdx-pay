@@ -10,7 +10,7 @@ Subscriptions are supported with some limitations: the first `SubscriptionOfferD
 
 *android:*
 
-     compile "com.badlogicgames.gdxpay:gdx-pay-android-googlebilling:$gdxPayVersion"
+     implementation "com.badlogicgames.gdxpay:gdx-pay-android-googlebilling:$gdxPayVersion"
 
 
 ### ProGuard configuration
