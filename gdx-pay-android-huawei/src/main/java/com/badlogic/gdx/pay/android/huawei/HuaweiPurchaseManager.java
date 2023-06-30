@@ -74,17 +74,17 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(Exception e) {
+                Exception installErrorException = e;
                 if (e instanceof IapApiException) {
                     IapApiException apiException = (IapApiException) e;
                     Status status = apiException.getStatus();
                     if (status.getStatusCode() == OrderStatusCode.ORDER_HWID_NOT_LOGIN) {
-                            huaweiPurchaseManagerConfig.observer.handleInstallError(new LoginRequiredException());
+                        installErrorException = new LoginRequiredException();
                     } else if (status.getStatusCode() == OrderStatusCode.ORDER_ACCOUNT_AREA_NOT_SUPPORTED) {
-                        huaweiPurchaseManagerConfig.observer.handleInstallError(new RegionNotSupportedException());
-                    } else {
-                        huaweiPurchaseManagerConfig.observer.handleInstallError(e);
+                        installErrorException = new RegionNotSupportedException();
                     }
                 }
+                huaweiPurchaseManagerConfig.observer.handleInstallError(installErrorException);
             }
         });
     }
