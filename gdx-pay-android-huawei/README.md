@@ -8,7 +8,7 @@ It manages purchases, restores and consumption for consumable, non-consumable an
 
  *android:*
 
-     compile "com.badlogicgames.gdxpay:gdx-pay-android-huawei:$gdxPayVersion"
+     implementation "com.badlogicgames.gdxpay:gdx-pay-android-huawei:$gdxPayVersion"
 
 
 ### ProGuard configuration
