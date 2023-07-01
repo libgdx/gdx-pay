@@ -84,6 +84,8 @@ public class HuaweiPurchaseManager implements PurchaseManager, AndroidEventListe
                     } else {
                         huaweiPurchaseManagerConfig.observer.handleInstallError(e);
                     }
+                } else {
+                    huaweiPurchaseManagerConfig.observer.handleInstallError(e);
                 }
             }
         });
