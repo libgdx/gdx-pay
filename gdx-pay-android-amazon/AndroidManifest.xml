@@ -5,14 +5,11 @@
     <application>
 
         <!-- IAP -->
-        <receiver
-                android:name="com.amazon.device.iap.ResponseReceiver"
-                tools:ignore="ExportedReceiver,InvalidPermission" android:exported="false">
+        <receiver android:name="com.amazon.device.iap.ResponseReceiver" android:exported="true"
+            android:permission="com.amazon.inapp.purchasing.Permission.NOTIFY" >
             <intent-filter>
                 <action
-                    android:name="com.amazon.inapp.purchasing.NOTIFY"
-                    android:permission="com.amazon.inapp.purchasing.Permission.NOTIFY"
-                    />
+                    android:name="com.amazon.inapp.purchasing.NOTIFY" />
             </intent-filter>
         </receiver>
 
