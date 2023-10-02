@@ -1,9 +1,7 @@
-[![Build Status](https://travis-ci.org/libgdx/gdx-pay.svg?branch=master)](https://travis-ci.org/libgdx/gdx-pay)
 [![Maven Central](http://maven-badges.herokuapp.com/maven-central/com.badlogicgames.gdxpay/gdx-pay/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.badlogicgames.gdxpay%22)
-[![Dependency Status](https://dependencyci.com/github/libgdx/gdx-pay/badge)](https://dependencyci.com/github/libgdx/gdx-pay)
 
 This project aims to provide a **cross-platform API for InApp purchasing**.
-The gdx-pay project is a libGDX extension. Current release version is 1.3.5. Please use at least libGDX v1.9.8 or Robovm 2.3.5.
+The gdx-pay project is a libGDX extension. Current release version is 1.3.6. Please use at least libGDX v1.9.8 or Robovm 2.3.5.
 
 SNAPSHOT builds are published regularly on [https://oss.sonatype.org/content/repositories/snapshots/](https://oss.sonatype.org/content/repositories/snapshots/).
 
@@ -26,7 +24,7 @@ The recommended way to use gdx-pay is via dependency management with Gradle or M
 *project-root/build.gradle:*
 
     ext {
-        gdxPayVersion = '1.3.5'
+        gdxPayVersion = '1.3.6'
     }
 
 Add the following dependencies:
