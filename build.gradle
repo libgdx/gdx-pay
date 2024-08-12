@@ -71,7 +71,7 @@ ext {
 
 buildscript {
     ext {
-        roboVMVersion = '2.3.4'
+        roboVMVersion = '2.3.21'
     }
 
     repositories {
