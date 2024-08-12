@@ -72,7 +72,6 @@ ext {
 buildscript {
     ext {
         roboVMVersion = '2.3.4'
-        unmockVersion = "0.7.0"
     }
 
     repositories {
@@ -85,7 +84,6 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:7.2.2"
         classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${roboVMVersion}"
-        classpath "de.mobilej.unmock:UnMockPlugin:${unmockVersion}"
     }
 }
 
