@@ -1,6 +1,8 @@
 package com.badlogic.gdx.pay.android.googlebilling;
 
 import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
 import com.android.billingclient.api.*;
 import com.android.billingclient.api.BillingClient.ProductType;
 import com.badlogic.gdx.Gdx;
@@ -16,11 +18,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * <a href="https://developer.android.com/google/play/billing/billing_java_kotlin">Reference docs</a>
  * <p>
+ * Exponential back-off copied from (a clone of) an
+ * <a href="https://github.com/john990/play-billing-samples/blob/main/TrivialDriveJava/app/src/main/java/com/sample/android/trivialdrivesample/billing/BillingDataSource.java">Android
+ * sample</a>.
+ * <p>
  * Created by Benjamin Schulte on 07.07.2018.
  */
 
 public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesUpdatedListener {
     private static final String TAG = "GdxPay/GoogleBilling";
+    private static final long RECONNECT_TIMER_START_MILLISECONDS = 1000L;
+    private static final long RECONNECT_TIMER_MAX_TIME_MILLISECONDS = 1000L * 60L * 15L; // 15 mins
+    private static final Handler handler = new Handler(Looper.getMainLooper());
 
     private final Map<String, Information> informationMap = new ConcurrentHashMap<>();
     private final Activity activity;
@@ -30,6 +39,8 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     private BillingClient mBillingClient;
     private PurchaseObserver observer;
     private PurchaseManagerConfig config;
+    private boolean hasBillingSetupFinishedSuccessfully = false;
+    private long reconnectMilliseconds = RECONNECT_TIMER_START_MILLISECONDS;
 
     public PurchaseManagerGoogleBilling(Activity activity) {
         this.activity = activity;
@@ -58,23 +69,22 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         // make sure to call the observer again
         installationComplete = false;
 
-        startServiceConnection(new Runnable() {
-            @Override
-            public void run() {
-                // it might happen that this was already disposed until the service connection was established
-                if (PurchaseManagerGoogleBilling.this.observer == null)
-                    return;
-
-                if (!serviceConnected)
-                    PurchaseManagerGoogleBilling.this.observer.handleInstallError(
-                            new GdxPayException("Connection to Play Billing not possible"));
-                else
-                    fetchOfferDetails();
-            }
-        });
+        startServiceConnection(this::handleBillingSetupFinished);
     }
 
-    private void startServiceConnection(final Runnable excecuteOnSetupFinished) {
+    private void handleBillingSetupFinished() {
+        // it might happen that this was already disposed until the service connection was established
+        if (PurchaseManagerGoogleBilling.this.observer == null)
+            return;
+
+        if (!serviceConnected)
+            PurchaseManagerGoogleBilling.this.observer.handleInstallError(
+                    new GdxPayException("Connection to Play Billing not possible"));
+        else
+            fetchOfferDetails();
+    }
+
+    private void startServiceConnection(final Runnable executeOnSetupFinished) {
         mBillingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(@Nonnull BillingResult result) {
@@ -83,17 +93,37 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 Gdx.app.debug(TAG, "Setup finished. Response code: " + billingResponseCode);
 
                 serviceConnected = (billingResponseCode == BillingClient.BillingResponseCode.OK);
+                if (serviceConnected) {
+                    reconnectMilliseconds = RECONNECT_TIMER_START_MILLISECONDS;
+                    hasBillingSetupFinishedSuccessfully = true;
+                } else {
+                    reconnectWithService();
+                }
 
-                if (excecuteOnSetupFinished != null) {
-                    excecuteOnSetupFinished.run();
+                if (executeOnSetupFinished != null) {
+                    executeOnSetupFinished.run();
                 }
             }
 
             @Override
             public void onBillingServiceDisconnected() {
                 serviceConnected = false;
+                reconnectWithService();
             }
         });
+    }
+
+    private void reconnectWithService() {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Runnable executeOnSetupFinished = hasBillingSetupFinishedSuccessfully
+                        ? null
+                        : PurchaseManagerGoogleBilling.this::handleBillingSetupFinished;
+                startServiceConnection(executeOnSetupFinished);
+            }
+        }, reconnectMilliseconds);
+        reconnectMilliseconds = Math.min(reconnectMilliseconds * 2, RECONNECT_TIMER_MAX_TIME_MILLISECONDS);
     }
 
     private void fetchOfferDetails() {
