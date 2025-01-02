@@ -10,12 +10,13 @@ You need a Nexus OSS account to publish the release with access to gdx-pay. Get 
 
 2. Wait until the GitHub action completes.
 
-3. Go to https://oss.sonatype.org --> "Staging Repositories"
+3. Go to https://oss.sonatype.org then "Staging Repositories"
    - wait until gdx-pay release appears here.
-   - select "Close", then "Release" to fully release (needs signing!)
+   - select "Close"
+   - Approx 2 minutes later Release button becomes enabled, click "Release" and confirm.
+   - In approx 30 minutes the release will be available in Maven Central.
 
-4. Update gdx-pay README.md --> search & replace version numbers!
-   update/tag git: e.g. v1.3.4
+4. Update gdx-pay README.md: search & replace version numbers
 
 5. Update gdx-pay gradle.properties
    update version to the next development version.
