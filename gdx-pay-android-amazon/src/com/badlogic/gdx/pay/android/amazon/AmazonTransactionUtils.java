@@ -24,6 +24,7 @@ import com.badlogic.gdx.pay.Information;
 import com.badlogic.gdx.pay.PurchaseManagerConfig;
 import com.badlogic.gdx.pay.Transaction;
 
+import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.ParseException;
 
@@ -73,7 +74,8 @@ public class AmazonTransactionUtils {
 	static Information convertProductToInformation(Product product) {
 		
 		String priceString = product.getPrice();
-		Float priceAsFloat = tryParsePrice(priceString);
+		Float priceAsFloat = tryParsePriceToFloat(priceString);
+		BigDecimal priceAsBigDecimal = tryParsePriceToBigDecimal(priceString);
 		return Information.newBuilder()
 				.localName(product.getTitle())
 				.localDescription(product.getDescription())
@@ -81,6 +83,7 @@ public class AmazonTransactionUtils {
 				.priceCurrencyCode(tryParseCurrency(priceString))
 				.priceInCents(convertToPriceInCents(priceAsFloat))
 				.priceAsDouble(priceAsFloat == null ? null : priceAsFloat.doubleValue())
+				.priceAsBigDecimal(priceAsBigDecimal)
 				.build();
 	}
 
@@ -103,17 +106,37 @@ public class AmazonTransactionUtils {
 		return priceAsFloat == null ? null : MathUtils.ceilPositive(priceAsFloat * 100);
 	}
 
-	private static Float tryParsePrice(String priceString) {
+	private static String tryParsePrice(String priceString) {
 		if (priceString == null || priceString.length() == 0)
 			return null;
-		try {
-			// Remove currency from string
-			// The ugly way
-			priceString = priceString.substring(1);
 
-			// Remaining should be parseable
+		// Remove currency from string
+		// The ugly way
+		priceString = priceString.substring(1);
+
+		// Remaining should be parseable
+		return priceString;
+	}
+
+	private static Float tryParsePriceToFloat(String priceString) {
+		priceString = tryParsePrice(priceString);
+		if (priceString == null)
+			return null;
+		try {
 			return NumberFormat.getInstance().parse(priceString).floatValue();
 		} catch (ParseException exception) {
+			// Silenced
+		}
+		return null;
+	}
+
+	private static BigDecimal tryParsePriceToBigDecimal(String priceString) {
+		priceString = tryParsePrice(priceString);
+		if (priceString == null)
+			return null;
+		try {
+			return new BigDecimal(priceString);
+		} catch (NumberFormatException exception) {
 			// Silenced
 		}
 		return null;

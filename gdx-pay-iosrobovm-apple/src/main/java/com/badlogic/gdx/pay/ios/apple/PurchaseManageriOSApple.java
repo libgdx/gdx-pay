@@ -23,6 +23,7 @@ import org.robovm.apple.foundation.*;
 import org.robovm.apple.storekit.*;
 
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -535,6 +536,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                         .priceCurrencyCode(p.getPriceLocale().getCurrencyCode())
                         .priceInCents(MathUtils.ceilPositive(p.getPrice().floatValue() * 100))
                         .priceAsDouble(p.getPrice().doubleValue())
+                        .priceAsBigDecimal(new BigDecimal(p.getPrice().stringValue()))
                         .freeTrialPeriod(convertToFreeTrialPeriod(p))
                         .build();
                 }

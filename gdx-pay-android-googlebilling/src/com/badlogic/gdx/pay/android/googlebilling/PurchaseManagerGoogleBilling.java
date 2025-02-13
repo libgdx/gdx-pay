@@ -10,6 +10,8 @@ import com.badlogic.gdx.pay.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -231,6 +233,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 .priceCurrencyCode(paidForPricingPhase.getPriceCurrencyCode())
                 .priceInCents((int) paidForPricingPhase.getPriceAmountMicros() / 10_000)
                 .priceAsDouble(paidForPricingPhase.getPriceAmountMicros() / 1_000_000.0)
+                .priceAsBigDecimal((new BigDecimal(paidForPricingPhase.getPriceAmountMicros())).divide(BigDecimal.valueOf(1_000_000), 6, RoundingMode.FLOOR).stripTrailingZeros())
             ;
 
         ProductDetails.PricingPhase freeTrialSubscriptionPhase = getFreeTrialSubscriptionPhase(details.getPricingPhases());
@@ -287,7 +290,8 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 .localPricing(priceString)
                 .priceCurrencyCode(oneTimePurchaseDetails.getPriceCurrencyCode())
                 .priceInCents((int) (oneTimePurchaseDetails.getPriceAmountMicros() / 10_000))
-                .priceAsDouble(oneTimePurchaseDetails.getPriceAmountMicros() / 1_000_000.0);
+                .priceAsDouble(oneTimePurchaseDetails.getPriceAmountMicros() / 1_000_000.0)
+                .priceAsBigDecimal((new BigDecimal(oneTimePurchaseDetails.getPriceAmountMicros())).divide(BigDecimal.valueOf(1_000_000), 6, RoundingMode.FLOOR).stripTrailingZeros());
     }
 
     /**

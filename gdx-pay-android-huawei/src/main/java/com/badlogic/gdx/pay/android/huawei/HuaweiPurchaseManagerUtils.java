@@ -13,6 +13,8 @@ import com.huawei.hms.iap.entity.PurchaseIntentReq;
 
 import org.json.JSONException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 
 class HuaweiPurchaseManagerUtils {
@@ -68,6 +70,7 @@ class HuaweiPurchaseManagerUtils {
                 .localPricing(priceString)
                 .priceCurrencyCode(productInfo.getCurrency())
                 .priceAsDouble(productInfo.getMicrosPrice() / 1_000_000.0)
+                .priceAsBigDecimal((new BigDecimal(productInfo.getMicrosPrice())).divide(BigDecimal.valueOf(1_000_000), 6, RoundingMode.FLOOR).stripTrailingZeros())
                 .build();
     }
 

@@ -1,6 +1,7 @@
 package com.badlogic.gdx.pay;
 
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
 import java.util.Currency;
 
 /**
@@ -27,6 +28,7 @@ public final class Information {
     @Deprecated
     private Integer priceInCents;
     private Double priceAsDouble;
+    private BigDecimal priceAsBigDecimal;
 
     private String priceCurrencyCode;
 
@@ -45,6 +47,7 @@ public final class Information {
         localPricing = builder.localPricing;
         priceInCents = builder.priceInCents;
         priceAsDouble = builder.priceAsDouble;
+        priceAsBigDecimal = builder.priceAsBigDecimal;
         priceCurrencyCode = builder.priceCurrencyCode;
         freeTrialPeriod = builder.freeTrialPeriod;
     }
@@ -94,6 +97,15 @@ public final class Information {
     @Nullable
     public Double getPriceAsDouble() {
         return priceAsDouble;
+    }
+
+    /**
+     * Price (as a BigDecimal).
+     * <p>Caution: this field could be null, information is not always available! </p>
+     */
+    @Nullable
+    public BigDecimal getPriceAsBigDecimal() {
+        return priceAsBigDecimal;
     }
 
     /**
@@ -169,6 +181,7 @@ public final class Information {
         @Deprecated
         private Integer priceInCents;
         private Double priceAsDouble;
+        private BigDecimal priceAsBigDecimal;
         private String priceCurrencyCode;
         private FreeTrialPeriod freeTrialPeriod;
 
@@ -207,6 +220,11 @@ public final class Information {
 
         public Builder priceAsDouble(Double val) {
             priceAsDouble = val;
+            return this;
+        }
+
+        public Builder priceAsBigDecimal(BigDecimal val) {
+            priceAsBigDecimal = val;
             return this;
         }
 
