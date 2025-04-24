@@ -10,4 +10,5 @@ dependencies {
     api project(':gdx-pay-client')
     api libraries.robovm_rt
     api libraries.robovm_cocoatouch
+    api libraries.robovm_storekit2
 }
