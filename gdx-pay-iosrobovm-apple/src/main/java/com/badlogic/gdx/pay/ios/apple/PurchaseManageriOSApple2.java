@@ -21,6 +21,7 @@ import com.badlogic.gdx.pay.*;
 import org.robovm.apple.foundation.*;
 import org.robovm.objc.block.VoidBlock1;
 import org.robovm.objc.block.VoidBlock2;
+import org.robovm.objc.block.VoidBooleanBlock;
 import org.robovm.pods.cocoatouch.storekitrvm.*;
 import org.robovm.pods.cocoatouch.storekitrvm.AsyncSequence.AsyncIterator;
 import org.robovm.pods.cocoatouch.storekitrvm.Transaction;
@@ -53,6 +54,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     private CancelableTask productsRequestAndInstall;
     private CancelableTask productsRequestAndPurchase;
     private NSArray<Product> products;
+    private Set<String> productIdsEligibleForIntroOffer;
 
     private final List<com.badlogic.gdx.pay.Transaction> restoredTransactions = new ArrayList<>();
 
@@ -83,7 +85,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
 
             // Request configured offers/products.
             log(LOGTYPELOG, "Requesting products...");
-            productsRequestAndInstall = getProducts(productIdentifiers, new FetchProductsAndInstallDelegate());
+            productsRequestAndInstall = getProducts(productIdentifiers, new FetchProductsAndInstallDelegate(), true);
         } else {
             log(LOGTYPEERROR, "Error setting up in-app-billing: Device not configured for purchases!");
             observer.handleInstallError(new GdxPayException(
@@ -116,6 +118,10 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
         productsRequestAndPurchase = null;
         products = null;
         restoredTransactions.clear();
+        if (productIdsEligibleForIntroOffer != null) {
+            productIdsEligibleForIntroOffer.clear();
+            productIdsEligibleForIntroOffer = null;
+        }
 
         observer = null;
         config = null;
@@ -133,7 +139,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
             log(LOGTYPELOG, "Requesting product info for " + identifierForStore);
 
             if (productsRequestAndPurchase != null) productsRequestAndPurchase.cancel();
-            productsRequestAndPurchase = getProducts(Collections.singleton(identifierForStore), new FetchProductAndPurchaseDelegate());
+            productsRequestAndPurchase = getProducts(Collections.singleton(identifierForStore), new FetchProductAndPurchaseDelegate(), false);
         } else {
             // Create a SKPayment from the product and start purchase flow
             log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
@@ -306,10 +312,9 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     }
 
     private FreeTrialPeriod convertToFreeTrialPeriod(Product product) {
-        if (!IosVersion.is_11_2_orAbove()) {
-            // introductoryPrice is introduced in ios 11.2
+        // fill only for eligible products
+        if (productIdsEligibleForIntroOffer == null || !productIdsEligibleForIntroOffer.contains(product.getId()))
             return null;
-        }
 
         if (product.getSubscription() == null) {
             return null;
@@ -361,8 +366,13 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     /// considers manager ready to go and notifies observer by calling observer.handleInstall();
     private class FetchProductsAndInstallDelegate implements FetchProductsDelegate {
         @Override
-        public void didReceiveResponse(NSArray<Product> products) {
+        public void didReceiveResponse(NSArray<Product> products, Set<String> freeTrialEligible) {
             PurchaseManageriOSApple2.this.products = products;
+            if (freeTrialEligible != null && !freeTrialEligible.isEmpty()) {
+                if (PurchaseManageriOSApple2.this.productIdsEligibleForIntroOffer == null)
+                    PurchaseManageriOSApple2.this.productIdsEligibleForIntroOffer = new HashSet<>();
+                PurchaseManageriOSApple2.this.productIdsEligibleForIntroOffer.addAll(freeTrialEligible);
+            }
 
             // Received the registered products from AppStore.
             log(LOGTYPELOG, "Products successfully received!");
@@ -403,7 +413,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     /// during purchase request
     private class FetchProductAndPurchaseDelegate implements FetchProductsDelegate {
         @Override
-        public void didReceiveResponse(final NSArray<Product> products) {
+        public void didReceiveResponse(final NSArray<Product> products, Set<String> freeTrialEligible) {
             // Received the registered products from AppStore.
             if (products.size() == 1) {
                 // Create a SKPayment from the product and start purchase flow
@@ -508,7 +518,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
 
     ///  delegate for fetching product info from AppleStore
     private interface FetchProductsDelegate {
-        void didReceiveResponse(NSArray<Product> products);
+        void didReceiveResponse(NSArray<Product> products, Set<String> freeTrialEligible);
         void didFail(NSError error);
     }
 
@@ -526,15 +536,59 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     //
 
     /// requests products list by identifiers, delivers result through delegate
-    private CancelableTask getProducts(Collection<String> identifiers, final FetchProductsDelegate delegate) {
-        Task task = Product.getProducts(NSArray.fromStrings(identifiers), new VoidBlock2<NSArray<Product>, NSError>() {
+    private CancelableTask getProducts(
+            Collection<String> identifiers,
+            final FetchProductsDelegate delegate,
+            final boolean fetchEligibleStatus) {
+        final CancelableTask task = new CancelableTask(null); // to set later
+        Task tsk = Product.getProducts(NSArray.fromStrings(identifiers), new VoidBlock2<NSArray<Product>, NSError>() {
             @Override
             public void invoke(NSArray<Product> products, NSError nsError) {
                 if (nsError != null || products == null) delegate.didFail(nsError);
-                else delegate.didReceiveResponse(products);
+                else if (!fetchEligibleStatus || products.isEmpty()) delegate.didReceiveResponse(products, null);
+                else {
+                    // either will start another task or call delegate and exit
+                    fetchEligibleForIntroOffer(task, products, delegate);
+                }
             }
         });
-        return new CancelableTask(task);
+        task.update(tsk);
+        return task;
+    }
+
+    /// for each product with promotion check if it is eligible for into offer
+    private void fetchEligibleForIntroOffer(
+            final CancelableTask task,
+            final NSArray<Product> products,
+            final FetchProductsDelegate delegate
+    ) {
+        final Set<String> statuses = new HashSet<>();
+        class FetchState implements VoidBooleanBlock {
+            final Iterator<Product> iter = products.iterator();
+            Product next;
+            void performFetch() {
+                while (iter.hasNext()) {
+                    next = iter.next();
+                    Product.SubscriptionInfo info = next.getSubscription();
+                    if (info != null) {
+                        // start task
+                        Task tsk = info.isEligibleForIntroOffer(this);
+                        task.update(tsk);
+                        return;
+                    }
+                }
+                // there is no product left, deliver callback
+                delegate.didReceiveResponse(products, statuses);
+            }
+
+            @Override
+            public void invoke(boolean status) {
+                if (status) statuses.add(next.getId());
+                performFetch();
+            }
+        }
+        FetchState state = new FetchState();
+        state.performFetch();
     }
 
     ///  Restores current transactions, should be called as early as possible
