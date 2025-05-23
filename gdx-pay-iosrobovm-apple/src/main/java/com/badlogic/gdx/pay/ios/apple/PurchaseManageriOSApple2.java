@@ -146,9 +146,30 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
             product.purchase(new NSSet<Product.PurchaseOption>(), new VoidBlock2<Product.PurchaseResult, NSError>() {
                 @Override
                 public void invoke(Product.PurchaseResult purchaseResult, NSError nsError) {
-                    if (nsError != null)
-                        log(LOGTYPEERROR, "Purchasing product " + identifier + " failed with error: " + nsError);
-                    else  log(LOGTYPELOG, "Purchasing product " + identifier + " complete " + purchaseResult);
+                    if (purchaseResult != null) {
+                        log(LOGTYPELOG, "Purchasing product " + identifier + " complete " + purchaseResult);
+
+                        if (purchaseResult instanceof Product.PurchaseResult.success) {
+                            Product.PurchaseResult.success success = (Product.PurchaseResult.success) purchaseResult;
+                            // Product was successfully purchased.
+                            final Transaction transaction = success.getTransaction().getUnsafePayloadValue();
+                            // Parse transaction data.
+                            final com.badlogic.gdx.pay.Transaction t = transaction(transaction);
+                            if (t == null)
+                                observer.handlePurchaseError(new GdxPayException("Failed to create GdxPay transaction"));
+                            else
+                                observer.handlePurchase(t);
+                        } else if (purchaseResult == Product.PurchaseResult.userCancelled()) {
+                            observer.handlePurchaseCanceled();
+                        } else {
+                            // should not happen
+                            observer.handlePurchaseError(new GdxPayException("Unexpected purchase result " + purchaseResult));
+                        }
+                    } else {
+                        String message = "Purchasing product " + identifier + " failed with error: " + nsError;
+                        log(LOGTYPEERROR, message);
+                        observer.handlePurchaseError(new GdxPayException(message));
+                    }
                 }
             });
         }
@@ -164,7 +185,17 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
         AppStore.sync(new VoidBlock1<NSError>() {
             @Override
             public void invoke(NSError nsError) {
-                if (nsError != null) log(LOGTYPEERROR, "Restore failed with error: " + nsError);
+                if (nsError != null) {
+                    // Decide if user cancelled or transaction failed.
+                    if (nsError.getCode() == StoreKitError.UserCancelled.value()) {
+                        log(LOGTYPEERROR, "Restoring of transactions was cancelled by user!");
+                        observer.handleRestoreError(new GdxPayException("Restoring of purchases was cancelled by user!"));
+                    } else {
+                        String message = "Restoring of transactions failed: " + nsError.toString();
+                        log(LOGTYPEERROR, message);
+                        observer.handleRestoreError(new GdxPayException(message));
+                    }
+                }
             }
         });
     }
