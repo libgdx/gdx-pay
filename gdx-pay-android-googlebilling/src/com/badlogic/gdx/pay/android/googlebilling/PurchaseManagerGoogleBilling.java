@@ -45,8 +45,15 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     public PurchaseManagerGoogleBilling(Activity activity) {
         this.activity = activity;
-        mBillingClient = BillingClient.newBuilder(activity).setListener(this)
-                .enablePendingPurchases(PendingPurchasesParams.newBuilder().build()).build();
+        PendingPurchasesParams params = PendingPurchasesParams.newBuilder()
+                .enableOneTimeProducts()
+                .enablePrepaidPlans()
+                .build();
+            
+        mBillingClient = BillingClient.newBuilder(activity)
+                .setListener(this)
+                .enablePendingPurchases(params)
+                .build();
     }
 
     @Override
@@ -232,7 +239,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 .priceCurrencyCode(paidForPricingPhase.getPriceCurrencyCode())
                 .priceInCents((int) paidForPricingPhase.getPriceAmountMicros() / 10_000)
                 .priceAsDouble(paidForPricingPhase.getPriceAmountMicros() / 1_000_000.0)
-            ;
+        ;
 
         ProductDetails.PricingPhase freeTrialSubscriptionPhase = getFreeTrialSubscriptionPhase(details.getPricingPhases());
 
@@ -249,9 +256,9 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     @Nullable
     private ProductDetails.PricingPhase getPaidRecurringPricingPhase(ProductDetails.SubscriptionOfferDetails details) {
         for(ProductDetails.PricingPhase phase : details.getPricingPhases().getPricingPhaseList()) {
-          if (isPaidForSubscriptionPhase(phase)) {
-              return phase;
-          }
+            if (isPaidForSubscriptionPhase(phase)) {
+                return phase;
+            }
         }
         return null;
     }
@@ -375,7 +382,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 Gdx.app.error(TAG, "subscriptionOfferDetails are empty for product: " + productDetails);
                 offerToken = null;
             } else {
-                 offerToken = getActiveSubscriptionOfferDetails(subscriptionOfferDetails) // HOW TO SPECIFY AN ALTERNATE OFFER USING gdx-pay?
+                offerToken = getActiveSubscriptionOfferDetails(subscriptionOfferDetails) // HOW TO SPECIFY AN ALTERNATE OFFER USING gdx-pay?
                         .getOfferToken();
             }
 
