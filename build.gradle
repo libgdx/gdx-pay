@@ -104,6 +104,11 @@ allprojects {
     tasks.withType(Sign) {
         onlyIf { isReleaseBuild() }
     }
+
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 }
 
 if (JavaVersion.current().isJava8Compatible()) {
