@@ -3,6 +3,7 @@ package com.badlogic.gdx.pay.android.googlebilling;
 import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
+import androidx.annotation.NonNull;
 import com.android.billingclient.api.*;
 import com.android.billingclient.api.BillingClient.ProductType;
 import com.badlogic.gdx.Gdx;
@@ -44,8 +45,15 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
 
     public PurchaseManagerGoogleBilling(Activity activity) {
         this.activity = activity;
-        mBillingClient = BillingClient.newBuilder(activity).setListener(this)
-                .enablePendingPurchases().build();
+        PendingPurchasesParams params = PendingPurchasesParams.newBuilder()
+                .enableOneTimeProducts()
+                .enablePrepaidPlans()
+                .build();
+            
+        mBillingClient = BillingClient.newBuilder(activity)
+                .setListener(this)
+                .enablePendingPurchases(params)
+                .build();
     }
 
     @Override
@@ -155,7 +163,8 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         mBillingClient.queryProductDetailsAsync(
                 params,
                 new ProductDetailsResponseListener() {
-                    public void onProductDetailsResponse(@Nonnull BillingResult billingResult, @Nonnull List<ProductDetails> productDetailsList) {
+                    @Override
+                    public void onProductDetailsResponse(@NonNull BillingResult billingResult, @NonNull QueryProductDetailsResult productDetailsResult) {
                         int responseCode = billingResult.getResponseCode();
                         // it might happen that this was already disposed until the response comes back
                         if (observer == null || Gdx.app == null)
@@ -166,12 +175,11 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                             if (!installationComplete) {
                                 observer.handleInstallError(new FetchItemInformationException(String.valueOf(responseCode)));
                             }
-
                         } else {
-                            Gdx.app.debug(TAG,"Retrieved product count: " +  productDetailsList.size());
+                            List<ProductDetails> productDetailsList = productDetailsResult.getProductDetailsList();
+                            Gdx.app.debug(TAG,"Retrieved product count: " + productDetailsList.size());
                             for (ProductDetails productDetails : productDetailsList) {
-                                informationMap.put(productDetails.getProductId(), convertProductDetailsToInformation
-                                        (productDetails));
+                                informationMap.put(productDetails.getProductId(), convertProductDetailsToInformation(productDetails));
                                 productDetailsMap.put(productDetails.getProductId(), productDetails);
                             }
 
@@ -231,7 +239,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 .priceCurrencyCode(paidForPricingPhase.getPriceCurrencyCode())
                 .priceInCents((int) paidForPricingPhase.getPriceAmountMicros() / 10_000)
                 .priceAsDouble(paidForPricingPhase.getPriceAmountMicros() / 1_000_000.0)
-            ;
+        ;
 
         ProductDetails.PricingPhase freeTrialSubscriptionPhase = getFreeTrialSubscriptionPhase(details.getPricingPhases());
 
@@ -248,9 +256,9 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     @Nullable
     private ProductDetails.PricingPhase getPaidRecurringPricingPhase(ProductDetails.SubscriptionOfferDetails details) {
         for(ProductDetails.PricingPhase phase : details.getPricingPhases().getPricingPhaseList()) {
-          if (isPaidForSubscriptionPhase(phase)) {
-              return phase;
-          }
+            if (isPaidForSubscriptionPhase(phase)) {
+                return phase;
+            }
         }
         return null;
     }
@@ -374,7 +382,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 Gdx.app.error(TAG, "subscriptionOfferDetails are empty for product: " + productDetails);
                 offerToken = null;
             } else {
-                 offerToken = getActiveSubscriptionOfferDetails(subscriptionOfferDetails) // HOW TO SPECIFY AN ALTERNATE OFFER USING gdx-pay?
+                offerToken = getActiveSubscriptionOfferDetails(subscriptionOfferDetails) // HOW TO SPECIFY AN ALTERNATE OFFER USING gdx-pay?
                         .getOfferToken();
             }
 
