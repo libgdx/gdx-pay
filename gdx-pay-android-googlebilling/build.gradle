@@ -7,7 +7,7 @@ android {
     buildToolsVersion androidBuildToolsVersion
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 21
         targetSdkVersion androidTargetSdkVersion
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
         testOptions {
