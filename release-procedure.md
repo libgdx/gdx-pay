@@ -6,20 +6,15 @@ You need a Nexus OSS account to publish the release with access to gdx-pay. Get 
 
 ## Every release
 
-1. Draft a new release from https://github.com/libgdx/gdx-pay/releases
+1. Make sure NEXUS_ secrets in GitHub Security are from the person publishing the release
 
-2. Wait until the GitHub action completes.
+2. Draft a new release from https://github.com/libgdx/gdx-pay/releases
 
-3. Go to https://central.sonatype.com/publishing and log in
-   - wait until gdx-pay release appears here.
-   - select "Close"
-   - Approx 2 minutes later Release button becomes enabled, click "Release" and confirm.
-   - In approx 30 minutes the release will be available in Maven Central.
+3. Wait until the GitHub action completes.
 
-   Note: I did not see the release appear here, but another maintainer did see it. 
-   See https://github.com/libgdx/gdx-pay/issues/278 for the discussion
+4. Go to https://central.sonatype.com/publishing and log in, publish the release there.
 
-4. Update gdx-pay README.md: search & replace version numbers
+5. Update gdx-pay README.md: search & replace version numbers
 
-5. Update gdx-pay gradle.properties
+6. Update gdx-pay gradle.properties
    update version to the next development version.
