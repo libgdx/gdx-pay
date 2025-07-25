@@ -73,7 +73,7 @@ Typically, the configuration just passes the items you want to offer:
     
     purchaseManager.install(new MyPurchaseObserver(), pmc, true);
 
-When the PurchaseManager is sucessfully installed, your `PurchaseObserver` will receive a
+When the PurchaseManager is successfully installed, your `PurchaseObserver` will receive a
  callback and `purchaseManager.installed()` will return `true`. That might take some seconds depending 
  on the payment service. You can now request information or purchase items.
  
