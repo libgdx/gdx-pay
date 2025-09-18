@@ -49,7 +49,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 .enableOneTimeProducts()
                 .enablePrepaidPlans()
                 .build();
-            
+
         mBillingClient = BillingClient.newBuilder(activity)
                 .setListener(this)
                 .enablePendingPurchases(params)
@@ -139,19 +139,71 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         productDetailsMap.clear();
         int offerSize = config.getOfferCount();
 
-        List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
+        List<QueryProductDetailsParams.Product> inAppProducts = new ArrayList<>();
+        List<QueryProductDetailsParams.Product> subsProducts = new ArrayList<>();
 
         for (int z = 0; z < offerSize; z++) {
             Offer offer = config.getOffer(z);
-            productList.add(QueryProductDetailsParams.Product.newBuilder()
+            String productType = mapOfferType(offer.getType());
+            QueryProductDetailsParams.Product product = QueryProductDetailsParams.Product.newBuilder()
                     .setProductId(offer.getIdentifierForStore(storeName()))
-                    .setProductType(mapOfferType(offer.getType()))
-                    .build());
+                    .setProductType(productType)
+                    .build();
+
+            if (ProductType.SUBS.equals(productType)) {
+                subsProducts.add(product);
+            } else {
+                inAppProducts.add(product);
+            }
         }
 
-        if (productList.isEmpty()) {
+        if (inAppProducts.isEmpty() && subsProducts.isEmpty()) {
             Gdx.app.debug(TAG, "No products configured");
             setInstalledAndNotifyObserver();
+            return;
+        }
+
+        // Execute per-product-type queries and only complete install after all succeed.
+        int totalBatches = (inAppProducts.isEmpty() ? 0 : 1) + (subsProducts.isEmpty() ? 0 : 1);
+        final int[] remainingBatches = new int[] { totalBatches };
+        final boolean[] failed = new boolean[] { false };
+
+        Runnable onBatchSuccess = () -> {
+            if (remainingBatches[0] > 0) {
+                remainingBatches[0] -= 1;
+            }
+            if (remainingBatches[0] == 0 && !failed[0]) {
+                setInstalledAndNotifyObserver();
+            }
+        };
+
+        java.util.function.Consumer<Exception> onBatchError = (Exception e) -> {
+            // Mark failure to prevent later handleInstall() and notify observer once.
+            failed[0] = true;
+            installationComplete = true; // clear "installing" state to avoid deadlock
+            Gdx.app.error(TAG, "Failed to fetch product details", e);
+            if (observer != null) {
+                observer.handleInstallError(e);
+            }
+        };
+
+        if (!inAppProducts.isEmpty()) {
+            queryProductDetailsForProducts(inAppProducts, ProductType.INAPP, onBatchSuccess, onBatchError);
+        }
+        if (!subsProducts.isEmpty()) {
+            queryProductDetailsForProducts(subsProducts, ProductType.SUBS, onBatchSuccess, onBatchError);
+        }
+    }
+
+    private void queryProductDetailsForProducts(List<QueryProductDetailsParams.Product> productList,
+                                                String productTypeHint,
+                                                Runnable onSuccess,
+                                                java.util.function.Consumer<Exception> onError) {
+        // We avoid mixing types in a single request by design (split beforehand).
+        // If productList is empty, treat as success to allow UI to show "Unavailable".
+        if (productList == null || productList.isEmpty()) {
+            Gdx.app.debug(TAG, "Empty product list for type: " + productTypeHint + " — treating as success");
+            onSuccess.run();
             return;
         }
 
@@ -159,33 +211,32 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 .setProductList(productList)
                 .build();
 
-        Gdx.app.debug(TAG, "QueryProductDetailsParams: " + params);
+        Gdx.app.debug(TAG, "QueryProductDetailsParams (type: " + productTypeHint + "): " + params);
         mBillingClient.queryProductDetailsAsync(
                 params,
-                new ProductDetailsResponseListener() {
-                    @Override
-                    public void onProductDetailsResponse(@NonNull BillingResult billingResult, @NonNull QueryProductDetailsResult productDetailsResult) {
-                        int responseCode = billingResult.getResponseCode();
-                        // it might happen that this was already disposed until the response comes back
-                        if (observer == null || Gdx.app == null)
-                            return;
+                (billingResult, productDetailsResult) -> {
+                    // it might happen that this was already disposed until the response comes back
+                    if (observer == null || Gdx.app == null) return;
 
-                        if (responseCode != BillingClient.BillingResponseCode.OK) {
-                            Gdx.app.error(TAG, "onProductDetailsResponse failed, error code is " + responseCode);
-                            if (!installationComplete) {
-                                observer.handleInstallError(new FetchItemInformationException(String.valueOf(responseCode)));
-                            }
-                        } else {
-                            List<ProductDetails> productDetailsList = productDetailsResult.getProductDetailsList();
-                            Gdx.app.debug(TAG,"Retrieved product count: " + productDetailsList.size());
-                            for (ProductDetails productDetails : productDetailsList) {
-                                informationMap.put(productDetails.getProductId(), convertProductDetailsToInformation(productDetails));
-                                productDetailsMap.put(productDetails.getProductId(), productDetails);
-                            }
-
-                            setInstalledAndNotifyObserver();
-                        }
+                    int responseCode = billingResult.getResponseCode();
+                    if (responseCode != BillingClient.BillingResponseCode.OK) {
+                        onError.accept(new FetchItemInformationException(String.valueOf(responseCode)));
+                        return;
                     }
+
+                    List<ProductDetails> productDetailsList = productDetailsResult.getProductDetailsList();
+                    if (productDetailsList == null) {
+                        productDetailsList = Collections.emptyList();
+                    }
+
+                    Gdx.app.debug(TAG, "Retrieved product count (batch " + productTypeHint + "): " + productDetailsList.size());
+                    for (ProductDetails productDetails : productDetailsList) {
+                        informationMap.put(productDetails.getProductId(), convertProductDetailsToInformation(productDetails));
+                        productDetailsMap.put(productDetails.getProductId(), productDetails);
+                    }
+
+                    // Even if empty, we still consider this batch a success to allow the app to show "Unavailable"
+                    onSuccess.run();
                 }
         );
     }
