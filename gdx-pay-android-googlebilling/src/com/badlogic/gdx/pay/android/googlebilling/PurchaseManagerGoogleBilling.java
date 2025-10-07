@@ -3,7 +3,6 @@ package com.badlogic.gdx.pay.android.googlebilling;
 import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
 import com.android.billingclient.api.*;
 import com.android.billingclient.api.BillingClient.ProductType;
 import com.badlogic.gdx.Gdx;
@@ -122,14 +121,11 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     }
 
     private void reconnectWithService() {
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Runnable executeOnSetupFinished = hasBillingSetupFinishedSuccessfully
-                        ? null
-                        : PurchaseManagerGoogleBilling.this::handleBillingSetupFinished;
-                startServiceConnection(executeOnSetupFinished);
-            }
+        handler.postDelayed(() -> {
+            Runnable executeOnSetupFinished = hasBillingSetupFinishedSuccessfully
+                    ? null
+                    : PurchaseManagerGoogleBilling.this::handleBillingSetupFinished;
+            startServiceConnection(executeOnSetupFinished);
         }, reconnectMilliseconds);
         reconnectMilliseconds = Math.min(reconnectMilliseconds * 2, RECONNECT_TIMER_MAX_TIME_MILLISECONDS);
     }
@@ -225,9 +221,6 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                     }
 
                     List<ProductDetails> productDetailsList = productDetailsResult.getProductDetailsList();
-                    if (productDetailsList == null) {
-                        productDetailsList = Collections.emptyList();
-                    }
 
                     Gdx.app.debug(TAG, "Retrieved product count (batch " + productTypeHint + "): " + productDetailsList.size());
                     for (ProductDetails productDetails : productDetailsList) {
@@ -262,13 +255,18 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         if (ProductType.SUBS.equals(productDetails.getProductType())) {
             convertSubscriptionProductToInformation(builder, productDetails.getSubscriptionOfferDetails());
         } else {
-            convertOneTimeProductToInformation(builder, productDetails.getOneTimePurchaseOfferDetails());
+
+            ProductDetails.OneTimePurchaseOfferDetails details = productDetails.getOneTimePurchaseOfferDetails();
+            if (details != null) {
+                convertOneTimeProductToInformation(builder, details);
+            }
         }
         return builder.build();
     }
 
-    private void convertSubscriptionProductToInformation(Information.Builder builder, List<ProductDetails.SubscriptionOfferDetails> subscriptionOfferDetails) {
-        if (subscriptionOfferDetails.isEmpty()) {
+    private void convertSubscriptionProductToInformation(Information.Builder builder,
+                                                         @Nullable List<ProductDetails.SubscriptionOfferDetails> subscriptionOfferDetails) {
+        if (subscriptionOfferDetails == null || subscriptionOfferDetails.isEmpty()) {
             Gdx.app.error(TAG, "Empty SubscriptionOfferDetails");
             return;
         }
@@ -340,7 +338,8 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                 (phase.getRecurrenceMode() == ProductDetails.RecurrenceMode.NON_RECURRING  || phase.getRecurrenceMode() == ProductDetails.RecurrenceMode.FINITE_RECURRING);
     }
 
-    private static void convertOneTimeProductToInformation(Information.Builder builder, ProductDetails.OneTimePurchaseOfferDetails oneTimePurchaseDetails) {
+    private static void convertOneTimeProductToInformation(Information.Builder builder, @Nullable ProductDetails.OneTimePurchaseOfferDetails oneTimePurchaseDetails) {
+
         String priceString = oneTimePurchaseDetails.getFormattedPrice();
         builder
                 .localPricing(priceString)
@@ -464,17 +463,14 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         mBillingClient.queryPurchasesAsync(
                 QueryPurchasesParams.newBuilder().setProductType(productType).build(),
 
-                new PurchasesResponseListener() {
-                    @Override
-                    public void onQueryPurchasesResponse(@Nonnull BillingResult billingResult, @Nonnull  List<Purchase> list) {
-                        int responseCode = billingResult.getResponseCode();
-                        if (responseCode == BillingClient.BillingResponseCode.OK) {
-                            handlePurchase(list, true);
-                        } else {
-                            Gdx.app.error(TAG, "queryPurchases failed with responseCode " + responseCode);
-                            observer.handleRestoreError(new GdxPayException("queryPurchases failed with " +
-                                    "responseCode " + responseCode));
-                        }
+                (billingResult, list) -> {
+                    int responseCode = billingResult.getResponseCode();
+                    if (responseCode == BillingClient.BillingResponseCode.OK) {
+                        handlePurchase(list, true);
+                    } else {
+                        Gdx.app.error(TAG, "queryPurchases failed with responseCode " + responseCode);
+                        observer.handleRestoreError(new GdxPayException("queryPurchases failed with " +
+                                "responseCode " + responseCode));
                     }
                 });
     }
@@ -542,7 +538,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
                                         @Override
                                         public void onConsumeResponse(@Nonnull BillingResult result, @Nonnull String outToken) {
                                             if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                                                // handlepurchase is done before item is consumed for compatibility with other
+                                                // handlePurchase is done before item is consumed for compatibility with other
                                                 // gdx-pay implementations
                                                 //TODO what to do if it did not return OK?
                                             }
