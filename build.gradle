@@ -34,7 +34,7 @@ ext {
             mockito_core                            : 'org.mockito:mockito-core:2.7.21',
             robovm_rt                               : "com.mobidevelop.robovm:robovm-rt:$roboVMVersion",
             robovm_cocoatouch                       : "com.mobidevelop.robovm:robovm-cocoatouch:$roboVMVersion",
-            robovm_storekit2                        : "io.github.dkimitsa.robovm:robopods-storekit-swift:18.2.0.1-SNAPSHOT",
+            robovm_storekit2                        : "com.mobidevelop.robovm:robopods-swift-storekit2:18.2.0.1",
             support_v4                              : "com.android.support:support-v4:25.0.0"
     ]
 
