@@ -1,5 +1,5 @@
 tasks.named('wrapper') {
-    gradleVersion = '8.5'
+    gradleVersion = '8.14.3'
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
