@@ -1,5 +1,5 @@
 tasks.named('wrapper') {
-    gradleVersion = '7.5.1'
+    gradleVersion = '8.5'
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
@@ -82,7 +82,7 @@ buildscript {
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.2.2"
+        classpath "com.android.tools.build:gradle:8.2.0"
         classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${roboVMVersion}"
     }
 }
@@ -106,8 +106,8 @@ allprojects {
     }
 
     tasks.withType(JavaCompile) {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
