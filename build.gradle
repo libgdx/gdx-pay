@@ -111,10 +111,9 @@ allprojects {
     }
 }
 
-if (JavaVersion.current().isJava8Compatible()) {
-    allprojects {
-        tasks.withType(Javadoc) {
-            options.addStringOption('Xdoclint:none', '-quiet')
-        }
+// Java 17+ is required, so Javadoc linting is always available
+allprojects {
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
     }
 }
