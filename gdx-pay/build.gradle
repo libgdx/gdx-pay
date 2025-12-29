@@ -1,7 +1,7 @@
 apply plugin: 'java-library'
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 11
+targetCompatibility = 11
 
 apply from : '../publish_java.gradle'
 

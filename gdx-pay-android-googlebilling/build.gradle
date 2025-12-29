@@ -3,6 +3,7 @@ apply plugin: 'com.android.library'
 apply from : '../publish_android.gradle'
 
 android {
+    namespace 'com.badlogic.gdx.pay.android.googlebilling'
     compileSdkVersion androidCompileSdkVersion
     buildToolsVersion androidBuildToolsVersion
 
