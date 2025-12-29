@@ -39,7 +39,8 @@ import java.util.*;
  */
 public class PurchaseManageriOSApple2 implements PurchaseManager {
     private static final String TAG = "GdxPay/AppleIOS";
-    private static final boolean LOGDEBUG = true;
+    private static final boolean LOGDEBUG =
+            Boolean.parseBoolean(System.getProperty("gdx.pay.ios.apple.logdebug", "false"));
     private static final int LOGTYPELOG = 0;
     private static final int LOGTYPEERROR = 1;
 
