@@ -509,11 +509,11 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
 
     ///  observer for transaction update -- finish them
     class AppleTransactionUpdateObserver implements TransactionUpdatesDelegate {
+        @Override
         public void transactionUpdated(VerificationResult.Transaction result) {
             if (result.isVerified()) {
                 // Product was successfully purchased.
                 final Transaction transaction = result.getUnsafePayloadValue();
-
                 // Parse transaction data.
                 final com.badlogic.gdx.pay.Transaction t = transaction(transaction);
                 if (t == null) return;
