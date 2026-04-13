@@ -21,6 +21,7 @@ import com.badlogic.gdx.pay.*;
 import libcore.io.Base64;
 import org.robovm.apple.foundation.*;
 import org.robovm.apple.storekit.*;
+import org.robovm.objc.block.VoidBlock1;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     private NSArray<SKProduct> products;
 
     private final List<Transaction> restoredTransactions = new ArrayList<Transaction>();
+    private NSTimer restoreTimer;
 
     @Override
     public String storeName () {
@@ -107,6 +109,9 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     @Override
     public void dispose () {
         if (appleObserver != null) {
+            // Cancel any pending restore delivery timer.
+            cancelRestoreTimer();
+
             // Remove and null our apple transaction observer.
 
             SKPaymentQueue defaultQueue = SKPaymentQueue.getDefaultQueue();
@@ -151,6 +156,8 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     public void purchaseRestore () {
         log(LOGTYPELOG, "Restoring purchases...");
 
+        // Cancel any pending restore delivery timer.
+        cancelRestoreTimer();
         // Clear previously restored transactions.
         restoredTransactions.clear();
         // Start the restore flow.
@@ -483,16 +490,26 @@ public class PurchaseManageriOSApple implements PurchaseManager {
 
         @Override
         public void restoreCompletedTransactionsFinished (SKPaymentQueue queue) {
-            // All products have been restored.
             log(LOGTYPELOG, "All transactions have been restored!");
 
-            observer.handleRestore(restoredTransactions.toArray(new Transaction[restoredTransactions.size()]));
-            restoredTransactions.clear();
+            // On iOS 26.4+, restoreCompletedTransactionsFinished may be called
+            // before all restored transactions are delivered via updatedTransactions.
+            // Defer delivery to allow any pending restored transactions to be processed.
+            cancelRestoreTimer();
+            restoreTimer = NSTimer.createScheduled(0.5, false, new VoidBlock1<NSTimer>() {
+                @Override
+                public void invoke(NSTimer timer) {
+                    restoreTimer = null;
+                    observer.handleRestore(restoredTransactions.toArray(new Transaction[restoredTransactions.size()]));
+                    restoredTransactions.clear();
+                }
+            });
         }
 
         @Override
         public void restoreCompletedTransactionsFailed (SKPaymentQueue queue, NSError error) {
             // Restoration failed.
+            cancelRestoreTimer();
 
             // Decide if user cancelled or transaction failed.
             if (error.getCode() == SKErrorCode.PaymentCancelled.value()) {
@@ -502,6 +519,13 @@ public class PurchaseManageriOSApple implements PurchaseManager {
                 log(LOGTYPEERROR, "Restoring of transactions failed: " + error.toString());
                 observer.handleRestoreError(new GdxPayException("Restoring of purchases failed: " + error.getLocalizedDescription()));
             }
+        }
+    }
+
+    private void cancelRestoreTimer() {
+        if (restoreTimer != null) {
+            restoreTimer.invalidate();
+            restoreTimer = null;
         }
     }
 
