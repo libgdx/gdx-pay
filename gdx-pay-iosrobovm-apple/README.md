@@ -34,6 +34,12 @@ If your app only uses StoreKit 1 and you want to exclude the StoreKit 2 transiti
          exclude group: 'com.mobidevelop.robovm', module: 'robopods-swift-storekit2'
      }
 
+### Note for Kotlin users
+
+Both `PurchaseManageriOSApple` and `PurchaseManageriOSApple2` work with Java and Kotlin without any special configuration. All async operations and callbacks are handled internally by the `PurchaseManager` implementation — you interact with it through the standard `PurchaseObserver` interface regardless of your language.
+
+Separately, there is also a Kotlin coroutine wrapper available (`com.mobidevelop.robovm:robopods-swift-storekit2-kt`) for projects that want to use the StoreKit 2 API directly without gdx-pay. This is **not** needed when using gdx-pay.
+
 ## Instantiation
 
 ### Using StoreKit 1 only
