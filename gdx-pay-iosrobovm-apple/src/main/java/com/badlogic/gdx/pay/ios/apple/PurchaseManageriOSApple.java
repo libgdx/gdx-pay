@@ -495,6 +495,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             // On iOS 26.4+, restoreCompletedTransactionsFinished may be called
             // before all restored transactions are delivered via updatedTransactions.
             // Defer delivery to allow any pending restored transactions to be processed.
+            // 500ms is chosen to safely exceed the observed ~60ms gap between callbacks.
             cancelRestoreTimer();
             restoreTimer = NSTimer.createScheduled(0.5, false, new VoidBlock1<NSTimer>() {
                 @Override
