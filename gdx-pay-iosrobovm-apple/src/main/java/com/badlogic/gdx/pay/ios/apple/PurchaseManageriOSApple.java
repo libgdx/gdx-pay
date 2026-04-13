@@ -18,10 +18,10 @@ package com.badlogic.gdx.pay.ios.apple;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.pay.*;
+import com.badlogic.gdx.utils.Timer;
 import libcore.io.Base64;
 import org.robovm.apple.foundation.*;
 import org.robovm.apple.storekit.*;
-import org.robovm.objc.block.VoidBlock1;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -53,7 +53,7 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     private NSArray<SKProduct> products;
 
     private final List<Transaction> restoredTransactions = new ArrayList<Transaction>();
-    private NSTimer restoreTimer;
+    private Timer.Task restoreTimerTask;
 
     @Override
     public String storeName () {
@@ -497,14 +497,14 @@ public class PurchaseManageriOSApple implements PurchaseManager {
             // Defer delivery to allow any pending restored transactions to be processed.
             // 500ms is chosen to safely exceed the observed ~60ms gap between callbacks.
             cancelRestoreTimer();
-            restoreTimer = NSTimer.createScheduled(0.5, false, new VoidBlock1<NSTimer>() {
+            restoreTimerTask = Timer.schedule(new Timer.Task() {
                 @Override
-                public void invoke(NSTimer timer) {
-                    restoreTimer = null;
+                public void run() {
+                    restoreTimerTask = null;
                     observer.handleRestore(restoredTransactions.toArray(new Transaction[restoredTransactions.size()]));
                     restoredTransactions.clear();
                 }
-            });
+            }, 0.5f);
         }
 
         @Override
@@ -524,9 +524,9 @@ public class PurchaseManageriOSApple implements PurchaseManager {
     }
 
     private void cancelRestoreTimer() {
-        if (restoreTimer != null) {
-            restoreTimer.invalidate();
-            restoreTimer = null;
+        if (restoreTimerTask != null) {
+            restoreTimerTask.cancel();
+            restoreTimerTask = null;
         }
     }
 
