@@ -10,7 +10,7 @@ You need a Nexus OSS account to publish the release with access to gdx-pay. Get 
 
 2. Draft a new release from https://github.com/libgdx/gdx-pay/releases
 
-3. Wait until the GitHub action completes.
+3. Wait until the GitHub action completes
 
 4. Go to https://central.sonatype.com/publishing and log in, publish the release there.
 
