@@ -10,11 +10,11 @@ class Developer {
 }
 
 ext {
-    androidBuildToolsVersion = '33.0.0'
-    androidCompileSdkVersion = 33
-    androidTargetSdkVersion = 33
+    androidBuildToolsVersion = "36.0.0"
+    androidCompileSdkVersion = 35
+    androidTargetSdkVersion = 35
     assertJVersion = '1.7.1'
-    gdxVersion = '1.9.8'
+    gdxVersion = '1.13.1'
     robolectricVersion = '4.3_r2-robolectric-0'
 
     developers = [
@@ -35,6 +35,7 @@ ext {
             robovm_rt                               : "com.mobidevelop.robovm:robovm-rt:$roboVMVersion",
             robovm_cocoatouch                       : "com.mobidevelop.robovm:robovm-cocoatouch:$roboVMVersion",
             robovm_storekit2                        : "com.mobidevelop.robovm:robopods-swift-storekit2:18.2.0.1",
+            gdxBackendMoe                           : "io.github.berstanio:gdx-backend-moe:${gdxVersion}",
             support_v4                              : "com.android.support:support-v4:25.0.0"
     ]
 
@@ -73,6 +74,7 @@ ext {
 buildscript {
     ext {
         roboVMVersion = '2.3.21'
+        moeVersion = '1.10.2'
     }
 
     repositories {
@@ -85,6 +87,7 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:8.2.0"
         classpath "com.mobidevelop.robovm:robovm-gradle-plugin:${roboVMVersion}"
+        classpath "org.multi-os-engine:moe-gradle:${moeVersion}"
     }
 }
 
