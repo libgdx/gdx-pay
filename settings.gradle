@@ -4,6 +4,7 @@ include ':gdx-pay-android-amazon'
 include ':gdx-pay-android-googlebilling'
 include ':gdx-pay-android-huawei'
 include ':gdx-pay-iosrobovm-apple'
+include ':gdx-pay-iosmoe-apple'
 include ':gdx-pay-server'
 
 rootProject.name = "gdx-pay-root"

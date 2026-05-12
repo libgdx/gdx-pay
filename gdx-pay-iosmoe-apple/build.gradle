@@ -1,5 +1,7 @@
 apply plugin : 'java-library'
+apply plugin : 'moe-sdk'
 apply from : '../publish_java.gradle'
+
 
 java {
     toolchain {
@@ -12,16 +14,8 @@ tasks.withType(JavaCompile).configureEach {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-sourceSets {
-    main {
-        java {
-            srcDir 'src'
-        }
-    }
-}
 
 dependencies {
-    api project(':gdx-pay')
-    api libraries.libgdx_core
-    testImplementation libraries.junit
+    api project(':gdx-pay-client')
+    api libraries.gdxBackendMoe
 }
