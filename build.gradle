@@ -106,9 +106,12 @@ allprojects {
         onlyIf { isReleaseBuild() }
     }
 
-    tasks.withType(JavaCompile) {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+    tasks.withType(JavaCompile).configureEach {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+        if (JavaVersion.current().isJava9Compatible() && !project.plugins.hasPlugin('com.android.library')) {
+            options.release.set(8)
+        }
     }
 }
 

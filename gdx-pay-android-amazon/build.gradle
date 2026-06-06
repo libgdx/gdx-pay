@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
 apply from : '../publish_android.gradle'
 
-sourceCompatibility = 11
-targetCompatibility = 11
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 android {
     namespace 'com.badlogic.gdx.pay.android.amazon'
