@@ -57,7 +57,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     private NSArray<Product> products;
     private Set<String> productIdsEligibleForIntroOffer;
 
-    private final List<com.badlogic.gdx.pay.Transaction> restoredTransactions = new ArrayList<>();
+    private CancelableTask manualRestoreTask;
 
     @Override
     public String storeName() {
@@ -103,6 +103,8 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     public void dispose() {
         if (startupTransactionRestorer != null)
             startupTransactionRestorer.cancel();
+        if (manualRestoreTask != null)
+            manualRestoreTask.cancel();
         if (transactionUpdateObserver != null)
             transactionUpdateObserver.cancel();
         if (promotionTransactionObserver != null)
@@ -113,12 +115,12 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
             productsRequestAndPurchase.cancel();
 
         startupTransactionRestorer = null;
+        manualRestoreTask = null;
         transactionUpdateObserver = null;
         promotionTransactionObserver = null;
         productsRequestAndInstall = null;
         productsRequestAndPurchase = null;
         products = null;
-        restoredTransactions.clear();
         if (productIdsEligibleForIntroOffer != null) {
             productIdsEligibleForIntroOffer.clear();
             productIdsEligibleForIntroOffer = null;
@@ -180,23 +182,38 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     public void purchaseRestore() {
         log(LOGTYPELOG, "Restoring purchases...");
 
-        // Clear previously restored transactions.
-        restoredTransactions.clear();
-        // Start the restore flow.
+        if (manualRestoreTask != null) {
+            manualRestoreTask.cancel();
+            manualRestoreTask = null;
+        }
+
         AppStore.sync(new VoidBlock1<NSError>() {
+            private boolean completed;
+
             @Override
             public void invoke(NSError nsError) {
-                if (nsError != null) {
-                    // Decide if user cancelled or transaction failed.
-                    if (nsError.getCode() == StoreKitError.UserCancelled.value()) {
-                        log(LOGTYPEERROR, "Restoring of transactions was cancelled by user!");
-                        observer.handleRestoreError(new GdxPayException("Restoring of purchases was cancelled by user!"));
-                    } else {
-                        String message = "Restoring of transactions failed: " + nsError.toString();
-                        log(LOGTYPEERROR, message);
-                        observer.handleRestoreError(new GdxPayException(message));
-                    }
+                if (completed) {
+                    return;
                 }
+                completed = true;
+
+                if (nsError != null) {
+                    if (nsError.getCode() == StoreKitError.UserCancelled.value()) {
+                        observer.handleRestoreError(
+                                new GdxPayException("Restoring of purchases was cancelled by user!")
+                        );
+                    } else {
+                        observer.handleRestoreError(
+                                new GdxPayException("Restoring of transactions failed: " + nsError)
+                        );
+                    }
+                    return;
+                }
+
+                // StoreKit 2 restore is: sync the App Store account and then read the current entitlements.
+                // The manual restore delegate has its own transaction list and must call handleRestore(),
+                // even when StoreKit returns zero current entitlements.
+                manualRestoreTask = getCurrentEntitlements(new AppleManualRestoreTransactionDelegate());
             }
         });
     }
@@ -412,7 +429,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
             // install all observers
             if (startupTransactionRestorer == null) {
                 // restore completed transactions
-                startupTransactionRestorer = getCurrentEntitlements(new AppleRestoreTransactionDelegate());
+                startupTransactionRestorer = getCurrentEntitlements(new AppleStartupRestoreTransactionDelegate());
                 log(LOGTYPELOG, "Startup purchase transaction restore started!");
             }
 
@@ -454,7 +471,27 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
                 product.purchase(new NSSet<Product.PurchaseOption>(), new VoidBlock2<Product.PurchaseResult, NSError>() {
                     @Override
                     public void invoke(Product.PurchaseResult purchaseResult, NSError nsError) {
+                        if (purchaseResult != null) {
+                            log(LOGTYPELOG, "Purchasing product " + product.getId() + " complete " + purchaseResult);
 
+                            if (purchaseResult instanceof Product.PurchaseResult.success) {
+                                Product.PurchaseResult.success success = (Product.PurchaseResult.success) purchaseResult;
+                                final Transaction transaction = success.getTransaction().getUnsafePayloadValue();
+                                final com.badlogic.gdx.pay.Transaction t = transaction(transaction);
+                                if (t == null)
+                                    observer.handlePurchaseError(new GdxPayException("Failed to create GdxPay transaction"));
+                                else
+                                    observer.handlePurchase(t);
+                            } else if (purchaseResult == Product.PurchaseResult.userCancelled()) {
+                                observer.handlePurchaseCanceled();
+                            } else {
+                                observer.handlePurchaseError(new GdxPayException("Unexpected purchase result " + purchaseResult));
+                            }
+                        } else {
+                            String message = "Purchasing product " + product.getId() + " failed with error: " + nsError;
+                            log(LOGTYPEERROR, message);
+                            observer.handlePurchaseError(new GdxPayException(message));
+                        }
                     }
                 });
             } else {
@@ -473,38 +510,99 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
         }
     }
 
-    ///  delegate for handling events on restoring currently completed transactions
-    private class AppleRestoreTransactionDelegate implements CurrentEntitlementsDelegate {
+    ///  delegate for handling current entitlements during startup.
+    ///
+    /// This keeps the historical behaviour of this class: current entitlements found at install time
+    /// are reported through handleRestore(). Manual restore uses a separate delegate below so the
+    /// restore button has an isolated callback lifecycle and its own transaction list.
+    private class AppleStartupRestoreTransactionDelegate extends CollectingRestoreTransactionDelegate {
         @Override
-        public void onComplete() {
-            // All products have been restored.
-            log(LOGTYPELOG, "All transactions have been restored!");
-
-            observer.handleRestore(restoredTransactions.toArray(new com.badlogic.gdx.pay.Transaction[0]));
-            restoredTransactions.clear();
+        protected void onRestoreComplete(com.badlogic.gdx.pay.Transaction[] transactions) {
+            log(LOGTYPELOG, "Startup entitlement restore complete: " + transactions.length + " transaction(s)");
+            observer.handleRestore(transactions);
+            startupTransactionRestorer = null;
         }
 
         @Override
-        public void onFailed(NSError error) {
-            // Restoration failed.
-            log(LOGTYPEERROR, "Restoring of transactions failed: " + error.toString());
+        protected void onRestoreFailed(NSError error) {
+            startupTransactionRestorer = null;
+            log(LOGTYPEERROR, "Startup entitlement restore failed: " + error);
             observer.handleRestoreError(new GdxPayException("Restoring of purchases failed: " + error.getLocalizedDescription()));
         }
+    }
+
+    ///  delegate for user initiated restore.
+    ///
+    /// Contract: purchaseRestore() must end in exactly one handleRestore(...) or handleRestoreError(...).
+    /// If StoreKit has no current entitlements, handleRestore() is still called with an empty array.
+    private class AppleManualRestoreTransactionDelegate extends CollectingRestoreTransactionDelegate {
+        @Override
+        protected void onRestoreComplete(com.badlogic.gdx.pay.Transaction[] transactions) {
+            log(LOGTYPELOG, "Manual restore complete: " + transactions.length + " transaction(s)");
+            manualRestoreTask = null;
+            observer.handleRestore(transactions);
+            log(LOGTYPELOG, "completed observer.handleRestore");
+
+        }
 
         @Override
-        public Task handleNext(Runnable scheduleNext, VerificationResult.Transaction result) {
+        protected void onRestoreFailed(NSError error) {
+            manualRestoreTask = null;
+            log(LOGTYPEERROR, "Manual restore failed: " + error);
+            observer.handleRestoreError(new GdxPayException("Restoring of purchases failed: " + error.getLocalizedDescription()));
+        }
+    }
+
+    /// Shared implementation for walking Transaction.currentEntitlements().
+    /// Uses a per-delegate list and a once-guard so startup/manual restore flows cannot share state
+    /// or accidentally emit duplicate callbacks.
+    private abstract class CollectingRestoreTransactionDelegate implements CurrentEntitlementsDelegate {
+        private final List<com.badlogic.gdx.pay.Transaction> restoredTransactions = new ArrayList<>();
+        private boolean callbackDelivered;
+
+        @Override
+        public final void onComplete() {
+            if (callbackDelivered) {
+                return;
+            }
+            callbackDelivered = true;
+
+            log(LOGTYPELOG, "All current entitlements have been processed!");
+            com.badlogic.gdx.pay.Transaction[] transactions =
+                    restoredTransactions.toArray(new com.badlogic.gdx.pay.Transaction[0]);
+            restoredTransactions.clear();
+            onRestoreComplete(transactions);
+        }
+
+        @Override
+        public final void onFailed(NSError error) {
+            if (callbackDelivered) {
+                return;
+            }
+            callbackDelivered = true;
+            restoredTransactions.clear();
+            onRestoreFailed(error);
+        }
+
+        @Override
+        public final Task handleNext(Runnable scheduleNext, VerificationResult.Transaction result) {
             if (result.isVerified()) {
                 Transaction transaction = result.getUnsafePayloadValue();
-                // A product has been restored.
-                // Parse transaction data.
                 com.badlogic.gdx.pay.Transaction ta = transaction(transaction);
                 if (ta != null) {
                     restoredTransactions.add(ta);
-                    log(LOGTYPELOG, "Transaction has been restored: " + getOriginalTxID(transaction));
+                    log(LOGTYPELOG, "Current entitlement restored: " + getOriginalTxID(transaction));
                 }
+            } else {
+                NSError error = result.getError();
+                log(LOGTYPEERROR, "Skipping unverified current entitlement: " + error);
             }
             return null; // proceed to next item
         }
+
+        protected abstract void onRestoreComplete(com.badlogic.gdx.pay.Transaction[] transactions);
+
+        protected abstract void onRestoreFailed(NSError error);
     }
 
     ///  observer for transaction update -- finish them
@@ -525,7 +623,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
                     @Override
                     public void run() {
                         observer.handlePurchase(t);
-                        log(LOGTYPELOG, "Transaction was finished: " + getOriginalTxID(transaction));
+                        log(LOGTYPELOG, "Transaction was finished: " + getOriginalTxID(transaction) + ", date: " + transaction.getPurchaseDate());
                     }
                 });
             } else {
@@ -693,7 +791,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     // ---------------  StoreKit2 helpers ---------------
     //
 
-    /// StoreKit2 task holder -- used to track running async tasks abd to be able to cancel it
+    /// StoreKit2 task holder -- used to track running async tasks and to be able to cancel it
     private static class CancelableTask {
         Task task;
 
@@ -702,7 +800,9 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
         }
 
         void cancel() {
-            task.cancel();
+            if (task != null) {
+                task.cancel();
+            }
         }
 
         void update(Task task) {
