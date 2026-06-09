@@ -28,7 +28,6 @@ import org.robovm.pods.cocoatouch.storekitrvm.AsyncSequence.AsyncIterator;
 import org.robovm.pods.cocoatouch.storekitrvm.Transaction;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -155,11 +154,18 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
                         log(LOGTYPELOG, "Purchasing product " + identifier + " complete " + purchaseResult);
 
                         if (purchaseResult instanceof Product.PurchaseResult.success) {
+
                             Product.PurchaseResult.success success = (Product.PurchaseResult.success) purchaseResult;
+
+                            VerificationResult.Transaction verificationResult = success.getTransaction();
+
+                            // Dit is de waarde die je server nodig heeft:
+                            String jwsRepresentation = verificationResult.getJwsRepresentation();
+
                             // Product was successfully purchased.
                             final Transaction transaction = success.getTransaction().getUnsafePayloadValue();
                             // Parse transaction data.
-                            final com.badlogic.gdx.pay.Transaction t = transaction(transaction);
+                            final com.badlogic.gdx.pay.Transaction t = convertToGdxTransaction(transaction, jwsRepresentation);
                             if (t == null)
                                 observer.handlePurchaseError(new GdxPayException("Failed to create GdxPay transaction"));
                             else
@@ -280,7 +286,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
      * Converts a purchase to our transaction object.
      */
     @Nullable
-    com.badlogic.gdx.pay.Transaction transaction(Transaction t) {
+    com.badlogic.gdx.pay.Transaction convertToGdxTransaction(Transaction t, @Nullable String jwsRepresentation) {
         String productIdentifier = t.getProductID();
         Product product = getProductByStoreIdentifier(productIdentifier);
         if (product == null) {
@@ -320,22 +326,8 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
 
         // there is no SKPaymentTransaction.payment.requestData alternative in StoreKit2
         transaction.setTransactionData(null);
+        transaction.setTransactionDataSignature(jwsRepresentation);
 
-        // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9 & hopefully long there after :)
-        String transactionDataSignature = null;
-        try {
-            NSData transactionReceipt = t.getJsonRepresentation();
-
-            if (transactionReceipt != null) {
-                transactionDataSignature = new String(transactionReceipt.getBytes(), StandardCharsets.UTF_8);
-            }
-
-        } catch (Throwable e) {
-            log(LOGTYPELOG, "Transaction jsonRepresentation appears broken", e);
-            transactionDataSignature = null;
-        }
-
-        transaction.setTransactionDataSignature(transactionDataSignature);
         // return the transaction
         return transaction;
     }
@@ -483,7 +475,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
                             if (purchaseResult instanceof Product.PurchaseResult.success) {
                                 Product.PurchaseResult.success success = (Product.PurchaseResult.success) purchaseResult;
                                 final Transaction transaction = success.getTransaction().getUnsafePayloadValue();
-                                final com.badlogic.gdx.pay.Transaction t = transaction(transaction);
+                                final com.badlogic.gdx.pay.Transaction t = convertToGdxTransaction(transaction, success.getTransaction().getJwsRepresentation());
                                 if (t == null)
                                     observer.handlePurchaseError(new GdxPayException("Failed to create GdxPay transaction"));
                                 else
@@ -594,7 +586,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
         public final Task handleNext(Runnable scheduleNext, VerificationResult.Transaction result) {
             if (result.isVerified()) {
                 Transaction transaction = result.getUnsafePayloadValue();
-                com.badlogic.gdx.pay.Transaction ta = transaction(transaction);
+                com.badlogic.gdx.pay.Transaction ta = convertToGdxTransaction(transaction, result.getJwsRepresentation());
                 if (ta != null) {
                     restoredTransactions.add(ta);
                     log(LOGTYPELOG, "Current entitlement restored: " + getOriginalTxID(transaction));
@@ -618,8 +610,10 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
             if (result.isVerified()) {
                 // Product was successfully purchased.
                 final Transaction transaction = result.getUnsafePayloadValue();
+
+
                 // Parse transaction data.
-                final com.badlogic.gdx.pay.Transaction t = transaction(transaction);
+                final com.badlogic.gdx.pay.Transaction t = convertToGdxTransaction(transaction, result.getJwsRepresentation());
                 if (t == null) return;
 
                 log(LOGTYPELOG, "Transaction updated: " + getOriginalTxID(transaction));
