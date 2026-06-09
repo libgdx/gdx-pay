@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
+
 package com.badlogic.gdx.pay.ios.apple;
 
 import com.badlogic.gdx.math.MathUtils;
@@ -27,6 +28,7 @@ import org.robovm.pods.cocoatouch.storekitrvm.AsyncSequence.AsyncIterator;
 import org.robovm.pods.cocoatouch.storekitrvm.Transaction;
 
 import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -320,16 +322,20 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
         transaction.setTransactionData(null);
 
         // NOTE: although deprecated as of iOS 7, "transactionReceipt" is still available as of iOS 9 & hopefully long there after :)
-        String transactionDataSignature;
+        String transactionDataSignature = null;
         try {
             NSData transactionReceipt = t.getJsonRepresentation();
-            transactionDataSignature = transactionReceipt.toBase64EncodedString(NSDataBase64EncodingOptions.None);
+
+            if (transactionReceipt != null) {
+                transactionDataSignature = new String(transactionReceipt.getBytes(), StandardCharsets.UTF_8);
+            }
+
         } catch (Throwable e) {
-            log(LOGTYPELOG, "Transaction.jsonRepresentation appears broken", e);
+            log(LOGTYPELOG, "Transaction jsonRepresentation appears broken", e);
             transactionDataSignature = null;
         }
-        transaction.setTransactionDataSignature(transactionDataSignature);
 
+        transaction.setTransactionDataSignature(transactionDataSignature);
         // return the transaction
         return transaction;
     }
