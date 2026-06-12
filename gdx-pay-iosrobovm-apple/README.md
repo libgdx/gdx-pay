@@ -66,6 +66,83 @@ If your app supports both older and newer iOS versions, you can choose the imple
         game.purchaseManager = new PurchaseManageriOSApple();
     }
 
+## Server-Side Purchase Validation
+
+When validating purchases on your server, the approach differs between StoreKit 1 and StoreKit 2.
+
+The `Transaction.getTransactionDataSignature()` field holds the data you need to validate. You can tell
+which format you received: if the string contains dots (`.`), it is a JWS token (StoreKit 2); otherwise
+it is a Base64-encoded receipt (StoreKit 1).
+
+### StoreKit 1 — receipt validation (legacy)
+
+`PurchaseManageriOSApple` sets `transactionDataSignature` to a **Base64-encoded receipt** string.
+
+To validate it server-side, POST the receipt to Apple's `/verifyReceipt` endpoint:
+
+```
+POST https://buy.itunes.apple.com/verifyReceipt          (production)
+POST https://sandbox.itunes.apple.com/verifyReceipt      (sandbox)
+
+Body: { "receipt-data": "<base64-encoded receipt>" }
+```
+
+The gdx-pay server module ships a ready-made helper for this:
+```java
+PurchaseVerifieriOSApple verifier = new PurchaseVerifieriOSApple(false /* sandbox */);
+boolean valid = verifier.isValid(transaction);
+```
+
+> **Note:** Apple's `/verifyReceipt` endpoint is considered legacy and may be deprecated in the future.
+> New apps should prefer StoreKit 2 and JWS-based validation.
+
+### StoreKit 2 — JWS validation (recommended)
+
+`PurchaseManageriOSApple2` sets `transactionDataSignature` to a **JWS (JSON Web Signature)** string
+obtained from `VerificationResult.getJwsRepresentation()`. This is a signed JWT issued directly by
+Apple and does **not** require a network call back to Apple for validation — you verify the signature
+locally using Apple's root certificate.
+
+Apple provides an official Java library for this:
+[apple/app-store-server-library-java](https://github.com/apple/app-store-server-library-java)
+
+Example server-side validation with that library:
+
+```java
+// Read your signed transaction from the gdx-pay Transaction object
+String jwsToken = transaction.getTransactionDataSignature();
+
+// Set up the verifier (once, reuse it)
+AppStoreServerAPIClient client = /* ... */;
+SignedDataVerifier verifier = new SignedDataVerifier(
+    rootCertificates,
+    bundleId,
+    bundleAppleId,
+    Environment.PRODUCTION
+);
+
+JWSTransactionDecodedPayload payload = verifier.verifyAndDecodeTransaction(jwsToken);
+// payload now contains the verified purchase details
+```
+
+### Distinguishing StoreKit 1 and StoreKit 2 receipts
+
+If you need to handle both receipt formats in the same server code (for example, during a migration
+from StoreKit 1 to StoreKit 2), you can detect the format by checking for a dot character:
+
+```java
+String sig = transaction.getTransactionDataSignature();
+if (sig != null && sig.contains(".")) {
+    // StoreKit 2: JWS token — validate with app-store-server-library-java
+} else {
+    // StoreKit 1: Base64 receipt — validate with /verifyReceipt endpoint
+}
+```
+
+> **Migration note:** Switching from `PurchaseManageriOSApple` to `PurchaseManageriOSApple2` is a
+> **breaking change** for any existing server-side validation code, because the format of
+> `transactionDataSignature` changes from a Base64 receipt to a JWS token.
+
 ## Testing
 Next to other ways, I find the easiest way to test the IAP the following: 
 
