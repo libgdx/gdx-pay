@@ -42,6 +42,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
     private static final String TAG = "GdxPay/AppleIOS";
     private static final boolean LOGDEBUG =
             Boolean.parseBoolean(System.getProperty("gdx.pay.ios.apple.logdebug", "false"));
+
     private static final int LOGTYPELOG = 0;
     private static final int LOGTYPEERROR = 1;
 
@@ -401,7 +402,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
             return null;
         }
 
-        return new FreeTrialPeriod((int) introductoryOffer.getPeriodCount(), periodUnit);
+        return new FreeTrialPeriod((int) introductoryOffer.getPeriod().getValue(), periodUnit);
     }
 
 
