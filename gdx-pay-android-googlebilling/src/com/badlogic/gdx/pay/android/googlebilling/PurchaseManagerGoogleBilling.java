@@ -130,6 +130,8 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
         reconnectMilliseconds = Math.min(reconnectMilliseconds * 2, RECONNECT_TIMER_MAX_TIME_MILLISECONDS);
     }
 
+    interface ErrorCallback { void accept(Exception e); }
+
     private void fetchOfferDetails() {
         Gdx.app.debug(TAG,"Called fetchOfferDetails()");
         productDetailsMap.clear();
@@ -173,7 +175,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
             }
         };
 
-        java.util.function.Consumer<Exception> onBatchError = (Exception e) -> {
+        ErrorCallback onBatchError = (Exception e) -> {
             // Mark failure to prevent later handleInstall() and notify observer once.
             failed[0] = true;
             installationComplete = true; // clear "installing" state to avoid deadlock
@@ -194,7 +196,7 @@ public class PurchaseManagerGoogleBilling implements PurchaseManager, PurchasesU
     private void queryProductDetailsForProducts(List<QueryProductDetailsParams.Product> productList,
                                                 String productTypeHint,
                                                 Runnable onSuccess,
-                                                java.util.function.Consumer<Exception> onError) {
+                                                ErrorCallback onError) {
         // We avoid mixing types in a single request by design (split beforehand).
         // If productList is empty, treat as success to allow UI to show "Unavailable".
         if (productList == null || productList.isEmpty()) {
