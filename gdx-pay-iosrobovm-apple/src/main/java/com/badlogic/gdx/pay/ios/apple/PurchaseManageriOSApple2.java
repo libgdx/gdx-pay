@@ -98,7 +98,8 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
 
     @Override
     public boolean installed() {
-        return promotionTransactionObserver != null;
+        // not promotionTransactionObserver: that one is not started below iOS 16.4
+        return transactionUpdateObserver != null;
     }
 
     @Override
@@ -438,8 +439,13 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
             }
 
             if (promotionTransactionObserver == null) {
-                // observe promotion transactions
-                promotionTransactionObserver = observePromotionTransactions();
+                if (IosVersion.is_16_4_orAbove()) {
+                    // observe promotion transactions
+                    promotionTransactionObserver = observePromotionTransactions();
+                } else {
+                    // PurchaseIntent is not available below iOS 16.4: touching it crashes the app
+                    log(LOGTYPELOG, "Promotion transactions are not observed: PurchaseIntent requires iOS 16.4");
+                }
             }
 
 

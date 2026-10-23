@@ -7,6 +7,8 @@ This module provides two `PurchaseManager` implementations for iOS:
 | `PurchaseManageriOSApple` | StoreKit 1 | iOS 7+ |
 | `PurchaseManageriOSApple2` | StoreKit 2 | iOS 15+ |
 
+On iOS 15.0 to 16.3, `PurchaseManageriOSApple2` does not observe App Store promoted purchases (`PurchaseIntent` requires iOS 16.4), so `shouldProcessPromotionalStorePayment()` is not called there.
+
 ## Choosing between StoreKit 1 and StoreKit 2
 
 **StoreKit 2** (`PurchaseManageriOSApple2`) is the recommended implementation for new projects. It uses Apple's modern StoreKit 2 Swift-based API (via [RoboVM StoreKit 2 bindings](https://github.com/MobiVM/robovm-cocoatouch-swift)) and provides:

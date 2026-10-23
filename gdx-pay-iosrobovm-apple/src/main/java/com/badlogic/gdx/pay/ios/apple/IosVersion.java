@@ -13,4 +13,9 @@ enum IosVersion {
         return ((Foundation.getMajorSystemVersion()  == 11 && Foundation.getMinorSystemVersion() >= 2)
                 || Foundation.getMajorSystemVersion() > 11);
     }
+
+    static boolean is_16_4_orAbove() {
+        return ((Foundation.getMajorSystemVersion() == 16 && Foundation.getMinorSystemVersion() >= 4)
+                || Foundation.getMajorSystemVersion() > 16);
+    }
 }
