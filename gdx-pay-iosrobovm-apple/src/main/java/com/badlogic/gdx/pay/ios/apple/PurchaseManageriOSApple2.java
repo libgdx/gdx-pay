@@ -149,42 +149,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
         } else {
             // Create a SKPayment from the product and start purchase flow
             log(LOGTYPELOG, "Purchasing product " + identifier + " ...");
-            product.purchase(new NSSet<Product.PurchaseOption>(), new VoidBlock2<Product.PurchaseResult, NSError>() {
-                @Override
-                public void invoke(Product.PurchaseResult purchaseResult, NSError nsError) {
-                    if (purchaseResult != null) {
-                        log(LOGTYPELOG, "Purchasing product " + identifier + " complete " + purchaseResult);
-
-                        if (purchaseResult instanceof Product.PurchaseResult.success) {
-
-                            Product.PurchaseResult.success success = (Product.PurchaseResult.success) purchaseResult;
-
-                            VerificationResult.Transaction verificationResult = success.getTransaction();
-
-                            // Dit is de waarde die je server nodig heeft:
-                            String jwsRepresentation = verificationResult.getJwsRepresentation();
-
-                            // Product was successfully purchased.
-                            final Transaction transaction = success.getTransaction().getUnsafePayloadValue();
-                            // Parse transaction data.
-                            final com.badlogic.gdx.pay.Transaction t = convertToGdxTransaction(transaction, jwsRepresentation);
-                            if (t == null)
-                                observer.handlePurchaseError(new GdxPayException("Failed to create GdxPay transaction"));
-                            else
-                                observer.handlePurchase(t);
-                        } else if (purchaseResult == Product.PurchaseResult.userCancelled()) {
-                            observer.handlePurchaseCanceled();
-                        } else {
-                            // should not happen
-                            observer.handlePurchaseError(new GdxPayException("Unexpected purchase result " + purchaseResult));
-                        }
-                    } else {
-                        String message = "Purchasing product " + identifier + " failed with error: " + nsError;
-                        log(LOGTYPEERROR, message);
-                        observer.handlePurchaseError(new GdxPayException(message));
-                    }
-                }
-            });
+            product.purchase(new NSSet<Product.PurchaseOption>(), new PurchaseResultHandler(identifier));
         }
     }
 
@@ -473,32 +438,7 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
                 // Create a SKPayment from the product and start purchase flow
                 Product product = products.get(0);
                 log(LOGTYPELOG, "Product info received/purchasing product " + product.getId() + " ...");
-                product.purchase(new NSSet<Product.PurchaseOption>(), new VoidBlock2<Product.PurchaseResult, NSError>() {
-                    @Override
-                    public void invoke(Product.PurchaseResult purchaseResult, NSError nsError) {
-                        if (purchaseResult != null) {
-                            log(LOGTYPELOG, "Purchasing product " + product.getId() + " complete " + purchaseResult);
-
-                            if (purchaseResult instanceof Product.PurchaseResult.success) {
-                                Product.PurchaseResult.success success = (Product.PurchaseResult.success) purchaseResult;
-                                final Transaction transaction = success.getTransaction().getUnsafePayloadValue();
-                                final com.badlogic.gdx.pay.Transaction t = convertToGdxTransaction(transaction, success.getTransaction().getJwsRepresentation());
-                                if (t == null)
-                                    observer.handlePurchaseError(new GdxPayException("Failed to create GdxPay transaction"));
-                                else
-                                    observer.handlePurchase(t);
-                            } else if (purchaseResult == Product.PurchaseResult.userCancelled()) {
-                                observer.handlePurchaseCanceled();
-                            } else {
-                                observer.handlePurchaseError(new GdxPayException("Unexpected purchase result " + purchaseResult));
-                            }
-                        } else {
-                            String message = "Purchasing product " + product.getId() + " failed with error: " + nsError;
-                            log(LOGTYPEERROR, message);
-                            observer.handlePurchaseError(new GdxPayException(message));
-                        }
-                    }
-                });
+                product.purchase(new NSSet<Product.PurchaseOption>(), new PurchaseResultHandler(product.getId()));
             } else {
                 // wrong product count returned
                 String errorMessage = "Error purchasing product (wrong product info count returned: " + products.size() + ")!";
@@ -608,6 +548,52 @@ public class PurchaseManageriOSApple2 implements PurchaseManager {
         protected abstract void onRestoreComplete(com.badlogic.gdx.pay.Transaction[] transactions);
 
         protected abstract void onRestoreFailed(NSError error);
+    }
+
+    /// Handles the result of Product.purchase(): a successful purchase is finished before it is reported, like
+    /// AppleTransactionUpdateObserver does. An unfinished transaction stays in StoreKit: a next purchase of the same
+    /// product then returns that old transaction ("Found unfinished transaction for ...") instead of showing the
+    /// payment sheet.
+    private class PurchaseResultHandler implements VoidBlock2<Product.PurchaseResult, NSError> {
+        private final String productDescription;
+
+        PurchaseResultHandler(String productDescription) {
+            this.productDescription = productDescription;
+        }
+
+        @Override
+        public void invoke(Product.PurchaseResult purchaseResult, NSError nsError) {
+            if (purchaseResult != null) {
+                log(LOGTYPELOG, "Purchasing product " + productDescription + " complete " + purchaseResult);
+
+                if (purchaseResult instanceof Product.PurchaseResult.success) {
+                    VerificationResult.Transaction verificationResult = ((Product.PurchaseResult.success) purchaseResult).getTransaction();
+                    final Transaction transaction = verificationResult.getUnsafePayloadValue();
+                    // The JWS representation is what a server needs to verify the purchase.
+                    final com.badlogic.gdx.pay.Transaction t = convertToGdxTransaction(transaction, verificationResult.getJwsRepresentation());
+                    if (t == null) {
+                        observer.handlePurchaseError(new GdxPayException("Failed to create GdxPay transaction"));
+                    } else {
+                        transaction.finish(new Runnable() {
+                            @Override
+                            public void run() {
+                                log(LOGTYPELOG, "Purchased transaction was finished: " + getOriginalTxID(transaction));
+                                observer.handlePurchase(t);
+                            }
+                        });
+                    }
+                } else if (purchaseResult == Product.PurchaseResult.userCancelled()) {
+                    observer.handlePurchaseCanceled();
+                } else {
+                    // pending (Ask to Buy, SCA): StoreKit reports the transaction later via Transaction.updates
+                    observer.handlePurchaseError(new GdxPayException("Unexpected purchase result " + purchaseResult));
+                }
+            } else {
+                String message = "Purchasing product " + productDescription + " failed with error: " + nsError;
+                log(LOGTYPEERROR, message);
+                observer.handlePurchaseError(new GdxPayException(message));
+            }
+        }
     }
 
     ///  observer for transaction update -- finish them
